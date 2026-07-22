@@ -83,6 +83,36 @@ def test_stock_without_direct_uzi_has_explicit_failure():
     assert detail["recommendation"]["state"] == "暂不纳入"
 
 
+def test_stock_with_current_uzi_only_waits_instead_of_hard_exclusion():
+    from scripts.update_monitor import run_pipeline
+
+    stock = {
+        "id": "stock-us-aapl",
+        "code": "AAPL",
+        "name": "Apple",
+        "asset_type": "stock",
+        "market": "US",
+        "enabled": True,
+    }
+    result = run_pipeline(
+        {"assets": [stock]},
+        {},
+        {
+            "now": NOW,
+            "market_data": {},
+            "uzi": {stock["id"]: {"overall": 82}},
+            "news_provider": lambda asset, region: [],
+            "write": False,
+        },
+    )
+
+    detail = result["assets"][stock["id"]]
+    assert detail["score"]["components"] == {"uzi_consensus": 82.0}
+    assert detail["source_status"]["market"]["error"] == "market_data_unavailable"
+    assert detail["recommendation"]["risk"]["hard_failures"] == []
+    assert detail["recommendation"]["state"] == "等待确认"
+
+
 def test_stock_market_data_without_source_url_is_stale_not_falsely_fresh():
     from scripts.update_monitor import run_pipeline
 
@@ -425,3 +455,196 @@ def test_fund_only_disclosed_holding_uses_only_current_manifest_score(
         assert detail["score"]["components"]["holding_uzi"] == 76
     else:
         assert "holding_uzi" not in detail["score"]["components"]
+
+
+def test_fresh_fund_refresh_purges_synthetic_seed_only_market_inputs():
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.providers.news import NewsItem
+    from scripts.update_monitor import run_pipeline
+
+    repo = Path(__file__).parents[2]
+    prior = json.loads(
+        (repo / "data" / "assets" / "fund-cn-025209.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    prior["market"].update(
+        {
+            "fixture_notice": "SYNTHETIC STALE FIXTURE: not live market data",
+            "size_billion": 1,
+            "expense_ratio_pct": 0.5,
+            "age_years": 1,
+            "manager_tenure_years": 1,
+        }
+    )
+
+    class FreshProvider:
+        def fetch_fund(self, asset):
+            return ProviderResult(
+                data={
+                    "asset": asset,
+                    "history": [
+                        {"date": "2026-07-20", "nav": 1.0},
+                        {"date": "2026-07-21", "nav": 1.05},
+                        {"date": "2026-07-22", "nav": 1.1},
+                    ],
+                    "holdings": [
+                        {
+                            "code": "600519.SH",
+                            "name": "贵州茅台",
+                            "weight_pct": 20,
+                            "latest_price": 1500,
+                            "change_pct": 1,
+                        }
+                    ],
+                    "holding_report_date": "2026 Q2",
+                },
+                source_urls=["https://fund-provider.example/025209"],
+                retrieved_at=NOW,
+                errors={},
+            )
+
+    def news(asset, region):
+        return [
+            NewsItem(
+                "fresh",
+                f"https://article.example/{region.lower()}",
+                "publisher",
+                "https://publisher.example",
+                NOW,
+                NOW,
+                region,
+            )
+        ]
+
+    result = run_pipeline(
+        {"version": 1, "assets": [prior["asset"]]},
+        {"assets": {prior["asset"]["id"]: prior}},
+        {
+            "now": NOW,
+            "fund_provider": FreshProvider(),
+            "holding_uzi": {},
+            "news_provider": news,
+        },
+    )
+    detail = result["assets"][prior["asset"]["id"]]
+
+    assert detail["source_status"]["market"]["stale"] is False
+    assert "fixture_notice" not in detail["market"]
+    assert not {
+        "size_billion",
+        "expense_ratio_pct",
+        "age_years",
+        "manager_tenure_years",
+    } & set(detail["market"])
+    assert "stability" not in detail["score"]["components"]
+
+
+def test_run_from_paths_builds_stock_components_from_current_uzi_evidence(
+    tmp_path, monkeypatch
+):
+    from scripts.providers import news as news_module
+    from scripts.providers.news import NewsItem
+    from scripts.update_monitor import run_from_paths
+    from scripts.validate_outputs import validate_outputs
+
+    stock = {
+        "id": "stock-us-aapl",
+        "code": "AAPL",
+        "name": "Apple",
+        "asset_type": "stock",
+        "market": "US",
+        "sector": "Technology",
+        "note": "production-entrypoint fixture",
+        "enabled": True,
+    }
+    data_root = tmp_path / "data"
+    data_root.mkdir()
+    watchlist_path = data_root / "watchlist.json"
+    watchlist_path.write_text(
+        json.dumps(
+            {"version": 1, "updated_at": NOW, "assets": [stock]},
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    cache = tmp_path / "uzi-cache" / "AAPL"
+    cache.mkdir(parents=True)
+    (cache / "synthesis.json").write_text(
+        json.dumps(
+            {
+                "overall_score": 82,
+                "fundamental_score": 78,
+                "school_scores": {"D": {"consensus": 74}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (cache / "panel.json").write_text(
+        json.dumps(
+            {
+                "panel_consensus": 80,
+                "school_scores": {"D": {"consensus": 74}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "attempted_at": NOW,
+                "depth": "lite",
+                "run_id": "run-1",
+                "upstream": {
+                    "repository": "wbh604/UZI-Skill",
+                    "commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+                },
+                "tickers": {
+                    "AAPL": {
+                        "status": "refreshed_this_run",
+                        "attempted_at": NOW,
+                        "last_success_at": NOW,
+                        "run_id": "run-1",
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fresh_news(asset, region):
+        return [
+            NewsItem(
+                "fresh",
+                f"https://article.example/{region.lower()}",
+                "publisher",
+                "https://publisher.example",
+                NOW,
+                NOW,
+                region,
+            )
+        ]
+
+    monkeypatch.setattr(news_module, "fetch_news", fresh_news)
+
+    result = run_from_paths(
+        watchlist_path,
+        data_root,
+        tmp_path / "uzi-cache",
+        manifest,
+        "final",
+    )
+    detail = result["assets"][stock["id"]]
+
+    assert detail["score"]["components"] == {
+        "uzi_consensus": 82.0,
+        "quality_valuation": 78.0,
+        "trend_momentum": 74.0,
+    }
+    assert detail["score"]["coverage"]["weight_pct"] == 80.0
+    assert detail["source_status"]["market"]["provider"] == "uzi_normalized_panel"
+    assert detail["source_status"]["market"]["stale"] is False
+    assert detail["recommendation"]["state"] != "暂不纳入"
+    assert validate_outputs(data_root) == []

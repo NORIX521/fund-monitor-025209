@@ -153,8 +153,14 @@ def test_validator_accepts_checked_in_production_seed():
     watchlist = load(REPO / "data" / "watchlist.json")
     assert [asset["id"] for asset in watchlist["assets"]] == ["fund-cn-025209"]
     detail = load(REPO / "data" / "assets" / "fund-cn-025209.json")
+    assert detail["market"] == {"history": [], "holdings": []}
     assert detail["market"]["holdings"] == []
+    assert detail["score"]["overall"] is None
+    assert detail["score"]["components"] == {}
     assert detail["score"]["coverage"]["holding_uzi_pct"] == 0
+    serialized = json.dumps(detail, ensure_ascii=False).lower()
+    assert "synthetic" not in serialized
+    assert ".example" not in serialized
 
 
 def test_validator_accepts_fresh_stock_and_fund_outputs_from_real_pipeline(tmp_path):

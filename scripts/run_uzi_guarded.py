@@ -24,6 +24,7 @@ else:
 
 DEFAULT_UZI_ROOT = Path(r"C:\Users\智汇云\Documents\A股选股策略\tools\UZI-Skill")
 DEPTHS = ("lite", "medium", "deep")
+MEDIUM_BATCH_SIZE = 10
 SAFE_ASSET_ID = re.compile(r"[a-z0-9][a-z0-9-]{0,119}$")
 CN_HOLDING = re.compile(r"\d{6}\.(?:SH|SZ|BJ)$")
 
@@ -185,6 +186,7 @@ def run_watchlist(
             "commit": UZI_COMMIT,
         },
         "tickers": {},
+        "batches": [],
     }
     if not universe:
         return base_manifest
@@ -193,8 +195,8 @@ def run_watchlist(
     cache_root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="uzi-stock-portfolio-") as temp_dir:
         temporary = Path(temp_dir)
-        portfolio = build_uzi_portfolio(universe, temporary / "stocks.csv")
         backups = temporary / "restored-cache"
+        checkpoints = temporary / "refreshed-cache"
         prior_success: dict[str, str] = {}
         tickers = [str(asset["code"]).strip().upper() for asset in universe]
         for ticker in tickers:
@@ -203,54 +205,101 @@ def run_watchlist(
                 prior_success[ticker] = _cache_success_at(target)
                 backups.mkdir(parents=True, exist_ok=True)
                 shutil.move(str(target), str(backups / ticker))
-        try:
-            _run_uzi_portfolio(root, portfolio, depth)
-        except (OSError, RuntimeError, ValueError):
-            pass
-
         entries: dict[str, dict[str, Any]] = {}
         refreshed = 0
         fallback = 0
-        for ticker in tickers:
-            current = cache_root / ticker
-            backup = backups / ticker
-            common = {
-                "ticker": ticker,
-                "attempted_at": attempted_at,
-                "run_id": str(run_id),
-                "upstream_commit": UZI_COMMIT,
-            }
-            if current.is_dir() and _valid_cache(current, ticker):
-                refreshed += 1
-                entries[ticker] = {
-                    **common,
-                    "status": "refreshed_this_run",
-                    "last_success_at": attempted_at,
-                    "stale": False,
-                    "error": "",
-                }
-            elif backup.is_dir() and _valid_cache(backup, ticker):
-                fallback += 1
+        batch_size = MEDIUM_BATCH_SIZE if depth == "medium" else len(universe)
+        chunks = [
+            universe[index : index + batch_size]
+            for index in range(0, len(universe), batch_size)
+        ]
+        try:
+            for batch_index, batch_assets in enumerate(chunks, start=1):
+                portfolio = build_uzi_portfolio(
+                    batch_assets, temporary / f"stocks-{batch_index:03d}.csv"
+                )
+                batch_tickers = [
+                    str(asset["code"]).strip().upper() for asset in batch_assets
+                ]
+                runner_error = ""
+                try:
+                    _run_uzi_portfolio(root, portfolio, depth)
+                except (OSError, RuntimeError, ValueError) as error:
+                    runner_error = str(error)
+
+                batch_refreshed = 0
+                batch_fallback = 0
+                for ticker in batch_tickers:
+                    current = cache_root / ticker
+                    backup = backups / ticker
+                    checkpoint = checkpoints / ticker
+                    common = {
+                        "ticker": ticker,
+                        "attempted_at": attempted_at,
+                        "run_id": str(run_id),
+                        "upstream_commit": UZI_COMMIT,
+                    }
+                    if current.is_dir() and _valid_cache(current, ticker):
+                        checkpoints.mkdir(parents=True, exist_ok=True)
+                        shutil.move(str(current), str(checkpoint))
+                        refreshed += 1
+                        batch_refreshed += 1
+                        entries[ticker] = {
+                            **common,
+                            "status": "refreshed_this_run",
+                            "last_success_at": attempted_at,
+                            "stale": False,
+                            "error": "",
+                        }
+                    elif backup.is_dir() and _valid_cache(backup, ticker):
+                        fallback += 1
+                        batch_fallback += 1
+                        if current.exists():
+                            shutil.rmtree(current)
+                        entries[ticker] = {
+                            **common,
+                            "status": "restored_fallback",
+                            "last_success_at": prior_success.get(ticker, ""),
+                            "stale": True,
+                            "error": "current_run_output_missing_or_invalid",
+                        }
+                    else:
+                        if current.exists():
+                            shutil.rmtree(current)
+                        entries[ticker] = {
+                            **common,
+                            "status": "failed",
+                            "last_success_at": "",
+                            "stale": True,
+                            "error": "current_run_output_missing_or_invalid",
+                        }
+                if runner_error and not batch_refreshed:
+                    batch_status = "failed"
+                elif batch_refreshed == len(batch_tickers):
+                    batch_status = "completed"
+                elif batch_refreshed or batch_fallback:
+                    batch_status = "partial"
+                else:
+                    batch_status = "failed"
+                base_manifest["batches"].append(
+                    {
+                        "index": batch_index,
+                        "tickers": batch_tickers,
+                        "status": batch_status,
+                        "error": runner_error,
+                    }
+                )
+        finally:
+            for ticker in tickers:
+                current = cache_root / ticker
+                checkpoint = checkpoints / ticker
+                backup = backups / ticker
                 if current.exists():
                     shutil.rmtree(current)
-                shutil.move(str(backup), str(current))
-                entries[ticker] = {
-                    **common,
-                    "status": "restored_fallback",
-                    "last_success_at": prior_success.get(ticker, ""),
-                    "stale": True,
-                    "error": "current_run_output_missing_or_invalid",
-                }
-            else:
-                if current.exists():
-                    shutil.rmtree(current)
-                entries[ticker] = {
-                    **common,
-                    "status": "failed",
-                    "last_success_at": "",
-                    "stale": True,
-                    "error": "current_run_output_missing_or_invalid",
-                }
+                if checkpoint.is_dir() and _valid_cache(checkpoint, ticker):
+                    shutil.move(str(checkpoint), str(current))
+                elif backup.is_dir() and _valid_cache(backup, ticker):
+                    shutil.move(str(backup), str(current))
         base_manifest["tickers"] = entries
         if refreshed == len(tickers):
             base_manifest["status"] = "completed"

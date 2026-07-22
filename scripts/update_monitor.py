@@ -30,6 +30,17 @@ UZI_SOURCE_URL = "https://github.com/wbh604/UZI-Skill/tree/fce996c33e70eddce8e37
 SAFE_ASSET_ID = re.compile(r"[a-z0-9][a-z0-9-]{0,119}$")
 STATES = {"暂不纳入", "等待确认", "风险偏高", "优先研究", "持续观察"}
 STATUS_FIELDS = {"provider", "source_urls", "attempted_at", "retrieved_at", "last_success_at", "stale", "error", "coverage"}
+FUND_MARKET_FIELDS = {
+    "history",
+    "holdings",
+    "holding_report_date",
+    "size_billion",
+    "expense_ratio_pct",
+    "age_years",
+    "manager_tenure_years",
+    "risk_flags",
+}
+FUND_PRIOR_CORE_FIELDS = {"history", "holdings", "holding_report_date"}
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
@@ -97,6 +108,35 @@ def _merge_market(previous: dict[str, Any], incoming: dict[str, Any], errors: di
     for field, value in incoming.items():
         if field not in {"asset", "errors"} and field not in errors and value not in (None, {}, []):
             market[field] = _merge_holdings(market.get("holdings"), value, "quotes" in errors) if field == "holdings" else value
+    return market
+
+
+def _prior_fund_market(previous: dict[str, Any]) -> dict[str, Any]:
+    """Keep only provider-supported last-good fund fields, never fixture extras."""
+    market = _as_dict(previous.get("market"))
+    return {
+        field: market[field]
+        for field in FUND_PRIOR_CORE_FIELDS
+        if field in market and market[field] not in (None, {}, [])
+    }
+
+
+def _merge_fund_market(
+    previous: dict[str, Any], incoming: dict[str, Any], errors: dict[str, Any]
+) -> dict[str, Any]:
+    market = _prior_fund_market(previous)
+    for field, value in incoming.items():
+        if (
+            field not in FUND_MARKET_FIELDS
+            or field in errors
+            or value in (None, {}, [])
+        ):
+            continue
+        market[field] = (
+            _merge_holdings(market.get("holdings"), value, "quotes" in errors)
+            if field == "holdings"
+            else value
+        )
     return market
 
 
@@ -235,7 +275,7 @@ def _fund_market(asset: dict[str, Any], previous: dict[str, Any], options: dict[
     if provider is None:
         statuses = {key: _component_status(previous, key, attempted_at=now, provider="eastmoney", source_urls=[], error="fund_provider_unavailable", succeeded=False, retrieved_at="") for key in ("history", "holdings", "quotes")}
         statuses["market"] = _component_status(previous, "market", attempted_at=now, provider="eastmoney", source_urls=[], error="fund_provider_unavailable", succeeded=False, retrieved_at="")
-        return _as_dict(previous.get("market")), statuses
+        return _prior_fund_market(previous), statuses
     try:
         result = provider.fetch_fund(asset)
         incoming = _as_dict(getattr(result, "data", result))
@@ -252,7 +292,7 @@ def _fund_market(asset: dict[str, Any], previous: dict[str, Any], options: dict[
         quote_error = str(errors.get("quotes", "")) or ("quote_no_data" if holdings_ok and covered == 0 else "quote_partial_data" if holdings_ok and covered < total else "")
         quotes_ok = holdings_ok and not quote_error
         merge_errors = {**errors, **({"quotes": quote_error} if quote_error else {})}
-        market = _merge_market(previous, incoming, {key: value for key, value in merge_errors.items() if key != "quotes" or value != "quote_partial_data"})
+        market = _merge_fund_market(previous, incoming, {key: value for key, value in merge_errors.items() if key != "quotes" or value != "quote_partial_data"})
         statuses = {
             "history": _component_status(previous, "history", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("history", "")), succeeded=history_ok, retrieved_at=retrieved),
             "holdings": _component_status(previous, "holdings", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("holdings", "")), succeeded=holdings_ok, retrieved_at=retrieved),
@@ -263,7 +303,7 @@ def _fund_market(asset: dict[str, Any], previous: dict[str, Any], options: dict[
         return market, statuses
     except Exception as error:
         statuses = {key: _component_status(previous, key, attempted_at=now, provider=type(provider).__name__, source_urls=[], error=str(error), succeeded=False, retrieved_at="") for key in ("history", "holdings", "quotes", "market")}
-        return _as_dict(previous.get("market")), statuses
+        return _prior_fund_market(previous), statuses
 
 
 def _score_dict(result: Any) -> dict[str, Any]:
@@ -301,6 +341,32 @@ def _news_streams(asset: dict[str, Any], previous: dict[str, Any], options: dict
     return streams, statuses
 
 
+def _stock_market_from_uzi(
+    direct_uzi: dict[str, dict[str, Any]],
+) -> tuple[dict[str, dict[str, Any]], dict[str, list[str]], dict[str, str]]:
+    """Expose only named, normalized UZI evidence as stock score components."""
+    market_data: dict[str, dict[str, Any]] = {}
+    source_urls: dict[str, list[str]] = {}
+    providers: dict[str, str] = {}
+    for asset_id, uzi in direct_uzi.items():
+        if not isinstance(uzi, dict):
+            continue
+        evidence: dict[str, Any] = {}
+        if uzi.get("fundamental_score") not in (None, ""):
+            evidence["quality_valuation"] = uzi["fundamental_score"]
+        schools = _as_dict(uzi.get("school_scores"))
+        if schools.get("D") not in (None, ""):
+            evidence["trend_momentum"] = schools["D"]
+        if not evidence:
+            continue
+        evidence["evidence_origin"] = "uzi_normalized_panel"
+        evidence["upstream_commit"] = str(uzi.get("upstream_commit") or "")
+        market_data[asset_id] = evidence
+        source_urls[asset_id] = [UZI_SOURCE_URL]
+        providers[asset_id] = "uzi_normalized_panel"
+    return market_data, source_urls, providers
+
+
 def run_pipeline(watchlist: dict[str, Any], previous: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
     """Refresh enabled assets while preserving valid last-good component evidence."""
     now = _iso(options.get("now"))
@@ -330,7 +396,11 @@ def run_pipeline(watchlist: dict[str, Any], previous: dict[str, Any], options: d
                 if not incoming_market
                 else "market_provenance_unavailable"
             )
-            statuses["market"] = _status(stale=not market_ok, attempted_at=now, provider="market_data", source_urls=market_urls, error=market_error, retrieved_at=now if market_ok else "", last_success_at=now if market_ok else _last_success(prior, "market"))
+            market_provider = str(
+                _as_dict(options.get("market_providers")).get(asset_id)
+                or "market_data"
+            )
+            statuses["market"] = _status(stale=not market_ok, attempted_at=now, provider=market_provider, source_urls=market_urls, error=market_error, retrieved_at=now if market_ok else "", last_success_at=now if market_ok else _last_success(prior, "market"))
             incoming_uzi = _as_dict(_as_dict(options.get("uzi")).get(asset_id))
             uzi_ok = incoming_uzi.get("overall") not in (None, "") or incoming_uzi.get("overall_score") not in (None, "")
             uzi = incoming_uzi if uzi_ok else _as_dict(prior.get("uzi"))
@@ -346,7 +416,7 @@ def run_pipeline(watchlist: dict[str, Any], previous: dict[str, Any], options: d
             raise ValueError("unsupported asset type")
         news, news_statuses = _news_streams(asset, prior, options, now)
         statuses.update(news_statuses)
-        hard_failures = [key for key, status in statuses.items() if status.get("error") in {"direct_uzi_unavailable", "market_data_unavailable"}]
+        hard_failures = [key for key, status in statuses.items() if status.get("error") == "direct_uzi_unavailable"]
         stale = any(status.get("stale") for status in statuses.values())
         recommendation = recommend(score, {"stale": stale, "hard_failures": hard_failures, "timestamp": now, "evidence": {"source_status": "stale" if stale else "fresh"}})
         detail = {"asset": asset, "market": market, "uzi": uzi, "news": news, "score": score, "recommendation": recommendation, "source_status": statuses}
@@ -461,13 +531,18 @@ def run_from_paths(
         manifest = _load_object(manifest_path)
         published = publish_uzi_manifest(cache_path, manifest, output_dir / "uzi")
         direct_uzi, holding_uzi = _select_current_uzi(watchlist, published, manifest)
+    market_data, market_source_urls, market_providers = _stock_market_from_uzi(
+        direct_uzi
+    )
     result = run_pipeline(
         watchlist,
         previous,
         {
             "fund_provider": EastmoneyProvider(),
             "news_provider": fetch_news,
-            "market_data": {},
+            "market_data": market_data,
+            "market_source_urls": market_source_urls,
+            "market_providers": market_providers,
             "uzi": direct_uzi,
             "holding_uzi": holding_uzi,
             "output_dir": output_dir,

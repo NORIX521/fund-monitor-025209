@@ -10,75 +10,31 @@
     "enabled": true
   },
   "market": {
-    "fixture_notice": "SYNTHETIC STALE FIXTURE: not live market data",
-    "history": [
-      {
-        "date": "1999-12-30",
-        "nav": 1
-      },
-      {
-        "date": "1999-12-31",
-        "nav": 1.04
-      },
-      {
-        "date": "2000-01-01",
-        "nav": 1.1
-      }
-    ],
-    "holdings": [],
-    "size_billion": 1,
-    "expense_ratio_pct": 0.5,
-    "age_years": 1,
-    "manager_tenure_years": 1
+    "history": [],
+    "holdings": []
   },
   "uzi": {},
   "news": {
-    "CN": [
-      {
-        "title": "[合成陈旧夹具] CN 离线趋势示例",
-        "article_url": "https://news.example/fund/cn/025209/cn",
-        "source": "Task 7 deterministic fixture",
-        "source_url": "https://sources.example/cn",
-        "published_at": "2000-01-01T00:00:00+00:00",
-        "retrieved_at": "2000-01-01T00:00:00+00:00",
-        "region": "CN"
-      }
-    ],
-    "INTL": [
-      {
-        "title": "[合成陈旧夹具] INTL 离线趋势示例",
-        "article_url": "https://news.example/fund/cn/025209/intl",
-        "source": "Task 7 deterministic fixture",
-        "source_url": "https://sources.example/intl",
-        "published_at": "2000-01-01T00:00:00+00:00",
-        "retrieved_at": "2000-01-01T00:00:00+00:00",
-        "region": "INTL"
-      }
-    ]
+    "CN": [],
+    "INTL": []
   },
   "score": {
-    "overall": 80.77,
-    "components": {
-      "risk_adjusted_return": 82,
-      "drawdown_volatility": 80,
-      "trend_recovery": 86,
-      "stability": 72
-    },
-    "confidence": 0.44,
-    "model": "task7-deterministic-synthetic-fixture",
+    "overall": null,
+    "components": {},
+    "confidence": 0,
+    "model": "fund-transparent-six-factor",
     "model_version": "1.0",
     "coverage": {
-      "available": [
+      "available": [],
+      "missing": [
         "risk_adjusted_return",
         "drawdown_volatility",
         "trend_recovery",
-        "stability"
-      ],
-      "missing": [
+        "stability",
         "concentration",
         "holding_uzi"
       ],
-      "weight_pct": 65,
+      "weight_pct": 0,
       "confidence_penalties": [
         "holding_uzi_coverage_below_60pct"
       ],
@@ -88,95 +44,83 @@
   },
   "recommendation": {
     "state": "等待确认",
-    "confidence": 0.44,
+    "confidence": 0,
     "risk": {
       "hard_flags": [],
       "warnings": [
-        "synthetic_stale_fixture"
+        "awaiting_first_verified_refresh"
       ],
       "stale": true,
       "hard_failures": []
     },
     "reasons": [
-      "FIXTURE ONLY: fixed synthetic/stale evidence for offline QA; not market truth"
+      "No verified market evidence is stored in this bootstrap record"
     ],
     "invalidation_rules": [
-      "Replace this fixture after a verified provider refresh",
-      "Never use this synthetic record as investment advice"
+      "Replace the bootstrap record only after a verified provider refresh",
+      "Do not use an unrefreshed bootstrap record as investment advice"
     ],
     "timestamp": "2000-01-01T00:00:00+00:00"
   },
   "source_status": {
     "market": {
-      "provider": "task7-deterministic-fund-fixture",
-      "source_urls": [
-        "https://fund.example/fund-cn-025209"
-      ],
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
       "attempted_at": "2000-01-01T00:00:00+00:00",
       "retrieved_at": "",
-      "last_success_at": "2000-01-01T00:00:00+00:00",
+      "last_success_at": "",
       "stale": true,
-      "error": "synthetic_fixture_stale",
+      "error": "awaiting_first_verified_refresh",
       "coverage": {}
     },
     "history": {
-      "provider": "task7-deterministic-fund-fixture",
-      "source_urls": [
-        "https://fund.example/fund-cn-025209/history"
-      ],
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
       "attempted_at": "2000-01-01T00:00:00+00:00",
       "retrieved_at": "",
-      "last_success_at": "2000-01-01T00:00:00+00:00",
+      "last_success_at": "",
       "stale": true,
-      "error": "synthetic_fixture_stale",
+      "error": "awaiting_first_verified_refresh",
       "coverage": {}
     },
     "holdings": {
-      "provider": "task7-deterministic-fund-fixture",
-      "source_urls": [
-        "https://fund.example/fund-cn-025209/holdings"
-      ],
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
       "attempted_at": "2000-01-01T00:00:00+00:00",
       "retrieved_at": "",
-      "last_success_at": "2000-01-01T00:00:00+00:00",
+      "last_success_at": "",
       "stale": true,
-      "error": "synthetic_fixture_stale",
+      "error": "awaiting_first_verified_refresh",
       "coverage": {}
     },
     "quotes": {
-      "provider": "task7-deterministic-fund-fixture",
-      "source_urls": [
-        "https://fund.example/fund-cn-025209/quotes"
-      ],
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
       "attempted_at": "2000-01-01T00:00:00+00:00",
       "retrieved_at": "",
-      "last_success_at": "2000-01-01T00:00:00+00:00",
+      "last_success_at": "",
       "stale": true,
-      "error": "synthetic_fixture_stale",
+      "error": "awaiting_first_verified_refresh",
       "coverage": {}
     },
     "news_CN": {
-      "provider": "task7-deterministic-news-fixture",
-      "source_urls": [
-        "https://sources.example/cn"
-      ],
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
       "attempted_at": "2000-01-01T00:00:00+00:00",
       "retrieved_at": "",
-      "last_success_at": "2000-01-01T00:00:00+00:00",
+      "last_success_at": "",
       "stale": true,
-      "error": "synthetic_fixture_stale",
+      "error": "awaiting_first_verified_refresh",
       "coverage": {}
     },
     "news_INTL": {
-      "provider": "task7-deterministic-news-fixture",
-      "source_urls": [
-        "https://sources.example/intl"
-      ],
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
       "attempted_at": "2000-01-01T00:00:00+00:00",
       "retrieved_at": "",
-      "last_success_at": "2000-01-01T00:00:00+00:00",
+      "last_success_at": "",
       "stale": true,
-      "error": "synthetic_fixture_stale",
+      "error": "awaiting_first_verified_refresh",
       "coverage": {}
     }
   }

@@ -378,3 +378,72 @@ def test_fund_disclosed_holdings_form_uzi_universe_and_empty_union_skips_runner(
     )
     assert skipped["status"] == "skipped_no_targets"
     assert skipped["tickers"] == {}
+
+
+def test_medium_depth_chunks_ten_and_preserves_other_batches_when_one_fails(
+    tmp_path, monkeypatch
+):
+    root = _make_uzi_root(tmp_path)
+    tickers = [f"{600000 + index:06d}.SH" for index in range(21)]
+    watchlist = tmp_path / "many-stocks.json"
+    watchlist.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "assets": [
+                    {
+                        "code": ticker,
+                        "name": ticker,
+                        "asset_type": "stock",
+                        "enabled": True,
+                    }
+                    for ticker in tickers
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    for ticker in tickers[10:20]:
+        _write_valid_cache(root, ticker, overall=61)
+
+    calls = []
+
+    def runner(uzi_root, portfolio_csv, depth):
+        with Path(portfolio_csv).open(encoding="utf-8-sig", newline="") as handle:
+            batch = [row["ticker"] for row in csv.DictReader(handle)]
+        calls.append(batch)
+        if len(calls) == 2:
+            raise RuntimeError("isolated second batch failure")
+        for ticker in batch:
+            _write_valid_cache(Path(uzi_root), ticker, overall=80)
+        return {"status": "completed"}
+
+    monkeypatch.setattr(run_uzi_guarded, "_run_uzi_portfolio", runner)
+
+    manifest = run_uzi_guarded.run_watchlist(
+        root,
+        watchlist,
+        "medium",
+        details_dir=tmp_path / "details",
+        run_id="chunked-run",
+    )
+
+    assert [len(batch) for batch in calls] == [10, 10, 1]
+    assert [batch[0] for batch in calls] == [tickers[0], tickers[10], tickers[20]]
+    assert manifest["status"] == "partial"
+    assert [batch["status"] for batch in manifest["batches"]] == [
+        "completed",
+        "failed",
+        "completed",
+    ]
+    assert all(
+        manifest["tickers"][ticker]["status"] == "refreshed_this_run"
+        for ticker in [*tickers[:10], tickers[20]]
+    )
+    assert all(
+        manifest["tickers"][ticker]["status"] == "restored_fallback"
+        for ticker in tickers[10:20]
+    )
+    cache_root = root / "skills" / "deep-analysis" / "scripts" / ".cache"
+    for ticker in tickers:
+        assert run_uzi_guarded._valid_cache(cache_root / ticker, ticker)

@@ -79,7 +79,7 @@ def test_issue_requires_machine_block():
 
 - [ ] **Step 2: Run tests and confirm the missing-module failure**
 
-Run: `python -m pytest tests/python/test_import_watchlist.py -q`  
+Run: `python -m pytest tests/python/test_import_watchlist.py -q`
 Expected: FAIL because `scripts.import_watchlist` does not exist.
 
 - [ ] **Step 3: Implement strict normalization and Issue extraction**
@@ -113,7 +113,7 @@ Add `pytest>=8,<9` to `requirements.txt`; retain requests and BeautifulSoup4.
 
 - [ ] **Step 5: Run focused and full tests**
 
-Run: `python -m pytest tests/python/test_import_watchlist.py -q`  
+Run: `python -m pytest tests/python/test_import_watchlist.py -q`
 Expected: all tests pass.
 
 - [ ] **Step 6: Commit**
@@ -157,7 +157,7 @@ def test_provider_keeps_errors_separate_from_data(fake_http_with_quote_failure):
 
 - [ ] **Step 2: Run tests and verify failure**
 
-Run: `python -m pytest tests/python/test_eastmoney_provider.py -q`  
+Run: `python -m pytest tests/python/test_eastmoney_provider.py -q`
 Expected: FAIL because provider classes do not exist.
 
 - [ ] **Step 3: Implement provider result and parsers**
@@ -182,7 +182,7 @@ All provider HTTP calls use `(5, 25)` connect/read timeout, a descriptive user-a
 
 - [ ] **Step 5: Run provider tests**
 
-Run: `python -m pytest tests/python/test_eastmoney_provider.py -q`  
+Run: `python -m pytest tests/python/test_eastmoney_provider.py -q`
 Expected: all tests pass, including the regression that prevents `name == "行情"`.
 
 - [ ] **Step 6: Commit**
@@ -229,7 +229,7 @@ def test_fund_holding_uzi_uses_covered_weight_only():
 
 - [ ] **Step 2: Run and confirm failure**
 
-Run: `python -m pytest tests/python/test_uzi_adapter.py tests/python/test_scoring.py -q`  
+Run: `python -m pytest tests/python/test_uzi_adapter.py tests/python/test_scoring.py -q`
 Expected: FAIL because adapter and scorer do not exist.
 
 - [ ] **Step 3: Implement guarded UZI invocation**
@@ -275,7 +275,7 @@ Missing optional components are excluded and their weights renormalized; they ar
 
 - [ ] **Step 5: Run score tests**
 
-Run: `python -m pytest tests/python/test_uzi_adapter.py tests/python/test_scoring.py -q`  
+Run: `python -m pytest tests/python/test_uzi_adapter.py tests/python/test_scoring.py -q`
 Expected: all tests pass, including low confidence when holdings UZI coverage is below 60%.
 
 - [ ] **Step 6: Commit**
@@ -325,7 +325,7 @@ def test_failed_refresh_preserves_last_good_record():
 
 - [ ] **Step 2: Run and confirm failures**
 
-Run: `python -m pytest tests/python/test_news_pipeline.py tests/python/test_recommendation.py tests/python/test_update_monitor.py -q`  
+Run: `python -m pytest tests/python/test_news_pipeline.py tests/python/test_recommendation.py tests/python/test_update_monitor.py -q`
 Expected: FAIL because modules do not exist.
 
 - [ ] **Step 3: Implement source-preserving RSS parsing and dedupe**
@@ -350,7 +350,7 @@ The pipeline writes atomically through sibling `.tmp` files, validates the outpu
 
 - [ ] **Step 6: Run the full Python suite**
 
-Run: `python -m pytest tests/python -q`  
+Run: `python -m pytest tests/python -q`
 Expected: all tests pass with no network access.
 
 - [ ] **Step 7: Commit**
@@ -396,7 +396,7 @@ test('escapeHtml neutralizes imported markup', () => {
 
 - [ ] **Step 2: Run and verify failure**
 
-Run: `npm test`  
+Run: `npm test`
 Expected: FAIL because `assets/core.js` does not exist.
 
 - [ ] **Step 3: Implement pure import and filtering functions**
@@ -428,7 +428,7 @@ Use cache name `fund-monitor-v2`, include `assets/core.js`, and apply network-fi
 
 - [ ] **Step 7: Run JS and syntax tests**
 
-Run: `npm test && node --check assets/app.js && node --check sw.js`  
+Run: `npm test && node --check assets/app.js && node --check sw.js`
 Expected: all Node tests pass and both syntax checks exit 0.
 
 - [ ] **Step 8: Commit**
@@ -468,7 +468,7 @@ def test_uzi_is_pinned_and_job_timeout_is_bounded():
 
 - [ ] **Step 2: Run and verify failure**
 
-Run: `python -m pytest tests/python/test_workflow_contract.py -q`  
+Run: `python -m pytest tests/python/test_workflow_contract.py -q`
 Expected: FAIL against the original single-fund workflow.
 
 - [ ] **Step 3: Implement trigger and security gate**
@@ -514,7 +514,7 @@ On authorized import success, comment accepted/rejected counts and the Actions r
 
 - [ ] **Step 8: Run workflow contract and full local tests**
 
-Run: `python -m pytest tests/python -q && npm test`  
+Run: `python -m pytest tests/python -q && npm test`
 Expected: all tests pass.
 
 - [ ] **Step 9: Commit**
@@ -552,7 +552,7 @@ def test_validator_rejects_unsourced_news(tmp_path):
 
 - [ ] **Step 2: Run and verify failure**
 
-Run: `python -m pytest tests/python/test_output_validation.py -q`  
+Run: `python -m pytest tests/python/test_output_validation.py -q`
 Expected: FAIL because validator does not exist.
 
 - [ ] **Step 3: Implement structural validation**
@@ -565,7 +565,7 @@ Use two stocks, one fund, and one ETF fixture without network. Keep production `
 
 - [ ] **Step 5: Run full automated verification**
 
-Run: `python -m pytest tests/python -q && npm test && python scripts/validate_outputs.py data && node --check assets/app.js && node --check sw.js`  
+Run: `python -m pytest tests/python -q && npm test && python scripts/validate_outputs.py data && node --check assets/app.js && node --check sw.js`
 Expected: all commands exit 0 and validator prints `OUTPUTS_OK`.
 
 - [ ] **Step 6: Serve and inspect desktop/mobile**
@@ -592,12 +592,12 @@ git commit -m "test: verify multi-asset monitor end to end"
 
 - [ ] **Step 1: Run a clean final verification**
 
-Run: `python -m pytest tests/python -q && npm test && python scripts/validate_outputs.py data && git diff --check`  
+Run: `python -m pytest tests/python -q && npm test && python scripts/validate_outputs.py data && git diff --check`
 Expected: zero failures and clean diff check.
 
 - [ ] **Step 2: Review scope and secrets**
 
-Run: `git status --short && git diff main...HEAD --stat && rg -n -i "(api[_-]?key|secret|token|password|BEGIN .*PRIVATE KEY)" --glob '!docs/**' --glob '!tests/fixtures/**' .`  
+Run: `git status --short && git diff main...HEAD --stat && rg -n -i "(api[_-]?key|secret|token|password|BEGIN .*PRIVATE KEY)" --glob '!docs/**' --glob '!tests/fixtures/**' .`
 Expected: only intended files; no credential values.
 
 - [ ] **Step 3: Merge the approved feature branch into local main**
@@ -610,12 +610,12 @@ git merge --no-ff feat/multi-asset-monitor -m "feat: launch multi-asset UZI moni
 
 - [ ] **Step 4: Re-run tests on merged main and push**
 
-Run the full verification from Step 1 again, then `git push origin main`.  
+Run the full verification from Step 1 again, then `git push origin main`.
 Expected: push succeeds without force.
 
 - [ ] **Step 5: Watch Actions to completion**
 
-Use `gh run list` to identify the run triggered by the merge commit and `gh run watch <id> --exit-status`.  
+Use `gh run list` to identify the run triggered by the merge commit and `gh run watch <id> --exit-status`.
 Expected: test/refresh/build/deploy jobs conclude `success`; if an external data provider fails, the run may still succeed only when last-good data is preserved and the failure is visible in `source_status`.
 
 - [ ] **Step 6: Verify deployed resources and behavior**
@@ -625,4 +625,3 @@ Check the Pages root, `assets/core.js`, `assets/app.js`, `data/dashboard.json`, 
 - [ ] **Step 7: Update long-term records**
 
 Update `C:\Users\智汇云\Documents\日常工作\基金监控网站\00-06` with scope, architecture, UZI/fund boundary, commits, Actions run, live URL, tests, known provider risks, and SOP. Add a global log only for a newly verified cross-project lesson.
-

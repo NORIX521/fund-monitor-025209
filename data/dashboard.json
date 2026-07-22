@@ -3,15 +3,13 @@
   "pipeline_version": "task7-fixture-1.0",
   "source_status": {
     "pipeline": {
-      "provider": "task7-deterministic-fixture-generator",
-      "source_urls": [
-        "https://fixture.example/task7"
-      ],
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
       "attempted_at": "2000-01-01T00:00:00+00:00",
       "retrieved_at": "",
-      "last_success_at": "2000-01-01T00:00:00+00:00",
+      "last_success_at": "",
       "stale": true,
-      "error": "synthetic_fixture_stale",
+      "error": "awaiting_first_verified_refresh",
       "coverage": {}
     }
   },
@@ -24,7 +22,7 @@
       "name": "永赢先锋半导体智选混合发起C",
       "asset_type": "fund",
       "state": "等待确认",
-      "confidence": 0.44,
+      "confidence": 0,
       "stale": true
     }
   ]

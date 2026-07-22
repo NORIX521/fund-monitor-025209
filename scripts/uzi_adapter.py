@@ -109,6 +109,10 @@ def normalize_panel(payload: Mapping[str, Any], ticker: str) -> dict[str, Any]:
     if consensus is not None:
         normalized["panel_consensus"] = consensus
 
+    fundamental = _score_number(synthesis.get("fundamental_score"))
+    if fundamental is not None:
+        normalized["fundamental_score"] = fundamental
+
     school_source = panel.get("school_scores") or synthesis.get("school_scores")
     schools: dict[str, float] = {}
     if isinstance(school_source, Mapping):

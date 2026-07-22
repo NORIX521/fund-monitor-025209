@@ -64,6 +64,7 @@ def test_authorized_import_failure_feedback_is_generic_and_leaves_issue_open():
     assert "needs: refresh-and-stage" in failure
     assert "always()" in failure
     assert "needs.refresh-and-stage.result == 'failure'" in failure
+    assert "needs.refresh-and-stage.result == 'cancelled'" in failure
     assert "permissions:\n      issues: write" in failure
     assert "github.rest.issues.createComment" in failure
     assert "github.run_id" in failure
