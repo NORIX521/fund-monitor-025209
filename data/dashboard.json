@@ -1,30 +1,227 @@
 {
-  "generated_at": "2026-07-22 12:00:00 +08:00",
-  "status": {"data_mode": "cached", "message": "仓库工作流首次运行后将自动切换为实时抓取数据。"},
+  "generated_at": "2026-07-22 14:46:07 +0800",
+  "status": {
+    "data_mode": "live",
+    "message": "All data sources updated."
+  },
   "fund": {
     "code": "025209",
     "name": "永赢先锋半导体智选混合发起C",
-    "peak_nav": 3.0864,
+    "peak_nav": 3.3176,
     "history": [
-      {"date":"2026-06-23","nav":2.4080,"change_pct":1.20},{"date":"2026-06-24","nav":2.4620,"change_pct":2.24},{"date":"2026-06-25","nav":2.5010,"change_pct":1.58},{"date":"2026-06-26","nav":2.5480,"change_pct":1.88},{"date":"2026-06-29","nav":2.6120,"change_pct":2.51},{"date":"2026-06-30","nav":2.6750,"change_pct":2.41},{"date":"2026-07-01","nav":2.7310,"change_pct":2.09},{"date":"2026-07-02","nav":2.7890,"change_pct":2.12},{"date":"2026-07-03","nav":2.8420,"change_pct":1.90},{"date":"2026-07-06","nav":2.9060,"change_pct":2.25},{"date":"2026-07-07","nav":2.9780,"change_pct":2.48},{"date":"2026-07-08","nav":3.0210,"change_pct":1.44},{"date":"2026-07-09","nav":3.0864,"change_pct":2.16},{"date":"2026-07-10","nav":2.9620,"change_pct":-4.03},{"date":"2026-07-13","nav":2.7834,"change_pct":-6.03},{"date":"2026-07-14","nav":2.7200,"change_pct":-2.28},{"date":"2026-07-15","nav":2.6610,"change_pct":-2.17},{"date":"2026-07-16","nav":2.6081,"change_pct":-1.99},{"date":"2026-07-17","nav":2.3770,"change_pct":-8.86},{"date":"2026-07-20","nav":2.2573,"change_pct":-5.04},{"date":"2026-07-21","nav":2.4767,"change_pct":9.72}
+      {
+        "date": "2026-06-24",
+        "nav": 3.0097,
+        "change_pct": 4.08
+      },
+      {
+        "date": "2026-06-25",
+        "nav": 3.1948,
+        "change_pct": 6.15
+      },
+      {
+        "date": "2026-06-26",
+        "nav": 3.1968,
+        "change_pct": 0.06
+      },
+      {
+        "date": "2026-06-29",
+        "nav": 3.2764,
+        "change_pct": 2.49
+      },
+      {
+        "date": "2026-06-30",
+        "nav": 3.3176,
+        "change_pct": 1.26
+      },
+      {
+        "date": "2026-07-01",
+        "nav": 3.2822,
+        "change_pct": -1.07
+      },
+      {
+        "date": "2026-07-02",
+        "nav": 3.0786,
+        "change_pct": -6.2
+      },
+      {
+        "date": "2026-07-03",
+        "nav": 3.1324,
+        "change_pct": 1.75
+      },
+      {
+        "date": "2026-07-06",
+        "nav": 3.1475,
+        "change_pct": 0.48
+      },
+      {
+        "date": "2026-07-07",
+        "nav": 3.0265,
+        "change_pct": -3.84
+      },
+      {
+        "date": "2026-07-08",
+        "nav": 2.9623,
+        "change_pct": -2.12
+      },
+      {
+        "date": "2026-07-09",
+        "nav": 3.0864,
+        "change_pct": 4.19
+      },
+      {
+        "date": "2026-07-10",
+        "nav": 2.9679,
+        "change_pct": -3.84
+      },
+      {
+        "date": "2026-07-13",
+        "nav": 2.7834,
+        "change_pct": -6.22
+      },
+      {
+        "date": "2026-07-14",
+        "nav": 2.8621,
+        "change_pct": 2.83
+      },
+      {
+        "date": "2026-07-15",
+        "nav": 2.7322,
+        "change_pct": -4.54
+      },
+      {
+        "date": "2026-07-16",
+        "nav": 2.6081,
+        "change_pct": -4.54
+      },
+      {
+        "date": "2026-07-17",
+        "nav": 2.377,
+        "change_pct": -8.86
+      },
+      {
+        "date": "2026-07-20",
+        "nav": 2.2573,
+        "change_pct": -5.04
+      },
+      {
+        "date": "2026-07-21",
+        "nav": 2.4767,
+        "change_pct": 9.72
+      }
     ]
   },
   "holding_report_date": "2026 Q2",
   "holdings": [
-    {"code":"603986","name":"兆易创新","weight_pct":null,"change_pct":null},{"code":"300223","name":"北京君正","weight_pct":null,"change_pct":null},{"code":"001309","name":"德明利","weight_pct":null,"change_pct":null},{"code":"301308","name":"江波龙","weight_pct":null,"change_pct":null},{"code":"688766","name":"普冉股份","weight_pct":null,"change_pct":null},{"code":"300475","name":"香农芯创","weight_pct":null,"change_pct":null},{"code":"688525","name":"佰维存储","weight_pct":null,"change_pct":null},{"code":"300661","name":"圣邦股份","weight_pct":null,"change_pct":null},{"code":"688536","name":"思瑞浦","weight_pct":null,"change_pct":null},{"code":"605111","name":"新洁能","weight_pct":null,"change_pct":null}
+    {
+      "code": "603986",
+      "name": "行情",
+      "weight_pct": 7.92,
+      "change_pct": -1.65,
+      "latest_price": 467.66
+    },
+    {
+      "code": "300223",
+      "name": "行情",
+      "weight_pct": 7.56,
+      "change_pct": -5.96,
+      "latest_price": 157.99
+    },
+    {
+      "code": "001309",
+      "name": "行情",
+      "weight_pct": 7.16,
+      "change_pct": -10.0,
+      "latest_price": 457.2
+    },
+    {
+      "code": "301308",
+      "name": "行情",
+      "weight_pct": 7.06,
+      "change_pct": -7.68,
+      "latest_price": 389.46
+    },
+    {
+      "code": "688766",
+      "name": "行情",
+      "weight_pct": 6.99,
+      "change_pct": -7.17,
+      "latest_price": 436.31
+    },
+    {
+      "code": "300475",
+      "name": "行情",
+      "weight_pct": 6.84,
+      "change_pct": -5.35,
+      "latest_price": 167.52
+    },
+    {
+      "code": "688525",
+      "name": "行情",
+      "weight_pct": 6.76,
+      "change_pct": -7.74,
+      "latest_price": 250.01
+    },
+    {
+      "code": "300661",
+      "name": "行情",
+      "weight_pct": 3.49,
+      "change_pct": -3.71,
+      "latest_price": 105.97
+    },
+    {
+      "code": "688536",
+      "name": "行情",
+      "weight_pct": 3.32,
+      "change_pct": 0.38,
+      "latest_price": 259.96
+    },
+    {
+      "code": "605111",
+      "name": "行情",
+      "weight_pct": 2.95,
+      "change_pct": 4.25,
+      "latest_price": 56.14
+    }
   ],
   "storage": {
-    "period": "2026 Q3",
-    "dram_qoq_range": [13,18],
-    "nand_qoq_range": [10,15],
-    "dram_trend": "价格仍涨，涨幅显著收敛",
-    "nand_trend": "价格仍涨，涨幅显著收敛",
-    "signal": "高景气但斜率放缓",
-    "summary": "存储价格仍处上行周期，但相较第二季度的极端涨幅，第三季度涨价斜率明显收敛。对基金而言，基本面仍有支撑，估值扩张的容错率却在下降。",
-    "source_title": "TrendForce：2026年第三季度存储器价格涨幅收敛",
-    "source_url": "https://www.trendforce.cn/presscenter/news/20260703-13133.html"
+    "period": "2026-07",
+    "dram_qoq_range": [
+      13,
+      18
+    ],
+    "nand_qoq_range": [
+      120,
+      170
+    ],
+    "dram_trend": "涨价斜率大致持平",
+    "nand_trend": "涨价斜率再次增强",
+    "signal": "涨价动能增强",
+    "summary": "最新行业信息显示：涨价斜率大致持平；涨价斜率再次增强。存储价格方向仍需与终端需求、库存和新增供给共同验证。",
+    "source_title": "TrendForce集邦咨询: 供给增速将领先需求成长，2H27 NAND Flash紧缺压力有望缓解",
+    "source_url": "https://www.trendforce.cn/presscenter/news/20260721-13149.html"
   },
   "alerts": [
-    {"level":"info","title":"首次部署等待实时数据","message":"当前页面使用缓存数据；GitHub Actions首次成功执行后，会自动抓取最新净值、重仓股行情与行业信号。","date":"2026-07-22"}
+    {
+      "id": "dd25-2026-07-21",
+      "level": "warning",
+      "title": "回撤扩大至25%",
+      "message": "相对 3.3176 高点回撤 -25.35%。",
+      "date": "2026-07-21"
+    },
+    {
+      "id": "breadth-down-2026-07-21",
+      "level": "danger",
+      "title": "重仓股集体走弱",
+      "message": "前十大重仓股 8 只下跌，平均跌幅 -4.46%。",
+      "date": "2026-07-21"
+    },
+    {
+      "id": "storage---2026-07-21",
+      "level": "info",
+      "title": "存储信号：涨价动能增强",
+      "message": "最新行业信息显示：涨价斜率大致持平；涨价斜率再次增强。存储价格方向仍需与终端需求、库存和新增供给共同验证。",
+      "date": "2026-07-21"
+    }
   ]
 }
