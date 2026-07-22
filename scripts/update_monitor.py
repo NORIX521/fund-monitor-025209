@@ -2,18 +2,26 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import math
 import os
 import re
+import sys
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from scripts.recommendation import recommend
-from scripts.scoring import score_fund, score_stock
+if __package__:
+    from .recommendation import recommend
+    from .scoring import score_fund, score_stock
+    from .uzi_adapter import normalize_uzi_cache
+else:
+    from recommendation import recommend
+    from scoring import score_fund, score_stock
+    from uzi_adapter import normalize_uzi_cache
 
 
 PIPELINE_VERSION = "4.1"
@@ -301,3 +309,158 @@ def run_pipeline(watchlist: dict[str, Any], previous: dict[str, Any], options: d
             _atomic_json(output_dir / "assets" / f"{asset_id}.json", detail)
         _atomic_json(output_dir / "dashboard.json", dashboard)
     return {"dashboard": dashboard, "assets": records}
+
+
+def _load_object(path: Path) -> dict[str, Any]:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"JSON object required: {path}")
+    return value
+
+
+def _load_previous(data_dir: Path, watchlist: dict[str, Any]) -> dict[str, Any]:
+    previous: dict[str, dict[str, Any]] = {}
+    for asset in watchlist.get("assets", []):
+        if not isinstance(asset, dict):
+            continue
+        asset_id = str(asset.get("id") or "")
+        if not SAFE_ASSET_ID.fullmatch(asset_id):
+            raise ValueError("watchlist asset requires a safe id")
+        detail_path = data_dir / "assets" / f"{asset_id}.json"
+        if detail_path.is_file():
+            previous[asset_id] = _load_object(detail_path)
+    return {"assets": previous}
+
+
+def _load_public_uzi(path: Path) -> dict[str, dict[str, Any]]:
+    results: dict[str, dict[str, Any]] = {}
+    if not path.is_dir():
+        return results
+    for source in sorted(path.glob("*.json")):
+        value = _load_object(source)
+        ticker = str(value.get("ticker") or source.stem).strip().upper()
+        if ticker:
+            results[ticker] = value
+    return results
+
+
+def _select_current_uzi(
+    watchlist: dict[str, Any],
+    restored: dict[str, dict[str, Any]],
+    run_result: dict[str, Any] | None,
+) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    """Select only scores proven by the current UZI run, never restored cache alone."""
+    if not isinstance(run_result, dict) or run_result.get("status") != "completed":
+        return {}, {}
+    stocks = [
+        asset
+        for asset in watchlist.get("assets", [])
+        if isinstance(asset, dict)
+        and asset.get("asset_type") == "stock"
+        and asset.get("enabled", True) is True
+    ]
+    expected_codes = {str(asset.get("code") or "").strip().upper() for asset in stocks}
+    failed_codes = {
+        str(item.get("ticker") or "").strip().upper()
+        for item in run_result.get("failed", [])
+        if isinstance(item, dict)
+    }
+    successful_codes = expected_codes - failed_codes
+    loaded = run_result.get("loaded")
+    if not isinstance(loaded, int) or loaded != len(successful_codes):
+        return {}, {}
+    current = {
+        code: restored[code]
+        for code in successful_codes
+        if code in restored
+    }
+    direct = {
+        str(asset["id"]): current[str(asset.get("code") or "").strip().upper()]
+        for asset in stocks
+        if str(asset.get("code") or "").strip().upper() in current
+    }
+    return direct, current
+
+
+def run_from_paths(
+    watchlist_path: str | Path,
+    data_dir: str | Path,
+    uzi_cache: str | Path,
+    uzi_result: str | Path | None = None,
+) -> dict[str, Any]:
+    """Load local state, refresh sourced evidence, and atomically publish data files."""
+    if __package__:
+        from .providers.eastmoney import EastmoneyProvider
+        from .providers.news import fetch_news
+    else:
+        from providers.eastmoney import EastmoneyProvider
+        from providers.news import fetch_news
+
+    watchlist_file = Path(watchlist_path)
+    output_dir = Path(data_dir)
+    watchlist = _load_object(watchlist_file)
+    if watchlist.get("version") != 1 or not isinstance(watchlist.get("assets"), list):
+        raise ValueError("watchlist must be a version 1 object with an assets array")
+    previous = _load_previous(output_dir, watchlist)
+    public_uzi_dir = output_dir / "uzi"
+    public_uzi_dir.mkdir(parents=True, exist_ok=True)
+    cache_path = Path(uzi_cache)
+    normalized = (
+        normalize_uzi_cache(cache_path, public_uzi_dir)
+        if cache_path.is_dir()
+        else _load_public_uzi(public_uzi_dir)
+    )
+    result_path = Path(uzi_result) if uzi_result else None
+    current_result = _load_object(result_path) if result_path and result_path.is_file() else None
+    direct_uzi, holding_uzi = _select_current_uzi(
+        watchlist, normalized, current_result
+    )
+    result = run_pipeline(
+        watchlist,
+        previous,
+        {
+            "fund_provider": EastmoneyProvider(),
+            "news_provider": fetch_news,
+            "market_data": {},
+            "uzi": direct_uzi,
+            "holding_uzi": holding_uzi,
+            "output_dir": output_dir,
+            "write": True,
+        },
+    )
+    return result
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--watchlist", type=Path, default=Path("data/watchlist.json"))
+    parser.add_argument("--data-dir", type=Path, default=Path("data"))
+    parser.add_argument("--uzi-cache", type=Path, required=True)
+    parser.add_argument("--uzi-result", type=Path)
+    args = parser.parse_args(argv)
+    try:
+        result = run_from_paths(
+            args.watchlist,
+            args.data_dir,
+            args.uzi_cache,
+            args.uzi_result,
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        print(str(error), file=sys.stderr)
+        return 2
+    print(
+        json.dumps(
+            {
+                "status": "success",
+                "asset_count": result["dashboard"]["asset_count"],
+                "stale_count": result["dashboard"]["stale_count"],
+            },
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

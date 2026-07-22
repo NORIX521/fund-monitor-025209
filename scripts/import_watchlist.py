@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import io
 import json
+import os
 import re
+import sys
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
-from scripts.domain import normalize_asset
+if __package__:
+    from .domain import normalize_asset
+else:
+    from domain import normalize_asset
 
 
 MAX_IMPORT = 50
@@ -122,3 +129,72 @@ def merge_watchlist(current: Mapping[str, Any], incoming: Sequence[Mapping[str, 
     if "updated_at" in current:
         result["updated_at"] = current["updated_at"]
     return result
+
+
+def _atomic_json(path: Path, payload: Mapping[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    os.replace(temporary, path)
+
+
+def import_issue_file(
+    issue_body_file: str | Path,
+    watchlist_file: str | Path,
+    summary_file: str | Path,
+) -> dict[str, Any]:
+    """Parse one Issue body and atomically merge it into the canonical watchlist."""
+    body_path = Path(issue_body_file)
+    watchlist_path = Path(watchlist_file)
+    summary_path = Path(summary_file)
+    body = body_path.read_text(encoding="utf-8")
+    current = json.loads(watchlist_path.read_text(encoding="utf-8"))
+    if not isinstance(current, Mapping):
+        raise ValueError("watchlist must be an object")
+    incoming = parse_issue_body(body)
+    existing = current.get("assets", [])
+    if not isinstance(existing, list):
+        raise ValueError("watchlist assets must be an array")
+    existing_ids = {
+        normalize_asset(asset)["id"]
+        for asset in existing
+        if isinstance(asset, Mapping)
+    }
+    incoming_ids = {asset["id"] for asset in incoming}
+    merged = merge_watchlist(current, incoming)
+    summary = {
+        "status": "success",
+        "imported_count": len(incoming_ids),
+        "added_count": len(incoming_ids - existing_ids),
+        "updated_count": len(incoming_ids & existing_ids),
+        "total_count": len(merged["assets"]),
+    }
+    _atomic_json(watchlist_path, merged)
+    _atomic_json(summary_path, summary)
+    return summary
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--issue-body-file", type=Path, required=True)
+    parser.add_argument("--watchlist", type=Path, default=Path("data/watchlist.json"))
+    parser.add_argument("--summary-file", type=Path, required=True)
+    args = parser.parse_args(argv)
+    try:
+        summary = import_issue_file(
+            args.issue_body_file,
+            args.watchlist,
+            args.summary_file,
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        print(str(error), file=sys.stderr)
+        return 2
+    print(json.dumps(summary, ensure_ascii=False, separators=(",", ":")))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

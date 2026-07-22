@@ -1,69 +1,233 @@
-name: Update fund data and deploy Pages
+name: Secure UZI monitor refresh and Pages deploy
 
 on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      depth:
+        description: UZI automated research depth
+        required: true
+        default: lite
+        type: choice
+        options:
+          - lite
+          - medium
+  schedule:
+    - cron: "30 13 * * 1-5"
+    - cron: "15 2 * * 6"
   push:
     branches: [main]
-  workflow_dispatch:
-  schedule:
-    # 21:30 China Standard Time, Monday-Friday. GitHub cron uses UTC.
-    - cron: "30 13 * * 1-5"
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-  issues: write
+permissions: {}
 
 concurrency:
-  group: pages
+  group: secure-uzi-pages
   cancel-in-progress: false
 
+env:
+  UZI_SHA: fce996c33e70eddce8e375f53cd252b549eb3d7c
+
 jobs:
-  build:
+  unauthorized-import-feedback:
+    if: >-
+      github.event_name == 'issues' &&
+      startsWith(github.event.issue.title, '[watchlist-import]') &&
+      !contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Explain collaborator-only import
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'This import was not processed. For least-privilege security, only repository owners, members, and collaborators can import a watchlist.'
+            });
+
+  refresh-and-stage:
+    if: >-
+      github.event_name != 'issues' ||
+      (startsWith(github.event.issue.title, '[watchlist-import]') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association))
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    permissions:
+      contents: write
+      issues: write
+      pages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
-      - name: Update dashboard data
-        run: python scripts/update_data.py
-
-      - name: Commit refreshed data
+      - name: Fetch pinned UZI
+        shell: bash
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/dashboard.json data/new_alerts.json
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: refresh fund monitoring data"
-            git push
-          fi
+          set -euo pipefail
+          UZI_ROOT="$RUNNER_TEMP/UZI-Skill"
+          git init "$UZI_ROOT"
+          git -C "$UZI_ROOT" remote add origin https://github.com/wbh604/UZI-Skill.git
+          git -C "$UZI_ROOT" fetch --depth 1 origin "$UZI_SHA"
+          git -C "$UZI_ROOT" checkout --detach FETCH_HEAD
+          test "$(git -C "$UZI_ROOT" rev-parse HEAD)" = "$UZI_SHA"
+          echo "UZI_ROOT=$UZI_ROOT" >> "$GITHUB_ENV"
 
-      - name: Create GitHub issues for new triggers
+      - name: Install pinned project and UZI dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -r requirements-actions.txt
+
+      - name: Restore UZI cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/UZI-Skill/skills/deep-analysis/scripts/.cache
+          key: uzi-${{ runner.os }}-${{ env.UZI_SHA }}-${{ hashFiles('data/watchlist.json') }}
+          restore-keys: |
+            uzi-${{ runner.os }}-${{ env.UZI_SHA }}-
+
+      - name: Save authorized Issue body to a private runner file
+        if: github.event_name == 'issues'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const path = 'data/new_alerts.json';
-            if (!fs.existsSync(path)) return;
-            const alerts = JSON.parse(fs.readFileSync(path, 'utf8'));
-            for (const alert of alerts) {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: `[025209] ${alert.title}`,
-                body: `${alert.message}\n\n触发日期：${alert.date}\n\n> 自动监控信息，仅供研究，不构成投资建议。`,
-                labels: []
-              });
-            }
+            const path = require('path');
+            const bodyPath = path.join(process.env.RUNNER_TEMP, 'watchlist-import-body.txt');
+            fs.writeFileSync(bodyPath, context.payload.issue.body || '', { encoding: 'utf8', mode: 0o600 });
+            core.exportVariable('WATCHLIST_IMPORT_BODY_FILE', bodyPath);
+
+      - name: Import authorized watchlist Issue
+        if: github.event_name == 'issues'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/import_watchlist.py \
+            --issue-body-file "$WATCHLIST_IMPORT_BODY_FILE" \
+            --watchlist data/watchlist.json \
+            --summary-file "$RUNNER_TEMP/watchlist-import-summary.json"
+
+      - name: Comment on and close successful import
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v7
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const summary = JSON.parse(fs.readFileSync(path.join(process.env.RUNNER_TEMP, 'watchlist-import-summary.json'), 'utf8'));
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Imported ${summary.imported_count} entries (${summary.added_count} added, ${summary.updated_count} updated; ${summary.total_count} total). Run: ${process.env.RUN_URL}`
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed'
+            });
+
+      - name: Select bounded automated depth
+        id: depth
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REQUESTED_DEPTH: ${{ inputs.depth }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          set -euo pipefail
+          DEPTH=lite
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$REQUESTED_DEPTH" == "medium" ]]; then
+            DEPTH=medium
+          elif [[ "$EVENT_NAME" == "schedule" && "$EVENT_SCHEDULE" == "15 2 * * 6" ]]; then
+            DEPTH=medium
+          fi
+          echo "depth=$DEPTH" >> "$GITHUB_OUTPUT"
+
+      - name: Count enabled stocks
+        id: stocks
+        shell: bash
+        run: |
+          set -euo pipefail
+          COUNT="$(python -c 'import json; data=json.load(open("data/watchlist.json", encoding="utf-8")); print(sum(1 for asset in data["assets"] if asset.get("asset_type") == "stock" and asset.get("enabled", True) is True))')"
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Run guarded UZI stock refresh
+        if: steps.stocks.outputs.count != '0'
+        id: uzi
+        continue-on-error: true
+        timeout-minutes: 300
+        shell: bash
+        env:
+          DEPTH: ${{ steps.depth.outputs.depth }}
+        run: |
+          set -euo pipefail
+          python scripts/run_uzi_guarded.py data/watchlist.json \
+            --uzi-root "$UZI_ROOT" \
+            --depth "$DEPTH" \
+            --result-file "$RUNNER_TEMP/uzi-run-result.json"
+
+      - name: Build schema-validated monitor data
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/update_monitor.py \
+            --watchlist data/watchlist.json \
+            --data-dir data \
+            --uzi-cache "$UZI_ROOT/skills/deep-analysis/scripts/.cache" \
+            --uzi-result "$RUNNER_TEMP/uzi-run-result.json"
+
+      - name: Test Python before committing
+        run: python -m pytest tests/python -q
+
+      - name: Test Node before committing
+        run: npm test
+
+      - name: Commit generated data only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/watchlist.json data/dashboard.json data/assets data/uzi data/new_alerts.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh multi-asset research data"
+            git push
+          fi
+
+      - name: Build allowlisted Pages staging directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf _site
+          mkdir -p _site
+          cp index.html manifest.webmanifest sw.js robots.txt _site/
+          cp -R assets data _site/
+          test ! -e _site/.git
+          test ! -e _site/.github
+          test ! -e _site/.uzi
+          test ! -e _site/tests
+          test ! -e _site/scripts
+          test ! -e _site/.venv
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -71,14 +235,17 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: .
+          path: _site
 
   deploy:
+    needs: refresh-and-stage
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

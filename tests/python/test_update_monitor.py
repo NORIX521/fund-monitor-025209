@@ -287,3 +287,30 @@ def test_partial_quote_merge_uses_covered_values_and_retains_uncovered_values():
     holdings = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": Provider(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]["market"]["holdings"]
     assert (holdings[0]["latest_price"], holdings[0]["change_pct"]) == (110, 3)
     assert (holdings[1]["latest_price"], holdings[1]["change_pct"]) == (80, 2)
+
+
+def test_current_uzi_selection_excludes_failed_and_unattempted_restored_cache():
+    from scripts.update_monitor import _select_current_uzi
+
+    first = {"id": "stock-cn-600519-sh", "code": "600519.SH", "asset_type": "stock", "enabled": True}
+    second = {"id": "stock-cn-000001-sz", "code": "000001.SZ", "asset_type": "stock", "enabled": True}
+    restored = {
+        "600519.SH": {"ticker": "600519.SH", "overall": 80},
+        "000001.SZ": {"ticker": "000001.SZ", "overall": 70},
+        "300750.SZ": {"ticker": "300750.SZ", "overall": 60},
+    }
+    current = {
+        "status": "completed",
+        "loaded": 1,
+        "failed": [{"ticker": "000001.SZ"}],
+    }
+
+    direct, holding = _select_current_uzi(
+        {"version": 1, "assets": [first, second]}, restored, current
+    )
+
+    assert direct == {first["id"]: restored["600519.SH"]}
+    assert holding == {"600519.SH": restored["600519.SH"]}
+    assert _select_current_uzi(
+        {"version": 1, "assets": [first]}, restored, None
+    ) == ({}, {})

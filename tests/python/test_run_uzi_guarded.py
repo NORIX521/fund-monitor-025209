@@ -227,3 +227,21 @@ def test_cli_rejects_raw_csv_before_uzi_invocation(tmp_path, monkeypatch):
     )
 
     assert run_uzi_guarded.main([str(csv_path), "--uzi-root", str(_make_uzi_root(tmp_path))]) == 2
+
+
+def test_cli_writes_current_run_result_for_downstream_failure_provenance(tmp_path, monkeypatch):
+    result_file = tmp_path / "uzi-result.json"
+    expected = {
+        "status": "completed",
+        "loaded": 1,
+        "failed": [{"ticker": "000001.SZ", "weight": 0.5}],
+    }
+    monkeypatch.setattr(run_uzi_guarded, "run_watchlist", lambda *args: expected)
+
+    exit_code = run_uzi_guarded.main(
+        ["watchlist.json", "--result-file", str(result_file)]
+    )
+
+    assert exit_code == 0
+    assert json.loads(result_file.read_text(encoding="utf-8")) == expected
+    assert not list(tmp_path.glob("*.tmp"))

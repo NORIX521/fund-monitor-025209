@@ -1,0 +1,12 @@
+# Exact direct dependencies for the pinned GitHub Actions runtime.
+akshare==1.18.64
+baostock==0.9.2
+beautifulsoup4==4.13.4
+ddgs==9.14.4
+mplfinance==0.12.10b0
+pandas==3.0.3
+playwright==1.61.0
+pytest==8.4.1
+requests==2.32.4
+rich==15.0.0
+yfinance==1.5.1

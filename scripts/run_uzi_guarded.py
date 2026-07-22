@@ -95,6 +95,16 @@ def run_watchlist(
         return _run_uzi_portfolio(uzi_root, portfolio, depth)
 
 
+def _write_result(path: Path, result: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(
+        json.dumps(result, ensure_ascii=False, indent=2, default=str) + "\n",
+        encoding="utf-8",
+    )
+    os.replace(temporary, path)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("watchlist_json", type=Path)
@@ -104,12 +114,20 @@ def main(argv: list[str] | None = None) -> int:
         default=Path(os.environ.get("UZI_ROOT", DEFAULT_UZI_ROOT)),
     )
     parser.add_argument("--depth", choices=DEPTHS, default="lite")
+    parser.add_argument("--result-file", type=Path)
     args = parser.parse_args(argv)
     try:
         result = run_watchlist(args.uzi_root, args.watchlist_json, args.depth)
     except (OSError, RuntimeError, ValueError) as error:
+        if args.result_file:
+            _write_result(
+                args.result_file,
+                {"status": "error", "error": str(error), "failed": []},
+            )
         print(str(error), file=sys.stderr)
         return 2
+    if args.result_file:
+        _write_result(args.result_file, result)
     print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
     return 0 if result.get("status") == "completed" else 1
 
