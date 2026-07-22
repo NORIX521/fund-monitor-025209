@@ -13,7 +13,8 @@ test('import preview has an accessible scroll-region name and centralized failur
   assert.ok((app.match(/setImportError\(/g) || []).length >= 3);
 });
 
-test('mobile evidence anchors have real 44px boxes', () => {
+test('mobile evidence anchors have real 44 by 44px boxes', () => {
   assert.match(css, /\.source-links a, \.news-links a\s*\{[^}]*display:\s*inline-flex/s);
   assert.match(css, /@media \(max-width: 640px\)[\s\S]*\.news-item a, \.source-links a\s*\{\s*min-height:\s*44px/s);
+  assert.match(css, /@media \(max-width: 640px\)[\s\S]*\.news-item a, \.source-links a\s*\{[^}]*min-width:\s*44px/s);
 });

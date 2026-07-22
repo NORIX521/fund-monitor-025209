@@ -23,17 +23,21 @@ self.addEventListener('activate', (event) => {
 
 async function networkFirst(request) {
   const cache = await caches.open(CACHE);
+  const requestUrl = typeof request === 'string' ? request : request.url;
+  const canonicalUrl = new URL(requestUrl, self.location.origin);
+  canonicalUrl.search = '';
+  const cacheKey = canonicalUrl.toString();
   try {
     const response = await fetch(request);
     if (response.ok) {
-      await cache.put(request, response.clone());
+      await cache.put(cacheKey, response.clone());
       return response;
     }
-    const cached = await cache.match(request);
+    const cached = await cache.match(cacheKey);
     if (cached) return cached;
     return response;
   } catch (error) {
-    const cached = await cache.match(request);
+    const cached = await cache.match(cacheKey);
     if (cached) return cached;
     throw error;
   }
