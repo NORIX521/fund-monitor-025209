@@ -272,3 +272,18 @@ def test_quote_coverage_requires_price_or_change(holdings, error, stale, covered
     status = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": Provider(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]["source_status"]["quotes"]
     assert (status["error"], status["stale"], status["coverage"]) == (error, stale, {"covered": covered, "total": total, "pct": covered / total * 100})
     assert status["last_success_at"] == (NOW if not stale else "2026-07-20T00:00:00+00:00")
+
+
+def test_partial_quote_merge_uses_covered_values_and_retains_uncovered_values():
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import run_pipeline
+
+    class Provider:
+        def fetch_fund(self, asset):
+            return ProviderResult(data={"asset": asset, "holdings": [{"code": "600519.SH", "weight_pct": 10, "latest_price": 110, "change_pct": 3}, {"code": "000001.SZ", "weight_pct": 8, "latest_price": None, "change_pct": None}]}, source_urls=["https://provider.test/quotes"], retrieved_at=NOW, errors={})
+
+    before = previous_detail()
+    before["market"]["holdings"] = [{"code": "600519.SH", "latest_price": 100, "change_pct": 1}, {"code": "000001.SZ", "latest_price": 80, "change_pct": 2}]
+    holdings = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": Provider(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]["market"]["holdings"]
+    assert (holdings[0]["latest_price"], holdings[0]["change_pct"]) == (110, 3)
+    assert (holdings[1]["latest_price"], holdings[1]["change_pct"]) == (80, 2)

@@ -207,7 +207,7 @@ def _fund_market(asset: dict[str, Any], previous: dict[str, Any], options: dict[
         quote_error = str(errors.get("quotes", "")) or ("quote_no_data" if holdings_ok and covered == 0 else "quote_partial_data" if holdings_ok and covered < total else "")
         quotes_ok = holdings_ok and not quote_error
         merge_errors = {**errors, **({"quotes": quote_error} if quote_error else {})}
-        market = _merge_market(previous, incoming, merge_errors)
+        market = _merge_market(previous, incoming, {key: value for key, value in merge_errors.items() if key != "quotes" or value != "quote_partial_data"})
         statuses = {
             "history": _component_status(previous, "history", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("history", "")), succeeded=history_ok, retrieved_at=retrieved),
             "holdings": _component_status(previous, "holdings", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("holdings", "")), succeeded=holdings_ok, retrieved_at=retrieved),
