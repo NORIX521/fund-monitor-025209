@@ -19,6 +19,7 @@ from scripts.scoring import score_fund, score_stock
 PIPELINE_VERSION = "4.1"
 SAFE_ASSET_ID = re.compile(r"[a-z0-9][a-z0-9-]{0,119}$")
 STATES = {"暂不纳入", "等待确认", "风险偏高", "优先研究", "持续观察"}
+STATUS_FIELDS = {"provider", "source_urls", "attempted_at", "retrieved_at", "last_success_at", "stale", "error"}
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
@@ -53,11 +54,38 @@ def _last_success(previous: dict[str, Any], key: str) -> str:
     return str(_prior_status(previous, key).get("last_success_at") or _prior_status(previous, key).get("retrieved_at") or "")
 
 
+def _holding_code(value: Any) -> str:
+    code = str(value or "").strip().upper()
+    base = code.split(".", maxsplit=1)[0]
+    if re.fullmatch(r"\d{6}", base):
+        suffix = "SH" if base.startswith(("5", "6", "9")) else "BJ" if base.startswith(("4", "8")) else "SZ"
+        return f"{base}.{suffix}"
+    return code
+
+
+def _merge_holdings(previous: Any, incoming: Any, quote_failed: bool) -> list[dict[str, Any]]:
+    earlier = previous if isinstance(previous, list) else []
+    refreshed = incoming if isinstance(incoming, list) else []
+    by_code = {_holding_code(item.get("code")): item for item in earlier if isinstance(item, dict)}
+    merged: list[dict[str, Any]] = []
+    for item in refreshed:
+        if not isinstance(item, dict):
+            continue
+        prior = _as_dict(by_code.get(_holding_code(item.get("code"))))
+        value = {**prior, **item}
+        if quote_failed and prior:
+            for field in ("name", "latest_price", "change_pct"):
+                if field in prior:
+                    value[field] = prior[field]
+        merged.append(value)
+    return merged
+
+
 def _merge_market(previous: dict[str, Any], incoming: dict[str, Any], errors: dict[str, Any]) -> dict[str, Any]:
     market = _as_dict(previous.get("market"))
     for field, value in incoming.items():
         if field not in {"asset", "errors"} and field not in errors and value not in (None, {}, []):
-            market[field] = value
+            market[field] = _merge_holdings(market.get("holdings"), value, "quotes" in errors) if field == "holdings" else value
     return market
 
 
@@ -92,11 +120,30 @@ def _validate_news(news: dict[str, Any]) -> None:
             _iso(item["retrieved_at"])
 
 
+def _validate_source_status(source_status: dict[str, Any]) -> None:
+    if not isinstance(source_status, dict) or not source_status:
+        raise ValueError("source_status is required")
+    for name, value in source_status.items():
+        if not isinstance(name, str) or not isinstance(value, dict) or set(value) != STATUS_FIELDS:
+            raise ValueError("invalid source_status record")
+        if not isinstance(value["provider"], str) or not value["provider"] or not isinstance(value["source_urls"], list) or not all(_url(url) for url in value["source_urls"]):
+            raise ValueError("invalid source_status provider or URL")
+        if type(value["stale"]) is not bool or not isinstance(value["error"], str) or not isinstance(value["attempted_at"], str) or not value["attempted_at"]:
+            raise ValueError("invalid source_status fields")
+        _iso(value["attempted_at"])
+        for timestamp in (value["retrieved_at"], value["last_success_at"]):
+            if not isinstance(timestamp, str):
+                raise ValueError("invalid source_status timestamp")
+            if timestamp:
+                _iso(timestamp)
+
+
 def _validate_detail(detail: dict[str, Any]) -> None:
     required = {"asset", "market", "uzi", "news", "score", "recommendation", "source_status"}
     if set(detail) != required or not SAFE_ASSET_ID.fullmatch(str(detail["asset"].get("id") or "")):
         raise ValueError("invalid or unsafe asset detail schema")
     _validate_news(detail["news"])
+    _validate_source_status(detail["source_status"])
     score = _as_dict(detail["score"])
     if score.get("overall") is not None and not isinstance(score.get("overall"), (int, float)):
         raise ValueError("invalid score")
@@ -115,6 +162,7 @@ def _validate_dashboard(dashboard: dict[str, Any]) -> None:
     if set(dashboard) != required or not isinstance(dashboard["assets"], list) or dashboard["asset_count"] != len(dashboard["assets"]):
         raise ValueError("invalid dashboard schema")
     _iso(dashboard["generated_at"])
+    _validate_source_status(dashboard["source_status"])
     if not _json_compatible(dashboard):
         raise ValueError("dashboard must contain finite JSON-compatible values")
     for item in dashboard["assets"]:
@@ -129,19 +177,38 @@ def _atomic_json(path: Path, payload: dict[str, Any]) -> None:
     os.replace(temporary, path)
 
 
+def _component_status(previous: dict[str, Any], key: str, *, attempted_at: str, provider: str, source_urls: list[str], error: str, succeeded: bool, retrieved_at: str) -> dict[str, Any]:
+    return _status(stale=not succeeded, attempted_at=attempted_at, provider=provider, source_urls=source_urls, error=error, retrieved_at=retrieved_at if succeeded else "", last_success_at=retrieved_at if succeeded else _last_success(previous, key))
+
+
 def _fund_market(asset: dict[str, Any], previous: dict[str, Any], options: dict[str, Any], now: str) -> tuple[dict[str, Any], dict[str, Any]]:
     provider = options.get("fund_provider")
     if provider is None:
-        return _as_dict(previous.get("market")), _status(stale=True, attempted_at=now, provider="eastmoney", error="fund_provider_unavailable", last_success_at=_last_success(previous, "market"))
+        statuses = {key: _component_status(previous, key, attempted_at=now, provider="eastmoney", source_urls=[], error="fund_provider_unavailable", succeeded=False, retrieved_at="") for key in ("history", "holdings", "quotes")}
+        statuses["market"] = _component_status(previous, "market", attempted_at=now, provider="eastmoney", source_urls=[], error="fund_provider_unavailable", succeeded=False, retrieved_at="")
+        return _as_dict(previous.get("market")), statuses
     try:
         result = provider.fetch_fund(asset)
         incoming = _as_dict(getattr(result, "data", result))
         errors = _as_dict(getattr(result, "errors", {}))
         market = _merge_market(previous, incoming, errors)
         retrieved = _iso(getattr(result, "retrieved_at", now))
-        return market, _status(stale=bool(errors), attempted_at=now, provider=type(provider).__name__, source_urls=list(getattr(result, "source_urls", [])), error="; ".join(str(value) for value in errors.values()), retrieved_at=retrieved, last_success_at=retrieved if market else _last_success(previous, "market"))
+        urls = list(getattr(result, "source_urls", []))
+        provider_name = type(provider).__name__
+        history_ok = "history" in incoming and incoming.get("history") not in (None, [], {}) and "history" not in errors
+        holdings_ok = "holdings" in incoming and incoming.get("holdings") not in (None, [], {}) and "holdings" not in errors
+        quotes_ok = holdings_ok and "quotes" not in errors
+        statuses = {
+            "history": _component_status(previous, "history", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("history", "")), succeeded=history_ok, retrieved_at=retrieved),
+            "holdings": _component_status(previous, "holdings", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("holdings", "")), succeeded=holdings_ok, retrieved_at=retrieved),
+            "quotes": _component_status(previous, "quotes", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("quotes", "")), succeeded=quotes_ok, retrieved_at=retrieved),
+        }
+        any_success = history_ok or holdings_ok or quotes_ok
+        statuses["market"] = _component_status(previous, "market", attempted_at=now, provider=provider_name, source_urls=urls, error="; ".join(str(value) for value in errors.values()), succeeded=any_success, retrieved_at=retrieved)
+        return market, statuses
     except Exception as error:
-        return _as_dict(previous.get("market")), _status(stale=True, attempted_at=now, provider=type(provider).__name__, error=str(error), last_success_at=_last_success(previous, "market"))
+        statuses = {key: _component_status(previous, key, attempted_at=now, provider=type(provider).__name__, source_urls=[], error=str(error), succeeded=False, retrieved_at="") for key in ("history", "holdings", "quotes", "market")}
+        return _as_dict(previous.get("market")), statuses
 
 
 def _score_dict(result: Any) -> dict[str, Any]:
@@ -200,7 +267,8 @@ def run_pipeline(watchlist: dict[str, Any], previous: dict[str, Any], options: d
             statuses["uzi"] = _status(stale=not uzi_ok, attempted_at=now, provider="uzi", error="" if uzi_ok else "direct_uzi_unavailable", retrieved_at=now if uzi_ok else "", last_success_at=now if uzi_ok else _last_success(prior, "uzi"))
             score = _score_dict(score_stock(asset, market, uzi))
         elif asset.get("asset_type") in {"fund", "etf", "lof"}:
-            market, statuses["market"] = _fund_market(asset, prior, options, now)
+            market, fund_statuses = _fund_market(asset, prior, options, now)
+            statuses.update(fund_statuses)
             uzi = {}
             holding_uzi = _as_dict(options.get("holding_uzi"))
             score = _score_dict(score_fund(asset, market, holding_uzi))

@@ -179,3 +179,53 @@ def test_checked_in_dashboard_satisfies_lightweight_schema_and_nan_is_rejected()
     stock = {"id": "stock-cn-600519-sh", "code": "600519.SH", "name": "测试股票", "asset_type": "stock", "market": "CN", "enabled": True}
     with pytest.raises(ValueError, match="finite"):
         run_pipeline({"assets": [stock]}, {}, {"now": NOW, "market_data": {stock["id"]: {"quality_valuation": float("nan")}}, "uzi": {stock["id"]: {"overall": 80}}, "news_provider": lambda *_: []})
+
+
+def test_quote_failure_preserves_prior_quote_fields_but_accepts_disclosure():
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import run_pipeline
+
+    class QuoteFailure:
+        def fetch_fund(self, asset):
+            return ProviderResult(data={"asset": asset, "holdings": [{"code": "600519", "name": "new disclosure", "weight_pct": 11, "latest_price": None, "change_pct": None}], "holding_report_date": "2026 Q3"}, source_urls=["https://provider.test/holdings"], retrieved_at=NOW, errors={"quotes": "quote refresh failed"})
+
+    before = previous_detail()
+    before["market"]["holdings"] = [{"code": "600519.SH", "name": "prior quote name", "weight_pct": 10, "latest_price": 100, "change_pct": 1}]
+    detail = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": QuoteFailure(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]
+    holding = detail["market"]["holdings"][0]
+    assert holding["weight_pct"] == 11
+    assert holding["name"] == "prior quote name"
+    assert holding["latest_price"] == 100
+    assert holding["change_pct"] == 1
+    assert detail["market"]["holding_report_date"] == "2026 Q3"
+    assert detail["source_status"]["quotes"]["stale"] is True
+    assert detail["source_status"]["holdings"]["last_success_at"] == NOW
+
+
+def test_total_provider_failure_retains_component_last_success_and_mixed_statuses():
+    from scripts.update_monitor import run_pipeline
+
+    before = previous_detail()
+    before["source_status"] = {
+        "market": {"last_success_at": "2026-07-20T00:00:00+00:00"},
+        "history": {"last_success_at": "2026-07-19T00:00:00+00:00"},
+        "holdings": {"last_success_at": "2026-07-18T00:00:00+00:00"},
+        "quotes": {"last_success_at": "2026-07-17T00:00:00+00:00"},
+    }
+    detail = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": FailedProvider(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]
+    assert detail["source_status"]["market"]["last_success_at"] == "2026-07-20T00:00:00+00:00"
+    assert detail["source_status"]["history"]["last_success_at"] == "2026-07-19T00:00:00+00:00"
+    assert detail["source_status"]["history"]["attempted_at"] == NOW
+    assert detail["source_status"]["holdings"]["stale"] is True
+
+
+@pytest.mark.parametrize("status", [
+    {"provider": "p", "source_urls": ["ftp://bad.test"], "attempted_at": NOW, "retrieved_at": "", "last_success_at": "", "stale": True, "error": "x"},
+    {"provider": "p", "source_urls": [], "attempted_at": NOW, "retrieved_at": "", "last_success_at": "not-a-time", "stale": True, "error": "x"},
+])
+def test_detail_rejects_invalid_source_status_urls_and_timestamps(status):
+    from scripts.update_monitor import _validate_detail
+
+    detail = {"asset": FUND, "market": {}, "uzi": {}, "news": {"CN": [], "INTL": []}, "score": {"overall": None, "confidence": 0.0}, "recommendation": {"state": "等待确认", "confidence": 0.0, "timestamp": NOW}, "source_status": {"market": status}}
+    with pytest.raises(ValueError):
+        _validate_detail(detail)
