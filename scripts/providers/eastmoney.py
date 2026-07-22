@@ -63,15 +63,27 @@ class EastmoneyProvider:
     def _source_url(self, base_url: str, params: dict[str, Any]) -> str:
         return f"{base_url}?{urlencode(params, doseq=True)}"
 
-    def _request(self, base_url: str, params: dict[str, Any]) -> tuple[Any, str]:
+    def _request(
+        self,
+        base_url: str,
+        params: dict[str, Any],
+        headers: dict[str, str] | None = None,
+    ) -> tuple[Any, str]:
         source_url = self._source_url(base_url, params)
-        response = self.session.get(source_url, headers=self.headers, timeout=TIMEOUT)
+        request_headers = {**self.headers, **(headers or {})}
+        response = self.session.get(source_url, headers=request_headers, timeout=TIMEOUT)
         response.raise_for_status()
         return response, source_url
 
+    @staticmethod
+    def _fund_page_url(fund_code: str) -> str:
+        return f"https://fundf10.eastmoney.com/jjjz_{fund_code}.html"
+
     def _fetch_history(self, fund_code: str) -> tuple[list[dict[str, Any]], str]:
         response, source_url = self._request(
-            HISTORY_URL, {"fundCode": fund_code, "pageIndex": 1, "pageSize": 180}
+            HISTORY_URL,
+            {"fundCode": fund_code, "pageIndex": 1, "pageSize": 180},
+            {"Referer": self._fund_page_url(fund_code)},
         )
         payload = response.json()
         rows = ((payload.get("Data") or {}).get("LSJZList") or [])
@@ -92,6 +104,7 @@ class EastmoneyProvider:
         response, source_url = self._request(
             HOLDINGS_URL,
             {"type": "jjcc", "code": fund_code, "topline": 10, "year": "", "month": ""},
+            {"Referer": self._fund_page_url(fund_code)},
         )
         page = html.unescape(self._decode_embedded_html(response.text))
         soup = BeautifulSoup(page, "html.parser")
