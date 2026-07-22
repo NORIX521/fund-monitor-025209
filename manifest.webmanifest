@@ -1,1 +1,18 @@
-{"name":"025209 存储基金监控","short_name":"基金监控","start_url":"./","display":"standalone","background_color":"#080a0e","theme_color":"#0a0d12","icons":[{"src":"assets/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
+{
+  "name": "多资产研究监控台",
+  "short_name": "研究监控台",
+  "description": "股票、基金、ETF 与 LOF 的研究证据和趋势监控。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080d14",
+  "theme_color": "#0b111a",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

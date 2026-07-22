@@ -1,0 +1,8 @@
+{
+  "name": "fund-monitor-025209-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/js/*.test.mjs"
+  }
+}
