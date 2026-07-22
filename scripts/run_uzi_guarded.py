@@ -7,8 +7,14 @@ import importlib
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
+
+if __package__:
+    from .uzi_adapter import build_uzi_portfolio
+else:
+    from uzi_adapter import build_uzi_portfolio
 
 
 DEFAULT_UZI_ROOT = Path(r"C:\Users\智汇云\Documents\A股选股策略\tools\UZI-Skill")
@@ -23,7 +29,9 @@ def _configure_utf8() -> None:
             reconfigure(encoding="utf-8", errors="backslashreplace")
 
 
-def run_guarded(uzi_root: str | Path, portfolio_csv: str | Path, depth: str = "lite") -> dict[str, Any]:
+def _run_uzi_portfolio(
+    uzi_root: str | Path, portfolio_csv: str | Path, depth: str = "lite"
+) -> dict[str, Any]:
     """Load UZI's own timeout guard, preserve its runner API, and return its result."""
     if depth not in DEPTHS:
         raise ValueError(f"unsupported UZI depth: {depth}")
@@ -53,9 +61,43 @@ def run_guarded(uzi_root: str | Path, portfolio_csv: str | Path, depth: str = "l
     return result
 
 
+def _load_watchlist(path: str | Path) -> list[dict[str, Any]]:
+    source = Path(path).expanduser().resolve()
+    if source.suffix.lower() != ".json":
+        raise ValueError("UZI input must be a canonical watchlist JSON file")
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or payload.get("version") != 1:
+        raise ValueError("watchlist must be a version 1 object")
+    assets = payload.get("assets")
+    if not isinstance(assets, list):
+        raise ValueError("watchlist assets must be a list")
+    canonical: list[dict[str, Any]] = []
+    for asset in assets:
+        if not isinstance(asset, dict):
+            raise ValueError("watchlist assets must be objects")
+        if asset.get("asset_type") not in {"stock", "fund", "etf", "lof"}:
+            raise ValueError("watchlist asset_type is not canonical")
+        if not isinstance(asset.get("code"), str) or not asset["code"].strip():
+            raise ValueError("watchlist asset requires a code")
+        if not isinstance(asset.get("enabled", True), bool):
+            raise ValueError("watchlist enabled must be boolean")
+        canonical.append(asset)
+    return canonical
+
+
+def run_watchlist(
+    uzi_root: str | Path, watchlist_json: str | Path, depth: str = "lite"
+) -> dict[str, Any]:
+    """Build a temporary stock-only portfolio from canonical typed watchlist assets."""
+    assets = _load_watchlist(watchlist_json)
+    with tempfile.TemporaryDirectory(prefix="uzi-stock-portfolio-") as temp_dir:
+        portfolio = build_uzi_portfolio(assets, Path(temp_dir) / "stocks.csv")
+        return _run_uzi_portfolio(uzi_root, portfolio, depth)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("portfolio_csv", type=Path)
+    parser.add_argument("watchlist_json", type=Path)
     parser.add_argument(
         "--uzi-root",
         type=Path,
@@ -63,7 +105,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--depth", choices=DEPTHS, default="lite")
     args = parser.parse_args(argv)
-    result = run_guarded(args.uzi_root, args.portfolio_csv, args.depth)
+    try:
+        result = run_watchlist(args.uzi_root, args.watchlist_json, args.depth)
+    except (OSError, RuntimeError, ValueError) as error:
+        print(str(error), file=sys.stderr)
+        return 2
     print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
     return 0 if result.get("status") == "completed" else 1
 

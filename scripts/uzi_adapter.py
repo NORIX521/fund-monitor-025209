@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
@@ -14,14 +15,25 @@ UZI_VERSION = "3.9.2"
 UZI_COMMIT = "fce996c33e70eddce8e375f53cd252b549eb3d7c"
 
 
-def _number(value: Any) -> float | None:
+def _score_number(value: Any) -> float | None:
     if isinstance(value, bool) or value in (None, ""):
         return None
     try:
         number = float(value)
     except (TypeError, ValueError):
         return None
-    return round(number, 2)
+    if not math.isfinite(number) or not 0.0 <= number <= 100.0:
+        return None
+    return number
+
+
+def _signal_count(value: Any) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    number = float(value)
+    if not math.isfinite(number) or number < 0 or not number.is_integer():
+        return None
+    return int(number)
 
 
 def build_uzi_portfolio(assets: Iterable[Mapping[str, Any]], path: str | Path) -> Path:
@@ -75,13 +87,14 @@ def normalize_panel(payload: Mapping[str, Any], ticker: str) -> dict[str, Any]:
         "upstream_commit": UZI_COMMIT,
     }
 
-    overall = _number(synthesis.get("overall_score"))
-    if overall is None:
-        overall = _number(synthesis.get("overall"))
+    primary_overall = synthesis.get("overall_score")
+    overall = _score_number(primary_overall)
+    if primary_overall in (None, ""):
+        overall = _score_number(synthesis.get("overall"))
     if overall is not None:
         normalized["overall"] = overall
 
-    consensus = _number(panel.get("panel_consensus"))
+    consensus = _score_number(panel.get("panel_consensus"))
     if consensus is not None:
         normalized["panel_consensus"] = consensus
 
@@ -90,11 +103,12 @@ def normalize_panel(payload: Mapping[str, Any], ticker: str) -> dict[str, Any]:
     if isinstance(school_source, Mapping):
         for group, value in school_source.items():
             if isinstance(value, Mapping):
-                score = _number(value.get("consensus"))
-                if score is None:
-                    score = _number(value.get("avg_score"))
+                primary_score = value.get("consensus")
+                score = _score_number(primary_score)
+                if primary_score in (None, ""):
+                    score = _score_number(value.get("avg_score"))
             else:
-                score = _number(value)
+                score = _score_number(value)
             if score is not None:
                 schools[str(group)] = score
     if schools:
@@ -102,11 +116,11 @@ def normalize_panel(payload: Mapping[str, Any], ticker: str) -> dict[str, Any]:
 
     signals = panel.get("signal_distribution")
     if isinstance(signals, Mapping):
-        safe_signals = {
-            key: int(value)
-            for key, value in signals.items()
-            if isinstance(key, str) and isinstance(value, (int, float)) and not isinstance(value, bool)
-        }
+        safe_signals = {}
+        for key, value in signals.items():
+            count = _signal_count(value)
+            if isinstance(key, str) and count is not None:
+                safe_signals[key] = count
         if safe_signals:
             normalized["signal_distribution"] = safe_signals
 
@@ -152,6 +166,7 @@ def normalize_uzi_cache(
         result = normalize_panel({"synthesis": synthesis, "panel": panel}, ticker)
         results[ticker] = result
         (destination / f"{ticker}.json").write_text(
-            json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            json.dumps(result, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
+            encoding="utf-8",
         )
     return results

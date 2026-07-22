@@ -30,7 +30,7 @@ FUND_WEIGHTS = {
 class ScoreResult:
     overall: float | None
     components: dict[str, float]
-    confidence: str
+    confidence: float
     model: str
     model_version: str
     coverage: dict[str, Any]
@@ -49,9 +49,9 @@ def _number(value: Any) -> float | None:
 
 def _score(value: Any) -> float | None:
     number = _number(value)
-    if number is None:
+    if number is None or not 0.0 <= number <= 100.0:
         return None
-    return round(min(100.0, max(0.0, number)), 2)
+    return round(number, 2)
 
 
 def _clamp(value: float) -> float:
@@ -98,7 +98,8 @@ def _assemble_score(
     components: Mapping[str, Any],
     weights: Mapping[str, float],
     *,
-    confidence: str | None,
+    confidence_factor: float,
+    confidence_cap: float,
     model: str,
     model_version: str,
     risk_flags: list[str],
@@ -113,18 +114,14 @@ def _assemble_score(
     coverage = _component_coverage(usable, weights)
     if coverage_extra:
         coverage.update(coverage_extra)
-    if confidence is None:
-        confidence = (
-            "high"
-            if coverage["weight_pct"] >= 80
-            else "medium"
-            if coverage["weight_pct"] >= 55
-            else "low"
-        )
+    confidence = min(
+        max(0.0, confidence_cap),
+        coverage["weight_pct"] / 100.0 * max(0.0, confidence_factor),
+    )
     return ScoreResult(
         overall=round(overall, 2) if overall is not None else None,
         components=usable,
-        confidence=confidence,
+        confidence=round(min(1.0, confidence), 4),
         model=model,
         model_version=model_version,
         coverage=coverage,
@@ -140,11 +137,32 @@ def _first_score(source: Mapping[str, Any], *keys: str) -> float | None:
     return None
 
 
+def _direct_uzi_score(source: Mapping[str, Any]) -> float | None:
+    """Use the first present UZI score field without masking a malformed primary value."""
+    primary = source.get("overall")
+    if primary not in (None, ""):
+        return _score(primary)
+    return _score(source.get("overall_score"))
+
+
 def _combined_score(source: Mapping[str, Any], direct: str, *parts: str) -> float | None:
     value = _first_score(source, direct)
     if value is not None:
         return value
     return weighted_average((_first_score(source, part), 1.0) for part in parts)
+
+
+def _quality_adjustment(*sources: Mapping[str, Any]) -> tuple[float, list[str]]:
+    """Return deterministic confidence penalties for stale data and source errors."""
+    factor = 1.0
+    penalties: list[str] = []
+    if any(source.get("stale") is True for source in sources):
+        factor *= 0.8
+        penalties.append("stale_data")
+    if any(source.get("errors") for source in sources):
+        factor *= 0.9
+        penalties.append("source_errors")
+    return factor, penalties
 
 
 def score_stock(
@@ -154,7 +172,7 @@ def score_stock(
     if asset.get("asset_type") != "stock":
         raise ValueError("score_stock requires a stock asset")
     components = {
-        "uzi_consensus": _first_score(uzi, "overall", "overall_score"),
+        "uzi_consensus": _direct_uzi_score(uzi),
         "quality_valuation": _combined_score(
             market, "quality_valuation", "quality", "valuation"
         ),
@@ -163,17 +181,20 @@ def score_stock(
         "news_events": _combined_score(market, "news_events", "news", "events"),
     }
     flags = _unique_flags(uzi.get("risk_flags"), market.get("risk_flags"))
-    result = _assemble_score(
+    confidence_factor, penalties = _quality_adjustment(market, uzi)
+    if components["uzi_consensus"] is None:
+        confidence_factor *= 0.6
+        penalties.append("direct_uzi_unavailable")
+    return _assemble_score(
         components,
         STOCK_WEIGHTS,
-        confidence=None,
+        confidence_factor=confidence_factor,
+        confidence_cap=1.0,
         model="stock-uzi-review-composite",
         model_version="1.0",
         risk_flags=flags,
+        coverage_extra={"confidence_penalties": penalties},
     )
-    if "uzi_consensus" not in result.components and result.confidence != "low":
-        return ScoreResult(**{**result.__dict__, "confidence": "low"})
-    return result
 
 
 def weighted_holding_uzi(
@@ -190,9 +211,7 @@ def weighted_holding_uzi(
         if not code or weight is None or weight <= 0:
             continue
         uzi = holding_uzi.get(code)
-        overall = (
-            _first_score(uzi, "overall", "overall_score") if isinstance(uzi, Mapping) else None
-        )
+        overall = _direct_uzi_score(uzi) if isinstance(uzi, Mapping) else None
         if overall is None:
             uncovered_codes.append(code)
             continue
@@ -351,12 +370,21 @@ def score_fund(
         flags.append("high_concentration")
     flags = _unique_flags(flags, fund_data.get("risk_flags"))
 
+    confidence_factor, penalties = _quality_adjustment(fund_data)
+    confidence_cap = 1.0
+    if holding_coverage < 60.0:
+        confidence_cap = 0.44
+        penalties.append("holding_uzi_coverage_below_60pct")
     return _assemble_score(
         components,
         FUND_WEIGHTS,
-        confidence="low" if holding_coverage < 60.0 else None,
+        confidence_factor=confidence_factor,
+        confidence_cap=confidence_cap,
         model="fund-transparent-six-factor",
         model_version="1.0",
         risk_flags=flags,
-        coverage_extra={"holding_uzi_pct": holding_coverage},
+        coverage_extra={
+            "holding_uzi_pct": holding_coverage,
+            "confidence_penalties": penalties,
+        },
     )

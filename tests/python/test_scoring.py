@@ -1,5 +1,7 @@
 from dataclasses import asdict
 
+import pytest
+
 from scripts.scoring import score_fund, score_stock, weighted_holding_uzi
 
 
@@ -52,6 +54,9 @@ def test_stock_score_renormalizes_around_unavailable_optional_components():
     }
     assert result.coverage["missing"] == ["trend_momentum", "news_events"]
     assert result.coverage["weight_pct"] == 80.0
+    assert isinstance(result.confidence, float)
+    assert 0.0 <= result.confidence <= 1.0
+    assert result.confidence == 0.8
     assert result.risk_flags == ["uzi_review_only", "valuation_watch"]
     assert set(asdict(result)) == {
         "overall",
@@ -88,7 +93,8 @@ def test_fund_score_lowers_confidence_when_holding_uzi_coverage_is_below_sixty()
 
     assert result.components["holding_uzi"] == 72.0
     assert result.coverage["holding_uzi_pct"] == 50.0
-    assert result.confidence == "low"
+    assert isinstance(result.confidence, float)
+    assert 0.0 <= result.confidence < 0.45
     assert "low_holding_uzi_coverage" in result.risk_flags
     assert "stability" in result.coverage["missing"]
 
@@ -115,3 +121,102 @@ def test_short_history_is_safe_and_never_turns_unavailable_metrics_into_zero():
         "holding_uzi",
     }
     assert result.overall is not None
+    assert result.confidence < 0.45
+
+
+def test_complete_stock_evidence_has_high_numeric_confidence():
+    result = score_stock(
+        STOCK,
+        {
+            "quality_valuation": 70,
+            "trend_momentum": 75,
+            "risk_signals": 80,
+            "news_events": 65,
+        },
+        {"overall": 82},
+    )
+
+    assert isinstance(result.confidence, float)
+    assert result.confidence >= 0.65
+    assert result.confidence == 1.0
+
+
+def test_stale_and_errored_inputs_apply_explicit_confidence_penalties():
+    result = score_stock(
+        STOCK,
+        {
+            "quality_valuation": 70,
+            "trend_momentum": 75,
+            "risk_signals": 80,
+            "news_events": 65,
+            "stale": True,
+            "errors": {"quotes": "timeout"},
+        },
+        {"overall": 82},
+    )
+
+    assert result.confidence == pytest.approx(0.72)
+    assert result.coverage["confidence_penalties"] == ["stale_data", "source_errors"]
+
+
+def test_missing_direct_stock_uzi_lowers_confidence():
+    complete = score_stock(
+        STOCK,
+        {
+            "quality_valuation": 70,
+            "trend_momentum": 75,
+            "risk_signals": 80,
+            "news_events": 65,
+        },
+        {"overall": 82},
+    )
+    without_uzi = score_stock(
+        STOCK,
+        {
+            "quality_valuation": 70,
+            "trend_momentum": 75,
+            "risk_signals": 80,
+            "news_events": 65,
+        },
+        {},
+    )
+
+    assert without_uzi.confidence < complete.confidence
+    assert without_uzi.confidence == pytest.approx(0.33)
+
+
+def test_invalid_direct_uzi_score_is_excluded_instead_of_clamped():
+    result = score_stock(
+        STOCK,
+        {"quality_valuation": 70},
+        {"overall": float("inf"), "overall_score": 80},
+    )
+
+    assert "uzi_consensus" not in result.components
+    assert result.confidence < 0.45
+
+
+def test_complete_fund_evidence_has_high_numeric_confidence():
+    holdings = [
+        {"code": "600001.SH", "weight_pct": 50},
+        {"code": "600002.SH", "weight_pct": 50},
+    ]
+    result = score_fund(
+        FUND,
+        {
+            "history": [
+                {"date": "2026-01-01", "nav": 1.00},
+                {"date": "2026-01-02", "nav": 1.01},
+                {"date": "2026-01-03", "nav": 1.03},
+                {"date": "2026-01-04", "nav": 1.02},
+            ],
+            "holdings": holdings,
+            "size_billion": 20,
+        },
+        {"600001.SH": {"overall": 80}, "600002.SH": {"overall": 70}},
+    )
+
+    assert result.coverage["weight_pct"] == 100.0
+    assert result.coverage["holding_uzi_pct"] == 100.0
+    assert result.confidence >= 0.65
+    assert result.confidence == 1.0
