@@ -230,6 +230,8 @@ class EastmoneyProvider:
             try:
                 quotes, source_url = self._fetch_quotes([holding["code"] for holding in holdings])
                 source_urls.append(source_url)
+                if not quotes:
+                    raise RuntimeError("Eastmoney returned no holding quotes")
                 for holding in holdings:
                     quote = quotes.get(holding["code"], {})
                     quote_name = _security_name(quote.get("name"))

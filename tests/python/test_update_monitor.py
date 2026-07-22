@@ -229,3 +229,22 @@ def test_detail_rejects_invalid_source_status_urls_and_timestamps(status):
     detail = {"asset": FUND, "market": {}, "uzi": {}, "news": {"CN": [], "INTL": []}, "score": {"overall": None, "confidence": 0.0}, "recommendation": {"state": "等待确认", "confidence": 0.0, "timestamp": NOW}, "source_status": {"market": status}}
     with pytest.raises(ValueError):
         _validate_detail(detail)
+
+
+def test_quote_no_data_retains_prior_fields_without_advancing_quote_success():
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import run_pipeline
+
+    class NoQuoteData:
+        def fetch_fund(self, asset):
+            return ProviderResult(data={"asset": asset, "holdings": [{"code": "600519.SH", "weight_pct": 12, "name": "", "latest_price": None, "change_pct": None}]}, source_urls=["https://provider.test/holdings"], retrieved_at=NOW, errors={})
+
+    before = previous_detail()
+    before["market"]["holdings"] = [{"code": "600519.SH", "weight_pct": 10, "name": "prior", "latest_price": 100, "change_pct": 1}]
+    before["source_status"] = {"quotes": {"last_success_at": "2026-07-20T00:00:00+00:00"}}
+    detail = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": NoQuoteData(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]
+    holding = detail["market"]["holdings"][0]
+    assert (holding["name"], holding["latest_price"], holding["change_pct"]) == ("prior", 100, 1)
+    assert detail["source_status"]["quotes"]["stale"] is True
+    assert detail["source_status"]["quotes"]["error"] == "quote_no_data"
+    assert detail["source_status"]["quotes"]["last_success_at"] == "2026-07-20T00:00:00+00:00"

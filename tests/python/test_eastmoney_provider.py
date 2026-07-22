@@ -102,3 +102,12 @@ def test_fetch_quotes_normalizes_cn_stock_codes():
     quotes = EastmoneyProvider(session=FixtureSession()).fetch_quotes(["603986"])
 
     assert quotes["603986.SH"]["name"] == "兆易创新"
+
+
+def test_fetch_fund_marks_empty_quote_map_as_quote_error():
+    session = FixtureSession()
+    session.quotes = {"data": {"diff": []}}
+
+    result = EastmoneyProvider(session=session).fetch_fund(ASSET)
+
+    assert result.errors["quotes"] == "Eastmoney returned no holding quotes"

@@ -73,10 +73,11 @@ def _merge_holdings(previous: Any, incoming: Any, quote_failed: bool) -> list[di
             continue
         prior = _as_dict(by_code.get(_holding_code(item.get("code"))))
         value = {**prior, **item}
-        if quote_failed and prior:
+        if prior:
             for field in ("name", "latest_price", "change_pct"):
-                if field in prior:
-                    value[field] = prior[field]
+                if quote_failed or item.get(field) in (None, ""):
+                    if field in prior:
+                        value[field] = prior[field]
         merged.append(value)
     return merged
 
@@ -191,20 +192,23 @@ def _fund_market(asset: dict[str, Any], previous: dict[str, Any], options: dict[
         result = provider.fetch_fund(asset)
         incoming = _as_dict(getattr(result, "data", result))
         errors = _as_dict(getattr(result, "errors", {}))
-        market = _merge_market(previous, incoming, errors)
         retrieved = _iso(getattr(result, "retrieved_at", now))
         urls = list(getattr(result, "source_urls", []))
         provider_name = type(provider).__name__
         history_ok = "history" in incoming and incoming.get("history") not in (None, [], {}) and "history" not in errors
         holdings_ok = "holdings" in incoming and incoming.get("holdings") not in (None, [], {}) and "holdings" not in errors
-        quotes_ok = holdings_ok and "quotes" not in errors
+        quote_values = [holding.get(field) for holding in incoming.get("holdings", []) if isinstance(holding, dict) for field in ("name", "latest_price", "change_pct")]
+        quote_error = str(errors.get("quotes", "")) or ("quote_no_data" if holdings_ok and not any(value not in (None, "") for value in quote_values) else "")
+        quotes_ok = holdings_ok and not quote_error
+        merge_errors = {**errors, **({"quotes": quote_error} if quote_error else {})}
+        market = _merge_market(previous, incoming, merge_errors)
         statuses = {
             "history": _component_status(previous, "history", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("history", "")), succeeded=history_ok, retrieved_at=retrieved),
             "holdings": _component_status(previous, "holdings", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("holdings", "")), succeeded=holdings_ok, retrieved_at=retrieved),
-            "quotes": _component_status(previous, "quotes", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("quotes", "")), succeeded=quotes_ok, retrieved_at=retrieved),
+            "quotes": _component_status(previous, "quotes", attempted_at=now, provider=provider_name, source_urls=urls, error=quote_error, succeeded=quotes_ok, retrieved_at=retrieved),
         }
         any_success = history_ok or holdings_ok or quotes_ok
-        statuses["market"] = _component_status(previous, "market", attempted_at=now, provider=provider_name, source_urls=urls, error="; ".join(str(value) for value in errors.values()), succeeded=any_success, retrieved_at=retrieved)
+        statuses["market"] = _component_status(previous, "market", attempted_at=now, provider=provider_name, source_urls=urls, error="; ".join(str(value) for value in merge_errors.values()), succeeded=any_success, retrieved_at=retrieved)
         return market, statuses
     except Exception as error:
         statuses = {key: _component_status(previous, key, attempted_at=now, provider=type(provider).__name__, source_urls=[], error=str(error), succeeded=False, retrieved_at="") for key in ("history", "holdings", "quotes", "market")}
