@@ -18,6 +18,17 @@ DEFAULT_FIXTURE = REPO_ROOT / "tests" / "fixtures" / "watchlist-mixed.json"
 FIXTURE_TIME = "2000-01-01T00:00:00+00:00"
 SAFE_ASSET_ID = re.compile(r"[a-z0-9][a-z0-9-]{0,119}$")
 ASSET_TYPES = {"stock", "fund", "etf", "lof"}
+ASSET_MARKETS = {"CN", "HK", "US"}
+ASSET_FIELDS = {
+    "id",
+    "code",
+    "name",
+    "asset_type",
+    "market",
+    "sector",
+    "note",
+    "enabled",
+}
 STATES = {"暂不纳入", "等待确认", "风险偏高", "优先研究", "持续观察"}
 STATUS_FIELDS = {
     "provider",
@@ -56,6 +67,9 @@ DASHBOARD_FIELDS = {
     "assets",
 }
 MAX_DASHBOARD_BYTES = 128_000
+# Provider coverage is rounded for publication; permit at most five hundredths
+# of one percentage point of rounding drift.
+COVERAGE_PCT_TOLERANCE = 0.05
 
 
 def _finite_number(value: Any) -> bool:
@@ -149,10 +163,21 @@ def _validate_statuses(
                 )
         if type(status["stale"]) is not bool or not isinstance(status["error"], str):
             errors.append(f"{prefix} stale/error fields are invalid")
-        if status.get("stale") is True and not (
-            status.get("error") or status.get("last_success_at")
-        ):
-            errors.append(f"{prefix} stale status needs an error or last_success_at")
+        elif status["stale"]:
+            if not (status["error"].strip() or _aware_timestamp(status["last_success_at"])):
+                errors.append(f"{prefix} stale status needs an error or last_success_at")
+        else:
+            if status["error"].strip():
+                errors.append(f"{prefix} fresh status cannot contain an error")
+            if not (
+                _aware_timestamp(status["retrieved_at"])
+                and _aware_timestamp(status["last_success_at"])
+            ):
+                errors.append(
+                    f"{prefix} fresh status requires retrieved_at and last_success_at"
+                )
+            if not urls:
+                errors.append(f"{prefix} fresh status requires source URLs")
         coverage = status["coverage"]
         if not isinstance(coverage, dict):
             errors.append(f"{prefix}.coverage must be an object")
@@ -170,6 +195,12 @@ def _validate_statuses(
                 or not _bounded(coverage["pct"], 0, 100)
             ):
                 errors.append(f"{prefix}.coverage values are invalid")
+            else:
+                expected_pct = coverage["covered"] / coverage["total"] * 100
+                if abs(float(coverage["pct"]) - expected_pct) > COVERAGE_PCT_TOLERANCE:
+                    errors.append(
+                        f"{prefix}.coverage pct does not match covered/total"
+                    )
 
 
 def _validate_news(news: Any, label: str, errors: list[str]) -> None:
@@ -238,12 +269,22 @@ def _validate_recommendation(value: Any, label: str, errors: list[str]) -> None:
     if not _aware_timestamp(value.get("timestamp")):
         errors.append(f"{label}: recommendation.timestamp must be timezone-aware ISO-8601")
     for key in ("reasons", "invalidation_rules"):
-        if not isinstance(value.get(key), list) or any(
+        if not isinstance(value.get(key), list) or not value[key] or any(
             not isinstance(item, str) or not item.strip() for item in value[key]
         ):
             errors.append(f"{label}: recommendation.{key} must contain text")
-    if not isinstance(value.get("risk"), dict):
+    risk = value.get("risk")
+    if not isinstance(risk, dict):
         errors.append(f"{label}: recommendation.risk must be an object")
+        return
+    for key in ("hard_flags", "warnings", "hard_failures"):
+        items = risk.get(key)
+        if not isinstance(items, list) or any(
+            not isinstance(item, str) or not item.strip() for item in items
+        ):
+            errors.append(f"{label}: recommendation.risk.{key} must contain text")
+    if type(risk.get("stale")) is not bool:
+        errors.append(f"{label}: recommendation.risk.stale must be boolean")
 
 
 def _detail_summary(detail: dict[str, Any]) -> dict[str, Any] | None:
@@ -295,7 +336,9 @@ def _validate_detail(
         "holdings",
         "quotes",
     }
-    _validate_statuses(detail["source_status"], label, errors, required_statuses)
+    raw_statuses = detail["source_status"]
+    _validate_statuses(raw_statuses, label, errors, required_statuses)
+    statuses = raw_statuses if isinstance(raw_statuses, dict) else {}
     _validate_score(detail["score"], label, errors)
     _validate_recommendation(detail["recommendation"], label, errors)
     market = detail["market"]
@@ -306,15 +349,22 @@ def _validate_detail(
             "holding_report_date"
         ].strip():
             errors.append(f"{label}: holding_report_date is required when holdings exist")
+    raw_uzi = detail["uzi"]
+    if not isinstance(raw_uzi, dict):
+        errors.append(f"{label}: uzi must be an object")
+        uzi: dict[str, Any] = {}
+    else:
+        uzi = raw_uzi
+    if asset_type in {"fund", "etf", "lof"} and uzi:
+        errors.append(f"{label}: fund products must not contain direct UZI")
     if asset_type == "stock":
-        uzi = detail["uzi"] if isinstance(detail["uzi"], dict) else {}
         direct = uzi.get("overall")
         if direct in (None, ""):
             direct = uzi.get("overall_score")
+        status = statuses.get("uzi", {})
         if direct not in (None, "") and not _bounded(direct, 0, 100):
             errors.append(f"{label}: direct UZI score must be between 0 and 100")
         if direct in (None, ""):
-            status = detail["source_status"].get("uzi", {})
             if not (
                 isinstance(status, dict)
                 and status.get("stale") is True
@@ -322,6 +372,12 @@ def _validate_detail(
                 and status["error"].strip()
             ):
                 errors.append(f"{label}: explicit direct UZI failure is required")
+        elif not (
+            isinstance(status, dict)
+            and status.get("stale") is False
+            and status.get("error") == ""
+        ):
+            errors.append(f"{label}: direct UZI score requires successful UZI status")
     actual_summary = _detail_summary(detail)
     if summary is not None and actual_summary != summary:
         errors.append(f"{label}: dashboard/detail summary parity failed")
@@ -738,21 +794,75 @@ def _write_fixture_data(
         if path.name not in expected_names:
             path.unlink()
     for asset_id, detail in records.items():
-        _write_json(assets_dir / f"{asset_id}.json", detail)
+        target = (assets_dir / f"{asset_id}.json").resolve()
+        if target.parent != assets_dir.resolve():
+            raise ValueError(f"unsafe asset id target: {asset_id}")
+        _write_json(target, detail)
+
+
+def _validate_fixture_watchlist(watchlist: Any) -> dict[str, Any]:
+    """Reject malformed demo input before the generator writes any files."""
+    if not isinstance(watchlist, dict) or set(watchlist) != {
+        "version",
+        "updated_at",
+        "assets",
+    }:
+        raise ValueError("fixture must be a versioned watchlist object")
+    if watchlist["version"] != 1 or isinstance(watchlist["version"], bool):
+        raise ValueError("fixture watchlist version must equal 1")
+    if not _aware_timestamp(watchlist["updated_at"]):
+        raise ValueError("fixture updated_at must be timezone-aware ISO-8601")
+    if not isinstance(watchlist["assets"], list):
+        raise ValueError("fixture assets must be a list")
+    seen: set[str] = set()
+    for index, asset in enumerate(watchlist["assets"]):
+        if not isinstance(asset, dict) or set(asset) != ASSET_FIELDS:
+            raise ValueError(f"fixture asset {index} must contain canonical fields")
+        asset_id = asset["id"]
+        if not isinstance(asset_id, str) or not SAFE_ASSET_ID.fullmatch(asset_id):
+            raise ValueError(f"unsafe fixture asset id at index {index}")
+        if asset_id in seen:
+            raise ValueError(f"duplicate asset id: {asset_id}")
+        seen.add(asset_id)
+        if asset["asset_type"] not in ASSET_TYPES:
+            raise ValueError(f"fixture asset {index} has unsupported asset_type")
+        if asset["market"] not in ASSET_MARKETS:
+            raise ValueError(f"fixture asset {index} has unsupported market")
+        for field in ("code", "name", "sector", "note"):
+            if not isinstance(asset[field], str):
+                raise ValueError(f"fixture asset {index}.{field} must be text")
+        if not asset["code"].strip():
+            raise ValueError(f"fixture asset {index}.code is required")
+        if type(asset["enabled"]) is not bool:
+            raise ValueError(f"fixture asset {index}.enabled must be boolean")
+    return watchlist
+
+
+def _validate_demo_destination(site_root: str | Path) -> Path:
+    destination = Path(site_root).resolve()
+    repository = REPO_ROOT.resolve()
+    production_data = (repository / "data").resolve()
+    if destination == repository or destination.is_relative_to(production_data):
+        raise ValueError("demo destination cannot be repository root or production data")
+    return destination
 
 
 def generate_fixture_site(
     site_root: str | Path, watchlist_path: str | Path = DEFAULT_FIXTURE
 ) -> Path:
     """Create a complete offline-served static site without touching repository data."""
-    destination = Path(site_root)
     fixture = Path(watchlist_path)
-    watchlist = json.loads(
-        fixture.read_text(encoding="utf-8"),
-        parse_constant=lambda value: (_ for _ in ()).throw(
-            ValueError(f"non-finite constant {value}")
-        ),
+    watchlist = _validate_fixture_watchlist(
+        json.loads(
+            fixture.read_text(encoding="utf-8"),
+            parse_constant=lambda value: (_ for _ in ()).throw(
+                ValueError(f"non-finite constant {value}")
+            ),
+        )
     )
+    if not _finite_json(watchlist):
+        raise ValueError("fixture requires finite JSON values")
+    destination = _validate_demo_destination(site_root)
     destination.mkdir(parents=True, exist_ok=True)
     for relative in ("index.html", "manifest.webmanifest", "robots.txt", "sw.js"):
         shutil.copy2(REPO_ROOT / relative, destination / relative)

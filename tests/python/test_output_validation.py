@@ -28,6 +28,13 @@ def generated(tmp_path):
     return site_root, data_root
 
 
+def assert_cli_rejects(data_root, capsys):
+    assert main([str(data_root)]) == 1
+    output = capsys.readouterr().out
+    assert "OUTPUT_ERROR:" in output
+    assert "OUTPUTS_OK" not in output
+
+
 def test_mixed_fixture_meets_deep_contract_and_is_a_complete_servable_site(tmp_path):
     site_root, data_root = generated(tmp_path)
 
@@ -84,6 +91,49 @@ def test_fixture_generation_is_byte_deterministic_and_does_not_touch_production_
     }
     assert first_files == second_files
     assert (REPO / "data" / "watchlist.json").read_bytes() == before
+
+
+@pytest.mark.parametrize(
+    "unsafe_id",
+    ["../escaped", "../../data/watchlist", "C:/absolute-target"],
+)
+def test_fixture_generation_rejects_unsafe_ids_before_any_write(tmp_path, unsafe_id):
+    fixture = load(MIXED_WATCHLIST)
+    fixture["assets"][0]["id"] = unsafe_id
+    fixture_path = tmp_path / "unsafe-fixture.json"
+    dump(fixture_path, fixture)
+    destination = tmp_path / "site"
+    production_before = (REPO / "data" / "watchlist.json").read_bytes()
+
+    with pytest.raises(ValueError, match="asset id"):
+        generate_fixture_site(destination, fixture_path)
+
+    assert not destination.exists()
+    assert not (tmp_path / "escaped.json").exists()
+    assert (REPO / "data" / "watchlist.json").read_bytes() == production_before
+
+
+def test_fixture_generation_rejects_duplicate_ids_before_any_write(tmp_path):
+    fixture = load(MIXED_WATCHLIST)
+    fixture["assets"].append(deepcopy(fixture["assets"][0]))
+    fixture_path = tmp_path / "duplicate-fixture.json"
+    dump(fixture_path, fixture)
+    destination = tmp_path / "site"
+
+    with pytest.raises(ValueError, match="duplicate asset id"):
+        generate_fixture_site(destination, fixture_path)
+
+    assert not destination.exists()
+
+
+@pytest.mark.parametrize("destination", [REPO, REPO / "data", REPO / "data" / "demo"])
+def test_fixture_generation_rejects_repository_root_and_production_data_destinations(destination):
+    production_before = (REPO / "data" / "watchlist.json").read_bytes()
+
+    with pytest.raises(ValueError, match="destination"):
+        generate_fixture_site(destination, MIXED_WATCHLIST)
+
+    assert (REPO / "data" / "watchlist.json").read_bytes() == production_before
 
 
 def test_cli_generates_a_repeatable_browser_demo_and_prints_its_path(tmp_path, capsys):
@@ -168,6 +218,141 @@ def test_validator_requires_holding_report_date_and_direct_uzi_failure_provenanc
 
     assert any("holding_report_date" in error for error in errors)
     assert any("direct UZI failure" in error for error in errors)
+
+
+@pytest.mark.parametrize(
+    ("mutate", "expected"),
+    [
+        (
+            lambda status: status.update(
+                {"stale": False, "error": "provider_failed"}
+            ),
+            "fresh status cannot contain an error",
+        ),
+        (
+            lambda status: status.update(
+                {"stale": False, "retrieved_at": "", "last_success_at": ""}
+            ),
+            "fresh status requires retrieved_at and last_success_at",
+        ),
+        (
+            lambda status: status.update({"stale": False, "source_urls": []}),
+            "fresh status requires source URLs",
+        ),
+    ],
+)
+def test_validator_rejects_contradictory_fresh_source_status(
+    tmp_path, capsys, mutate, expected
+):
+    _, data_root = generated(tmp_path)
+    detail_path = data_root / "assets" / "stock-cn-600519-sh.json"
+    detail = load(detail_path)
+    mutate(detail["source_status"]["market"])
+    dump(detail_path, detail)
+
+    assert any(expected in error for error in validate_outputs(data_root))
+    assert_cli_rejects(data_root, capsys)
+
+
+def test_validator_rejects_incorrect_coverage_arithmetic(tmp_path, capsys):
+    _, data_root = generated(tmp_path)
+    detail_path = data_root / "assets" / "fund-cn-025209.json"
+    detail = load(detail_path)
+    detail["source_status"]["quotes"]["coverage"] = {
+        "covered": 2,
+        "total": 2,
+        "pct": 1.0,
+    }
+    dump(detail_path, detail)
+
+    assert any("coverage pct" in error for error in validate_outputs(data_root))
+    assert_cli_rejects(data_root, capsys)
+
+
+@pytest.mark.parametrize("field", ["reasons", "invalidation_rules"])
+def test_validator_requires_nonempty_recommendation_evidence_lists(
+    tmp_path, capsys, field
+):
+    _, data_root = generated(tmp_path)
+    detail_path = data_root / "assets" / "fund-cn-025209.json"
+    detail = load(detail_path)
+    detail["recommendation"][field] = []
+    dump(detail_path, detail)
+
+    assert any(f"recommendation.{field}" in error for error in validate_outputs(data_root))
+    assert_cli_rejects(data_root, capsys)
+
+
+@pytest.mark.parametrize("field", ["hard_flags", "warnings", "hard_failures"])
+def test_validator_rejects_non_text_recommendation_risk_lists(tmp_path, capsys, field):
+    _, data_root = generated(tmp_path)
+    detail_path = data_root / "assets" / "fund-cn-025209.json"
+    detail = load(detail_path)
+    detail["recommendation"]["risk"][field] = [123]
+    dump(detail_path, detail)
+
+    assert any(f"recommendation.risk.{field}" in error for error in validate_outputs(data_root))
+    assert_cli_rejects(data_root, capsys)
+
+
+@pytest.mark.parametrize("asset_id", ["fund-cn-025209", "etf-cn-510300"])
+def test_validator_rejects_direct_uzi_payload_for_fund_products(
+    tmp_path, capsys, asset_id
+):
+    _, data_root = generated(tmp_path)
+    detail_path = data_root / "assets" / f"{asset_id}.json"
+    detail = load(detail_path)
+    detail["uzi"] = {"overall": 99}
+    dump(detail_path, detail)
+
+    assert any("fund products must not contain direct UZI" in error for error in validate_outputs(data_root))
+    assert_cli_rejects(data_root, capsys)
+
+
+@pytest.mark.parametrize(
+    ("mutate", "expected"),
+    [
+        (
+            lambda detail: detail["source_status"]["uzi"].update(
+                {"stale": True, "error": "uzi_failed", "retrieved_at": ""}
+            ),
+            "direct UZI score requires successful UZI status",
+        ),
+        (
+            lambda detail: detail["uzi"].clear(),
+            "explicit direct UZI failure is required",
+        ),
+    ],
+)
+def test_validator_requires_stock_uzi_payload_status_agreement(
+    tmp_path, capsys, mutate, expected
+):
+    _, data_root = generated(tmp_path)
+    detail_path = data_root / "assets" / "stock-cn-600519-sh.json"
+    detail = load(detail_path)
+    mutate(detail)
+    dump(detail_path, detail)
+
+    assert any(expected in error for error in validate_outputs(data_root))
+    assert_cli_rejects(data_root, capsys)
+
+
+def test_malformed_source_status_returns_errors_and_cli_exit_one(tmp_path, capsys):
+    _, data_root = generated(tmp_path)
+    detail_path = data_root / "assets" / "stock-cn-000001-sz.json"
+    detail = load(detail_path)
+    detail["source_status"] = []
+    dump(detail_path, detail)
+
+    errors = validate_outputs(data_root)
+
+    assert isinstance(errors, list)
+    assert errors
+    assert any("source_status provenance" in error for error in errors)
+    assert main([str(data_root)]) == 1
+    output = capsys.readouterr().out
+    assert "OUTPUT_ERROR:" in output
+    assert "Traceback" not in output
 
 
 def test_validator_rejects_non_finite_json_and_heavy_dashboard(tmp_path):
