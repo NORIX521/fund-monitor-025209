@@ -1,0 +1,85 @@
+name: Update fund data and deploy Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # 21:30 China Standard Time, Monday-Friday. GitHub cron uses UTC.
+    - cron: "30 13 * * 1-5"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  issues: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Update dashboard data
+        run: python scripts/update_data.py
+
+      - name: Commit refreshed data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/dashboard.json data/new_alerts.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh fund monitoring data"
+            git push
+          fi
+
+      - name: Create GitHub issues for new triggers
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'data/new_alerts.json';
+            if (!fs.existsSync(path)) return;
+            const alerts = JSON.parse(fs.readFileSync(path, 'utf8'));
+            for (const alert of alerts) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[025209] ${alert.title}`,
+                body: `${alert.message}\n\n触发日期：${alert.date}\n\n> 自动监控信息，仅供研究，不构成投资建议。`,
+                labels: []
+              });
+            }
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
