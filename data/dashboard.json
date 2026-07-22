@@ -1,5 +1,26 @@
 {
   "generated_at": "2026-07-22 14:51:33 +0800",
+  "pipeline_version": "4.0",
+  "source_status": {
+    "legacy_dashboard": {
+      "stale": true,
+      "timestamp": "2026-07-22 14:51:33 +0800",
+      "error": "legacy_record_requires_pipeline_refresh"
+    }
+  },
+  "stale_count": 1,
+  "asset_count": 1,
+  "assets": [
+    {
+      "id": "fund-cn-025209",
+      "code": "025209",
+      "name": "永赢先锋半导体智选混合发起C",
+      "asset_type": "fund",
+      "state": "等待确认",
+      "confidence": 0.0,
+      "stale": true
+    }
+  ],
   "status": {
     "data_mode": "live",
     "message": "All data sources updated."
