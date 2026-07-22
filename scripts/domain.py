@@ -56,9 +56,9 @@ def _normalize_code(code: str, kind: str) -> str:
     if any(character.isspace() for character in normalized):
         raise ValueError("invalid code: whitespace is not allowed")
 
-    if kind == "fund":
+    if kind != "stock":
         if not _FUND_CODE.fullmatch(normalized):
-            raise ValueError(f"invalid fund code: {normalized}")
+            raise ValueError(f"invalid {kind} code: {normalized}")
         return normalized
 
     if re.fullmatch(r"\d{6}", normalized):
@@ -71,7 +71,7 @@ def _normalize_code(code: str, kind: str) -> str:
 
 
 def _market(code: str, kind: str) -> str:
-    if kind == "fund" or code.endswith((".SH", ".SZ", ".BJ")):
+    if kind != "stock" or code.endswith((".SH", ".SZ", ".BJ")):
         return "CN"
     if code.endswith(".HK"):
         return "HK"

@@ -67,3 +67,17 @@ def test_issue_block_parses_only_machine_readable_assets():
             "enabled": True,
         }
     ]
+
+
+def test_etf_import_keeps_six_digit_fund_code():
+    asset = parse_rows("510300,沪深300ETF,etf", "text")[0]
+
+    assert asset["code"] == "510300"
+    assert asset["market"] == "CN"
+
+
+def test_lof_import_keeps_six_digit_fund_code():
+    asset = parse_rows("161725,招商中证白酒LOF,lof", "text")[0]
+
+    assert asset["code"] == "161725"
+    assert asset["market"] == "CN"
