@@ -17,10 +17,12 @@ _TYPE_ALIASES = {
     "交易型开放式指数基金": "etf",
 }
 _CN_SECURITIES = re.compile(r"\d{6}\.(?:SH|SZ|BJ)$")
-_CN_CODE_WITH_OPTIONAL_EXCHANGE = re.compile(r"(\d{6})(?:\.(?:SH|SZ|BJ))?$")
+_CN_CODE_WITH_OPTIONAL_EXCHANGE = re.compile(r"(\d{6})(?:\.(SH|SZ|BJ))?$")
 _HK_SECURITIES = re.compile(r"\d{5}\.HK$")
 _US_SECURITIES = re.compile(r"[A-Z][A-Z0-9.-]{0,9}$")
 _FUND_CODE = re.compile(r"\d{6}$")
+_SH_EQUITY_PREFIXES = ("600", "601", "603", "605", "688", "689", "900")
+_SZ_EQUITY_PREFIXES = ("000", "001", "002", "003", "200", "300", "301")
 _MAX_TEXT_LENGTH = 200
 
 
@@ -55,12 +57,27 @@ def _asset_type(raw_type: Any, code: str) -> str:
 
 
 def validate_stock_security_code(code: str) -> str:
-    """Reject deterministic mainland fund namespaces before a code reaches stock tooling."""
+    """Allow only deterministic mainland equity namespaces with aligned exchanges."""
     normalized = clean(code).upper()
     match = _CN_CODE_WITH_OPTIONAL_EXCHANGE.fullmatch(normalized)
-    if match and match.group(1).startswith(("5", "1")):
+    if not match:
+        return normalized
+
+    security_code, declared_exchange = match.groups()
+    if security_code.startswith(_SH_EQUITY_PREFIXES):
+        expected_exchange = "SH"
+    elif security_code.startswith(_SZ_EQUITY_PREFIXES):
+        expected_exchange = "SZ"
+    elif security_code.startswith(("4", "8")):
+        expected_exchange = "BJ"
+    else:
         raise ValueError(
-            f"{normalized} is in a known CN fund namespace and cannot be asset_type stock"
+            f"{normalized} is not in a supported CN equity namespace"
+        )
+
+    if declared_exchange and declared_exchange != expected_exchange:
+        raise ValueError(
+            f"{normalized} does not match its CN equity exchange {expected_exchange}"
         )
     return normalized
 

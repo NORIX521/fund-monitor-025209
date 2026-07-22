@@ -89,10 +89,21 @@ def test_untyped_six_digit_cn_code_requires_asset_type(code):
         parse_rows(code, "text")
 
 
-@pytest.mark.parametrize("code", ["510300", "510300.SH", "161725", "161725.SZ"])
-def test_known_cn_fund_namespaces_cannot_be_declared_stock(code):
-    with pytest.raises(ValueError, match="fund namespace"):
+@pytest.mark.parametrize(
+    "code", ["025209", "025209.SZ", "510300", "510300.SH", "161725", "161725.SZ"]
+)
+def test_codes_outside_cn_equity_namespaces_cannot_be_declared_stock(code):
+    with pytest.raises(ValueError, match="CN equity"):
         parse_rows(f"{code},mislabeled,stock", "text")
+
+
+@pytest.mark.parametrize(
+    "code",
+    ["600519.SZ", "000001.SH", "300750.SH", "688981.SZ", "430047.SH"],
+)
+def test_cn_stock_code_must_match_its_exchange(code):
+    with pytest.raises(ValueError, match="CN equity"):
+        parse_rows(f"{code},misaligned,stock", "text")
 
 
 @pytest.mark.parametrize(
@@ -117,6 +128,10 @@ def test_explicit_fund_types_keep_unsuffixed_six_digit_codes(code, kind):
         ("600519", "600519.SH", "CN"),
         ("000001", "000001.SZ", "CN"),
         ("600519.SH", "600519.SH", "CN"),
+        ("000001.SZ", "000001.SZ", "CN"),
+        ("300750.SZ", "300750.SZ", "CN"),
+        ("688981.SH", "688981.SH", "CN"),
+        ("430047.BJ", "430047.BJ", "CN"),
         ("00700.HK", "00700.HK", "HK"),
         ("AAPL", "AAPL", "US"),
     ],
