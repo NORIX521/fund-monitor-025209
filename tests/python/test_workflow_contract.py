@@ -95,6 +95,36 @@ def test_workflow_pins_uzi_bounds_depth_and_restores_only_its_cache():
     assert depth_input and "deep" not in depth_input.group(0)
 
 
+def test_push_deploy_skips_data_refresh_and_preserves_checked_in_evidence():
+    refresh = WORKFLOW.split("  refresh-and-stage:", 1)[1].split(
+        "\n  finalize-authorized-import:", 1
+    )[0]
+    for name in (
+        "Fetch pinned UZI",
+        "Install pinned project and UZI dependencies",
+        "Restore UZI cache",
+        "Prepare fund disclosures before UZI",
+        "Run guarded UZI direct-stock and disclosed-holding refresh",
+        "Build final schema-validated monitor data",
+        "Commit generated data only",
+    ):
+        block = re.search(
+            rf"(?ms)^\s{{6}}- name: {re.escape(name)}\s*$.*?(?=^\s{{6}}- name:)",
+            refresh,
+        )
+        assert block
+        assert "if: github.event_name != 'push'" in block.group(0)
+    push_install = re.search(
+        r"(?ms)^\s{6}- name: Install project test dependencies for push\s*$.*?(?=^\s{6}- name:)",
+        refresh,
+    )
+    assert push_install
+    assert "if: github.event_name == 'push'" in push_install.group(0)
+    assert "-r requirements.txt" in push_install.group(0)
+    assert "requirements-actions.txt" not in push_install.group(0)
+    assert "Create truthful push deployment manifest" not in refresh
+
+
 def test_workflow_tests_before_generated_only_commit_and_deploys_same_run():
     for action in (
         "actions/checkout@v4",
