@@ -1,6 +1,6 @@
 {
   "generated_at": "2000-01-01T00:00:00+00:00",
-  "pipeline_version": "task7-fixture-1.0",
+  "pipeline_version": "4.1",
   "source_status": {
     "pipeline": {
       "provider": "bootstrap-unrefreshed",
