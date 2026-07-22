@@ -1,19 +1,31 @@
 {
-  "generated_at": "2026-07-22T06:51:33+00:00",
-  "pipeline_version": "4.1",
+  "generated_at": "2000-01-01T00:00:00+00:00",
+  "pipeline_version": "task7-fixture-1.0",
   "source_status": {
     "pipeline": {
-      "provider": "migration",
-      "source_urls": [],
-      "attempted_at": "2026-07-22T06:51:33+00:00",
+      "provider": "task7-deterministic-fixture-generator",
+      "source_urls": [
+        "https://fixture.example/task7"
+      ],
+      "attempted_at": "2000-01-01T00:00:00+00:00",
       "retrieved_at": "",
-      "last_success_at": "",
+      "last_success_at": "2000-01-01T00:00:00+00:00",
       "stale": true,
-      "error": "pipeline_refresh_required",
+      "error": "synthetic_fixture_stale",
       "coverage": {}
     }
   },
-  "stale_count": 0,
-  "asset_count": 0,
-  "assets": []
+  "stale_count": 1,
+  "asset_count": 1,
+  "assets": [
+    {
+      "id": "fund-cn-025209",
+      "code": "025209",
+      "name": "永赢先锋半导体智选混合发起C",
+      "asset_type": "fund",
+      "state": "等待确认",
+      "confidence": 0.44,
+      "stale": true
+    }
+  ]
 }

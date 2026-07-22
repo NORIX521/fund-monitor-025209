@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "updated_at": "2000-01-01T00:00:00+00:00",
+  "assets": [
+    {
+      "id": "stock-cn-600519-sh",
+      "code": "600519.SH",
+      "name": "合成示例股票 A",
+      "asset_type": "stock",
+      "market": "CN",
+      "sector": "合成高质量场景",
+      "note": "仅用于 Task 7 离线演示，不代表真实证券事实",
+      "enabled": true
+    },
+    {
+      "id": "stock-cn-000001-sz",
+      "code": "000001.SZ",
+      "name": "合成示例股票 B",
+      "asset_type": "stock",
+      "market": "CN",
+      "sector": "合成 UZI 失败场景",
+      "note": "仅用于 Task 7 离线演示，不代表真实证券事实",
+      "enabled": true
+    },
+    {
+      "id": "fund-cn-025209",
+      "code": "025209",
+      "name": "025209 合成陈旧演示记录",
+      "asset_type": "fund",
+      "market": "CN",
+      "sector": "合成基金持仓覆盖场景",
+      "note": "固定夹具；不是实时净值、持仓或投资结论",
+      "enabled": true
+    },
+    {
+      "id": "etf-cn-510300",
+      "code": "510300",
+      "name": "合成示例 ETF",
+      "asset_type": "etf",
+      "market": "CN",
+      "sector": "合成风险场景",
+      "note": "仅用于 Task 7 离线演示，不代表真实证券事实",
+      "enabled": true
+    }
+  ]
+}
