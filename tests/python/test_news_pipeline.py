@@ -75,3 +75,33 @@ def test_fetch_news_rejects_unknown_region_without_network():
     with pytest.raises(ValueError, match="CN or INTL"):
         fetch_news({}, "US", session=session)
     assert session.calls == []
+
+
+def test_default_feeds_are_allowlisted_google_searches_for_asset_identity():
+    from urllib.parse import unquote
+    from scripts.providers.news import default_feeds
+
+    asset = {"code": "600519.SH", "name": "研究标的", "sector": "半导体"}
+    cn = default_feeds(asset, "CN")
+    intl = default_feeds(asset, "INTL")
+
+    assert len(cn) == len(intl) == 1
+    assert "news.google.com/rss/search" in cn[0]
+    assert "600519.SH" in unquote(cn[0]) and "半导体" in unquote(cn[0])
+    assert "hl=zh-CN" in cn[0]
+    assert "hl=en-US" in intl[0]
+    assert "NORIX521/fund-monitor-025209" in __import__("scripts.providers.news", fromlist=["USER_AGENT"]).USER_AGENT
+
+
+def test_tracking_and_fragment_variants_dedupe_without_rewriting_selected_url():
+    from scripts.providers.news import fetch_news
+
+    class Session:
+        def get(self, *_args, **_kwargs):
+            class Response:
+                text = """<rss><channel><item><title>Same title</title><link>https://article.test/a?id=1&amp;utm_source=x</link><pubDate>Tue, 21 Jul 2026 08:00:00 +0000</pubDate><source url='https://source.test'>Source</source></item><item><title>Same title!</title><link>https://article.test/a?id=1#fragment</link><pubDate>Tue, 21 Jul 2026 09:00:00 +0000</pubDate><source url='https://source.test'>Source</source></item></channel></rss>"""
+                def raise_for_status(self): pass
+            return Response()
+
+    items = fetch_news({}, "CN", session=Session(), feeds=["https://feed.test"], retrieved_at="2026-07-22T00:00:00+00:00")
+    assert [item.article_url for item in items] == ["https://article.test/a?id=1&utm_source=x"]

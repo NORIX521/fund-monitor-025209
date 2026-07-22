@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 
 NOW = "2026-07-22T00:00:00+00:00"
 FUND = {
@@ -108,3 +110,72 @@ def test_pipeline_writes_valid_versioned_outputs_atomically(tmp_path):
     assert dashboard["assets"] == [result["dashboard"]["assets"][0]]
     assert detail["asset"]["id"] == FUND["id"]
     assert not list(tmp_path.rglob("*.tmp"))
+
+
+def test_pipeline_calls_and_stores_both_news_regions_and_serializes_items(tmp_path):
+    from scripts.providers.news import NewsItem
+    from scripts.update_monitor import run_pipeline
+
+    calls = []
+    def news(asset, region):
+        calls.append(region)
+        return [NewsItem("traceable", f"https://example.test/{region}", "source", "https://source.test", NOW, NOW, region)]
+
+    result = run_pipeline(
+        {"assets": [FUND]},
+        {},
+        {"now": NOW, "news_provider": news, "write": True, "output_dir": tmp_path},
+    )
+    detail = result["assets"][FUND["id"]]
+    assert calls == ["CN", "INTL"]
+    assert set(detail["news"]) == {"CN", "INTL"}
+    assert detail["news"]["CN"][0]["article_url"] == "https://example.test/CN"
+    assert json.loads((tmp_path / "assets" / f"{FUND['id']}.json").read_text(encoding="utf-8"))["news"]["INTL"]
+
+
+def test_failed_stock_uzi_retains_previous_evidence_but_excludes_asset():
+    from scripts.update_monitor import run_pipeline
+
+    stock = {"id": "stock-cn-600519-sh", "code": "600519.SH", "name": "测试股票", "asset_type": "stock", "market": "CN", "enabled": True}
+    previous = {"assets": {stock["id"]: {"asset": stock, "market": {"quality_valuation": 70}, "uzi": {"overall": 80}, "news": {"CN": [], "INTL": []}, "score": {"overall": 80, "confidence": .8}, "recommendation": {"state": "优先研究"}, "source_status": {}}}}
+    detail = run_pipeline({"assets": [stock]}, previous, {"now": NOW, "market_data": {stock["id"]: {"quality_valuation": 70}}, "uzi": {}, "news_provider": lambda *_: []})["assets"][stock["id"]]
+    assert detail["uzi"] == {"overall": 80}
+    assert detail["source_status"]["uzi"]["stale"] is True
+    assert detail["recommendation"]["state"] == "暂不纳入"
+
+
+def test_pipeline_generates_timezone_timestamp_and_rejects_unsafe_asset_id():
+    from scripts.update_monitor import run_pipeline
+
+    result = run_pipeline({"assets": [FUND]}, {}, {"news_provider": lambda *_: []})
+    assert result["dashboard"]["generated_at"].endswith("+00:00")
+    unsafe = {**FUND, "id": "../unsafe"}
+    with pytest.raises(ValueError, match="safe"):
+        run_pipeline({"assets": [unsafe]}, {}, {"news_provider": lambda *_: []})
+
+
+def test_partial_fund_merge_keeps_prior_holdings_and_component_provenance():
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import run_pipeline
+
+    class PartialProvider:
+        def fetch_fund(self, asset):
+            return ProviderResult(data={"asset": asset, "history": [{"date": "2026-07-21", "nav": 1.5}]}, source_urls=["https://provider.test/history"], retrieved_at=NOW, errors={"holdings": "holdings unavailable"})
+
+    before = previous_detail()
+    before["market"]["holdings"] = [{"code": "600519.SH", "weight_pct": 20}]
+    result = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": PartialProvider(), "holding_uzi": {}, "news_provider": lambda *_: []})
+    detail = result["assets"][FUND["id"]]
+    assert detail["market"]["holdings"] == before["market"]["holdings"]
+    assert detail["source_status"]["market"]["source_urls"] == ["https://provider.test/history"]
+    assert detail["source_status"]["market"]["attempted_at"] == NOW
+
+
+def test_checked_in_dashboard_satisfies_lightweight_schema_and_nan_is_rejected():
+    from scripts.update_monitor import _validate_dashboard, run_pipeline
+
+    dashboard = json.loads((Path(__file__).parents[2] / "data" / "dashboard.json").read_text(encoding="utf-8"))
+    _validate_dashboard(dashboard)
+    stock = {"id": "stock-cn-600519-sh", "code": "600519.SH", "name": "测试股票", "asset_type": "stock", "market": "CN", "enabled": True}
+    with pytest.raises(ValueError, match="finite"):
+        run_pipeline({"assets": [stock]}, {}, {"now": NOW, "market_data": {stock["id"]: {"quality_valuation": float("nan")}}, "uzi": {stock["id"]: {"overall": 80}}, "news_provider": lambda *_: []})

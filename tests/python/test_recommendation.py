@@ -66,3 +66,11 @@ def test_reasons_reference_only_named_components_or_evidence():
     assert "uzi_consensus" in joined
     assert "trend_momentum" in joined
     assert "news_traceability" in joined
+
+
+def test_soft_warnings_do_not_escalate_but_closed_hard_risks_do():
+    from scripts.recommendation import recommend
+
+    score = {"overall": 82, "confidence": 0.8, "warnings": ["low_holding_uzi_coverage"]}
+    assert recommend(score, {"timestamp": NOW})["state"] == "优先研究"
+    assert recommend({**score, "risk_flags": ["large_drawdown"]}, {"timestamp": NOW})["state"] == "风险偏高"
