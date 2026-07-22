@@ -73,6 +73,85 @@ function parseCsvLine(line) {
   return fields;
 }
 
+function parseCsvRecords(text) {
+  const records = [];
+  const invalid = [];
+  let fields = [];
+  let value = '';
+  let quoted = false;
+  let closedQuote = false;
+  let physicalRow = 1;
+  let recordRow = 1;
+
+  const finishField = () => {
+    fields.push(value);
+    value = '';
+    closedQuote = false;
+  };
+  const finishRecord = () => {
+    finishField();
+    records.push({ values: fields, row: recordRow });
+    fields = [];
+  };
+
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    const isCrLf = character === '\r' && text[index + 1] === '\n';
+    const isNewline = character === '\n' || character === '\r';
+    if (quoted) {
+      if (character === '"' && text[index + 1] === '"') {
+        value += '"';
+        index += 1;
+      } else if (character === '"') {
+        quoted = false;
+        closedQuote = true;
+      } else if (isNewline) {
+        value += '\n';
+        if (isCrLf) index += 1;
+        physicalRow += 1;
+      } else {
+        value += character;
+      }
+      continue;
+    }
+
+    if (closedQuote) {
+      if (character === ',') {
+        finishField();
+      } else if (isNewline) {
+        finishRecord();
+        if (isCrLf) index += 1;
+        physicalRow += 1;
+        recordRow = physicalRow;
+      } else if (!/\s/.test(character)) {
+        throw new Error(`malformed CSV quoting at source row ${recordRow}`);
+      }
+      continue;
+    }
+
+    if (character === ',' ) {
+      finishField();
+    } else if (character === '"') {
+      if (value) throw new Error(`malformed CSV quoting at source row ${recordRow}`);
+      quoted = true;
+    } else if (isNewline) {
+      finishRecord();
+      if (isCrLf) index += 1;
+      physicalRow += 1;
+      recordRow = physicalRow;
+    } else {
+      value += character;
+    }
+  }
+
+  if (quoted) {
+    invalid.push({ row: recordRow, input: [...fields, value].join(','), reason: 'unterminated CSV quote' });
+  } else if (fields.length || value || closedQuote) {
+    finishRecord();
+  }
+  return { records, invalid };
+}
+
 function expectedExchange(code) {
   if (/^(600|601|603|605|688|689|900)/.test(code)) return 'SH';
   if (/^(000|001|002|003|200|300|301)/.test(code)) return 'SZ';
@@ -165,6 +244,7 @@ function normalizeRows(rows) {
         duplicates.push({ row: entry.row, code: asset.code, id: asset.id });
       } else {
         seen.add(asset.id);
+        Object.defineProperty(asset, 'sourceRow', { value: entry.row, enumerable: false });
         assets.push(asset);
       }
     } catch (error) {
@@ -198,26 +278,26 @@ export function parseImportText(text) {
 }
 
 export function parseImportCsv(text) {
-  const lines = boundedText(text).split(/\r?\n/);
-  const headerIndex = lines.findIndex((line) => line.trim());
+  const parsedCsv = parseCsvRecords(boundedText(text));
+  const headerIndex = parsedCsv.records.findIndex((record) => record.values.some((value) => value.trim()));
   if (headerIndex < 0) throw new Error('CSV import requires a header row');
-  const rawHeaders = parseCsvLine(lines[headerIndex]);
+  const rawHeaders = parsedCsv.records[headerIndex].values;
   const headers = rawHeaders.map((header) => HEADER_ALIASES.get(clean(header).toLowerCase()) || '');
   if (!headers.includes('code')) throw new Error('CSV import requires a code header');
   const rows = [];
-  for (let index = headerIndex + 1; index < lines.length; index += 1) {
-    const line = lines[index];
-    if (!line.trim()) continue;
+  for (const record of parsedCsv.records.slice(headerIndex + 1)) {
+    if (!record.values.some((value) => value.trim())) continue;
     try {
-      const values = parseCsvLine(line);
+      const values = record.values;
       if (values.length !== headers.length) throw new Error('CSV row does not match header column count');
       const value = {};
       headers.forEach((header, column) => { if (header) value[header] = values[column]; });
-      rows.push({ row: index + 1, input: line, value });
+      rows.push({ row: record.row, input: values.join(','), value });
     } catch (error) {
-      rows.push({ row: index + 1, input: line, value: { code: '', asset_type: '' }, parseError: error });
+      rows.push({ row: record.row, input: record.values.join(','), value: { code: '', asset_type: '' }, parseError: error });
     }
   }
+  parsedCsv.invalid.forEach((item) => rows.push({ ...item, value: { code: '', asset_type: '' }, parseError: new Error(item.reason) }));
   if (rows.length > MAX_IMPORT) throw new RangeError(`an import may contain at most ${MAX_IMPORT} assets`);
   const parsed = normalizeRows(rows.filter((row) => !row.parseError));
   const parseInvalid = rows.filter((row) => row.parseError).map((row) => ({ row: row.row, input: row.input, reason: row.parseError.message }));

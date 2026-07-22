@@ -61,6 +61,23 @@ test('CSV parser supports quoted fields and bilingual headers', () => {
   assert.equal(assets[1].asset_type, 'fund');
 });
 
+test('CSV parser preserves quoted CRLF records and logical source rows', () => {
+  const assets = parseImportCsv([
+    'code,name,asset_type,note',
+    '',
+    '600519,"贵州\r\n茅台",stock,"第一行\r\n第二行"',
+    '025209,半导体基金,fund,',
+  ].join('\r\n'));
+
+  assert.equal(assets.length, 2);
+  assert.equal(assets[0].name, '贵州茅台');
+  assert.equal(assets[0].note, '第一行第二行');
+  assert.equal(assets[0].sourceRow, 3);
+  assert.equal(assets[1].sourceRow, 6);
+  assert.equal(Object.prototype.propertyIsEnumerable.call(assets[0], 'sourceRow'), false);
+  assert.doesNotMatch(JSON.stringify(assets), /sourceRow/);
+});
+
 test('CSV parser requires a code header and reports malformed rows', () => {
   assert.throws(() => parseImportCsv('name,type\nApple,stock'), /code header/i);
   const assets = parseImportCsv('code,name,asset_type\n600519,茅台,stock\n"unterminated');

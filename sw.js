@@ -25,7 +25,12 @@ async function networkFirst(request) {
   const cache = await caches.open(CACHE);
   try {
     const response = await fetch(request);
-    if (response.ok) await cache.put(request, response.clone());
+    if (response.ok) {
+      await cache.put(request, response.clone());
+      return response;
+    }
+    const cached = await cache.match(request);
+    if (cached) return cached;
     return response;
   } catch (error) {
     const cached = await cache.match(request);
@@ -33,6 +38,8 @@ async function networkFirst(request) {
     throw error;
   }
 }
+
+self.__fundMonitorTest = { networkFirst };
 
 async function shellFirst(request) {
   const cached = await caches.match(request);

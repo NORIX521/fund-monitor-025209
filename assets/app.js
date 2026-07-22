@@ -3,6 +3,7 @@ import { buildIssueUrl, filterAssets, parseImportCsv, parseImportText } from './
 const SAFE_ID = /^[a-z0-9][a-z0-9-]{0,119}$/;
 const TYPES = new Set(['stock', 'fund', 'etf', 'lof']);
 const STATES = new Set(['优先研究', '持续观察', '等待确认', '风险偏高', '暂不纳入']);
+const STATUS_FIELDS = new Set(['provider', 'source_urls', 'attempted_at', 'retrieved_at', 'last_success_at', 'stale', 'error', 'coverage']);
 const detailCache = new Map();
 let dashboard = null;
 let selectedId = '';
@@ -56,15 +57,72 @@ function normalizeSummary(raw) {
   };
 }
 
-function normalizeDashboard(raw) {
+function normalizeSourceStatus(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('source_status 数据结构无效');
+  const normalized = {};
+  for (const [key, status] of Object.entries(raw)) {
+    if (!status || typeof status !== 'object' || Array.isArray(status)) throw new Error(`source_status.${key} 数据结构无效`);
+    const fields = Object.keys(status);
+    if (fields.length !== STATUS_FIELDS.size || fields.some((field) => !STATUS_FIELDS.has(field))) throw new Error(`source_status.${key} 字段无效`);
+    if (typeof status.provider !== 'string' || !status.provider.trim()) throw new Error(`source_status.${key}.provider 无效`);
+    if (!Array.isArray(status.source_urls) || status.source_urls.some((url) => !safeUrl(url))) throw new Error(`source_status.${key}.source_urls 无效`);
+    if (typeof status.stale !== 'boolean' || typeof status.error !== 'string' || typeof status.attempted_at !== 'string' || !status.attempted_at) {
+      throw new Error(`source_status.${key} 状态字段无效`);
+    }
+    for (const timestampName of ['attempted_at', 'retrieved_at', 'last_success_at']) {
+      const timestamp = status[timestampName];
+      if (typeof timestamp !== 'string' || (timestamp && Number.isNaN(Date.parse(timestamp)))) throw new Error(`source_status.${key}.${timestampName} 无效`);
+    }
+    if (!status.coverage || typeof status.coverage !== 'object' || Array.isArray(status.coverage)) throw new Error(`source_status.${key}.coverage 无效`);
+    const coverageFields = Object.keys(status.coverage);
+    if (coverageFields.length && (
+      coverageFields.length !== 3 || !['covered', 'total', 'pct'].every((field) => coverageFields.includes(field))
+      || !Number.isInteger(status.coverage.covered) || !Number.isInteger(status.coverage.total) || status.coverage.total <= 0
+      || finite(status.coverage.pct) == null
+    )) throw new Error(`source_status.${key}.coverage 无效`);
+    normalized[key] = {
+      provider: text(status.provider),
+      source_urls: status.source_urls.map(safeUrl),
+      attempted_at: text(status.attempted_at, ''),
+      retrieved_at: text(status.retrieved_at, ''),
+      last_success_at: text(status.last_success_at, ''),
+      stale: status.stale,
+      error: text(status.error, ''),
+      coverage: { ...status.coverage },
+    };
+  }
+  if (!normalized.pipeline) throw new Error('source_status.pipeline 缺失');
+  return normalized;
+}
+
+export function normalizeDashboard(raw) {
   if (!raw || typeof raw !== 'object' || !Array.isArray(raw.assets)) throw new Error('总览数据结构无效');
   const assets = raw.assets.map(normalizeSummary).filter(Boolean);
+  if (!Number.isInteger(raw.asset_count) || raw.asset_count < 0 || raw.asset_count !== raw.assets.length || assets.length !== raw.assets.length) {
+    throw new Error(`asset_count 与有效资产行不一致：声明 ${raw.asset_count}，原始 ${raw.assets.length}，有效 ${assets.length}`);
+  }
+  const normalizedStaleCount = assets.filter((asset) => asset.stale).length;
+  if (!Number.isInteger(raw.stale_count) || raw.stale_count < 0 || raw.stale_count !== normalizedStaleCount) {
+    throw new Error(`stale_count 与资产状态不一致：声明 ${raw.stale_count}，有效 ${normalizedStaleCount}`);
+  }
   return {
     generated_at: text(raw.generated_at, ''),
     pipeline_version: text(raw.pipeline_version, '—'),
-    stale_count: assets.filter((asset) => asset.stale).length,
+    source_status: normalizeSourceStatus(raw.source_status),
+    stale_count: raw.stale_count,
+    asset_count: raw.asset_count,
     assets,
   };
+}
+
+export function dashboardHealth(value) {
+  const pipeline = value?.source_status?.pipeline;
+  if (pipeline?.error) return { kind: 'error', label: '流水线异常', message: `流水线异常：${pipeline.error}` };
+  if (pipeline?.stale) return { kind: 'warning', label: '流水线过期', message: '流水线数据已过期，请核对来源与最后成功时间。' };
+  if (value?.assets?.some((asset) => asset.stale)) return { kind: 'warning', label: '含过期数据', message: `已载入 ${value.assets.length} 项资产，其中 ${value.stale_count} 项需重新确认。` };
+  return value?.assets?.length
+    ? { kind: 'success', label: '数据当前', message: `已载入 ${value.assets.length} 项研究资产。` }
+    : { kind: 'neutral', label: '等待资产', message: '数据已载入，研究队列当前为空。' };
 }
 
 async function loadDashboard(force = false) {
@@ -80,12 +138,16 @@ async function loadDashboard(force = false) {
     dashboard = normalizeDashboard(await response.json());
     renderOverview();
     renderAssets();
-    setStatus(dashboard.assets.length ? `已载入 ${dashboard.assets.length} 项研究资产。` : '数据已载入，研究队列当前为空。', dashboard.assets.length ? 'success' : 'neutral');
+    const health = dashboardHealth(dashboard);
+    setStatus(health.message, health.kind);
     if (selectedId && dashboard.assets.some((asset) => asset.id === selectedId)) selectAsset(selectedId);
     else if (dashboard.assets.length) selectAsset(dashboard.assets[0].id);
     else resetDetail();
   } catch (error) {
-    dashboard = { generated_at: '', pipeline_version: '—', stale_count: 0, assets: [] };
+    dashboard = {
+      generated_at: '', pipeline_version: '—', stale_count: 0, asset_count: 0, assets: [],
+      source_status: { pipeline: { provider: 'browser', source_urls: [], attempted_at: new Date().toISOString(), retrieved_at: '', last_success_at: '', stale: true, error: 'dashboard_load_failed', coverage: {} } },
+    };
     renderOverview();
     renderAssets('无法读取总览数据。请检查网络后重试；若离线，需先成功访问一次以建立缓存。');
     resetDetail('总览读取失败，暂时无法选择资产。');
@@ -99,15 +161,16 @@ async function loadDashboard(force = false) {
 function renderOverview() {
   const assets = dashboard?.assets || [];
   const confidence = assets.length ? assets.reduce((sum, asset) => sum + asset.confidence, 0) / assets.length : null;
-  $('assetCount').textContent = String(assets.length);
+  $('assetCount').textContent = String(dashboard?.asset_count ?? assets.length);
   $('averageConfidence').textContent = confidence == null ? '—' : formatPercent(confidence, 1);
   $('priorityCount').textContent = String(assets.filter((asset) => asset.state === '优先研究').length);
-  $('staleCount').textContent = String(assets.filter((asset) => asset.stale).length);
+  $('staleCount').textContent = String(dashboard?.stale_count ?? assets.filter((asset) => asset.stale).length);
   $('generatedAt').textContent = `更新时间 ${formatDate(dashboard?.generated_at)}`;
   $('pipelineVersion').textContent = `Pipeline ${dashboard?.pipeline_version || '—'}`;
-  const stale = assets.some((asset) => asset.stale);
-  $('freshnessBadge').textContent = stale ? '含过期数据' : assets.length ? '数据当前' : '等待资产';
-  $('freshnessBadge').className = `status-chip ${stale ? 'warning' : assets.length ? 'positive' : 'neutral'}`;
+  const health = dashboardHealth(dashboard);
+  $('freshnessBadge').textContent = health.label;
+  const badgeKind = health.kind === 'success' ? 'positive' : health.kind === 'error' ? 'negative' : health.kind;
+  $('freshnessBadge').className = `status-chip ${badgeKind}`;
 }
 
 function currentFilters() {
@@ -338,20 +401,33 @@ function renderSourceStatus(statuses) {
   }
 }
 
-function renderNews(items, root, fallback) {
+export function renderNews(items, root, fallback) {
   clear(root);
   const valid = Array.isArray(items) ? items.filter((item) => item && typeof item === 'object' && safeUrl(item.article_url || item.url)) : [];
   for (const item of valid) {
     const article = document.createElement('article');
     article.className = 'news-item';
+    const links = document.createElement('div');
+    links.className = 'news-links';
     const link = document.createElement('a');
     link.href = safeUrl(item.article_url || item.url);
     link.target = '_blank';
     link.rel = 'noreferrer noopener';
     link.textContent = text(item.title, '未命名来源记录');
+    links.append(link);
+    const publisherUrl = safeUrl(item.source_url);
+    if (publisherUrl) {
+      const publisher = document.createElement('a');
+      publisher.href = publisherUrl;
+      publisher.target = '_blank';
+      publisher.rel = 'noreferrer noopener';
+      publisher.className = 'publisher-link';
+      publisher.textContent = `来源：${text(item.source, '发布方')}`;
+      links.append(publisher);
+    }
     const meta = document.createElement('p');
     meta.textContent = `${text(item.source, '来源未注明')} · 发布 ${formatDate(item.published_at)} · 抓取 ${formatDate(item.retrieved_at)}`;
-    article.append(link, meta);
+    article.append(links, meta);
     root.append(article);
   }
   if (!valid.length) {
@@ -380,6 +456,21 @@ function resetImport() {
   $('createIssueLink').setAttribute('aria-disabled', 'true');
 }
 
+function disableIssueLink() {
+  const link = $('createIssueLink');
+  link.removeAttribute('href');
+  link.classList.add('disabled');
+  link.setAttribute('aria-disabled', 'true');
+}
+
+export function setImportError(message, title = '解析失败') {
+  clear($('previewRows'));
+  $('importSummary').textContent = title;
+  $('importSummary').className = 'status-chip negative';
+  $('importMessage').textContent = text(message, '无法解析导入内容');
+  disableIssueLink();
+}
+
 function appendPreviewRow(row, code, type, status, kind) {
   const tr = document.createElement('tr');
   const badge = document.createElement('span');
@@ -389,9 +480,9 @@ function appendPreviewRow(row, code, type, status, kind) {
   $('previewRows').append(tr);
 }
 
-function renderImportPreview(assets) {
+export function renderImportPreview(assets) {
   clear($('previewRows'));
-  assets.forEach((asset, index) => appendPreviewRow(index + 1, `${asset.code} · ${asset.name || '未命名'}`, asset.asset_type.toUpperCase(), '可导入', 'positive'));
+  assets.forEach((asset, index) => appendPreviewRow(asset.sourceRow ?? index + 1, `${asset.code} · ${asset.name || '未命名'}`, asset.asset_type.toUpperCase(), '可导入', 'positive'));
   assets.duplicates.forEach((item) => appendPreviewRow(item.row, item.code, '—', '重复，已忽略', 'warning'));
   assets.invalid.forEach((item) => appendPreviewRow(item.row, `${text(item.input, '无有效内容')} · ${text(item.reason)}`, '—', '无效，已拒绝', 'negative'));
   const issues = assets.duplicates.length + assets.invalid.length;
@@ -400,15 +491,13 @@ function renderImportPreview(assets) {
   $('importMessage').textContent = assets.length ? '预览仅保留规范化字段。提交后由仓库工作流再次鉴权和校验。' : '没有可导入资产；请修正代码或资产类型。';
   const link = $('createIssueLink');
   if (assets.length) {
-    link.href = buildIssueUrl(assets);
+    link.setAttribute('href', buildIssueUrl(assets));
     link.target = '_blank';
     link.rel = 'noreferrer noopener';
     link.classList.remove('disabled');
     link.setAttribute('aria-disabled', 'false');
   } else {
-    link.removeAttribute('href');
-    link.classList.add('disabled');
-    link.setAttribute('aria-disabled', 'true');
+    disableIssueLink();
   }
 }
 
@@ -418,13 +507,7 @@ function parsePastedImport() {
   try {
     renderImportPreview(parseImportText(value));
   } catch (error) {
-    clear($('previewRows'));
-    $('importSummary').textContent = '解析失败';
-    $('importSummary').className = 'status-chip negative';
-    $('importMessage').textContent = error instanceof Error ? error.message : '无法解析导入内容';
-    $('createIssueLink').removeAttribute('href');
-    $('createIssueLink').classList.add('disabled');
-    $('createIssueLink').setAttribute('aria-disabled', 'true');
+    setImportError(error instanceof Error ? error.message : '无法解析导入内容');
   }
 }
 
@@ -436,23 +519,24 @@ async function parseCsvFile() {
     renderImportPreview(parseImportCsv(content));
     $('importText').value = '';
   } catch (error) {
-    $('importSummary').textContent = 'CSV 解析失败';
-    $('importSummary').className = 'status-chip negative';
-    $('importMessage').textContent = error instanceof Error ? error.message : '无法读取 CSV 文件';
+    setImportError(error instanceof Error ? error.message : '无法读取 CSV 文件', 'CSV 解析失败');
   }
 }
 
-$('refreshButton').addEventListener('click', () => loadDashboard(true));
-$('importButton').addEventListener('click', openImport);
-$('emptyImportButton').addEventListener('click', openImport);
-$('closeImportButton').addEventListener('click', () => $('importDialog').close());
-$('clearImportButton').addEventListener('click', resetImport);
-$('importText').addEventListener('input', parsePastedImport);
-$('csvFile').addEventListener('change', parseCsvFile);
-$('createIssueLink').addEventListener('click', (event) => { if (event.currentTarget.getAttribute('aria-disabled') === 'true') event.preventDefault(); });
-$('importDialog').addEventListener('close', () => lastImportTrigger?.focus());
-$('filterForm').addEventListener('input', () => renderAssets());
-$('filterForm').addEventListener('submit', (event) => event.preventDefault());
+function initializeApp() {
+  $('refreshButton').addEventListener('click', () => loadDashboard(true));
+  $('importButton').addEventListener('click', openImport);
+  $('emptyImportButton').addEventListener('click', openImport);
+  $('closeImportButton').addEventListener('click', () => $('importDialog').close());
+  $('clearImportButton').addEventListener('click', resetImport);
+  $('importText').addEventListener('input', parsePastedImport);
+  $('csvFile').addEventListener('change', parseCsvFile);
+  $('createIssueLink').addEventListener('click', (event) => { if (event.currentTarget.getAttribute('aria-disabled') === 'true') event.preventDefault(); });
+  $('importDialog').addEventListener('close', () => lastImportTrigger?.focus());
+  $('filterForm').addEventListener('input', () => renderAssets());
+  $('filterForm').addEventListener('submit', (event) => event.preventDefault());
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register(new URL('sw.js', document.baseURI)).catch(() => {});
+  loadDashboard();
+}
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register(new URL('sw.js', document.baseURI)).catch(() => {});
-loadDashboard();
+if (typeof document !== 'undefined' && $('refreshButton')) initializeApp();
