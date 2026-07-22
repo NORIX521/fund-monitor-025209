@@ -83,6 +83,33 @@ def test_stock_without_direct_uzi_has_explicit_failure():
     assert detail["recommendation"]["state"] == "暂不纳入"
 
 
+def test_stock_market_data_without_source_url_is_stale_not_falsely_fresh():
+    from scripts.update_monitor import run_pipeline
+
+    stock = {
+        "id": "stock-cn-600519-sh",
+        "code": "600519.SH",
+        "name": "测试股票",
+        "asset_type": "stock",
+        "market": "CN",
+        "enabled": True,
+    }
+    detail = run_pipeline(
+        {"assets": [stock]},
+        {},
+        {
+            "now": NOW,
+            "market_data": {stock["id"]: {"quality_valuation": 70}},
+            "uzi": {stock["id"]: {"overall": 80}},
+            "news_provider": lambda *_: [],
+        },
+    )["assets"][stock["id"]]
+
+    assert detail["market"]["quality_valuation"] == 70
+    assert detail["source_status"]["market"]["stale"] is True
+    assert detail["source_status"]["market"]["error"] == "market_provenance_unavailable"
+
+
 def test_pipeline_writes_valid_versioned_outputs_atomically(tmp_path):
     from scripts.update_monitor import run_pipeline
 
@@ -229,6 +256,24 @@ def test_detail_rejects_invalid_source_status_urls_and_timestamps(status):
     detail = {"asset": FUND, "market": {}, "uzi": {}, "news": {"CN": [], "INTL": []}, "score": {"overall": None, "confidence": 0.0}, "recommendation": {"state": "等待确认", "confidence": 0.0, "timestamp": NOW}, "source_status": {"market": status}}
     with pytest.raises(ValueError):
         _validate_detail(detail)
+
+
+def test_producer_validator_rejects_fresh_status_without_provenance():
+    from scripts.update_monitor import _validate_source_status
+
+    status = {
+        "provider": "market_data",
+        "source_urls": [],
+        "attempted_at": NOW,
+        "retrieved_at": NOW,
+        "last_success_at": NOW,
+        "stale": False,
+        "error": "",
+        "coverage": {},
+    }
+
+    with pytest.raises(ValueError, match="fresh source_status requires provenance"):
+        _validate_source_status({"market": status})
 
 
 def test_quote_no_data_retains_prior_fields_without_advancing_quote_success():

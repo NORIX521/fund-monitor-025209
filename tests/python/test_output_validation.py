@@ -9,6 +9,7 @@ from scripts.validate_outputs import generate_fixture_site, main, validate_outpu
 
 REPO = Path(__file__).parents[2]
 MIXED_WATCHLIST = REPO / "tests" / "fixtures" / "watchlist-mixed.json"
+FIXTURE_NOW = "2026-07-22T00:00:00+00:00"
 
 
 def load(path):
@@ -154,6 +155,119 @@ def test_validator_accepts_checked_in_production_seed():
     detail = load(REPO / "data" / "assets" / "fund-cn-025209.json")
     assert detail["market"]["holdings"] == []
     assert detail["score"]["coverage"]["holding_uzi_pct"] == 0
+
+
+def test_validator_accepts_fresh_stock_and_fund_outputs_from_real_pipeline(tmp_path):
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.providers.news import NewsItem
+    from scripts.update_monitor import run_pipeline
+
+    stock = {
+        "id": "stock-cn-600519-sh",
+        "code": "600519.SH",
+        "name": "新鲜股票夹具",
+        "asset_type": "stock",
+        "market": "CN",
+        "sector": "消费",
+        "note": "producer-validator integration fixture",
+        "enabled": True,
+    }
+    fund = {
+        "id": "fund-cn-025209",
+        "code": "025209",
+        "name": "新鲜基金夹具",
+        "asset_type": "fund",
+        "market": "CN",
+        "sector": "半导体",
+        "note": "producer-validator integration fixture",
+        "enabled": True,
+    }
+    watchlist = {"version": 1, "updated_at": FIXTURE_NOW, "assets": [stock, fund]}
+
+    class FreshFundProvider:
+        def fetch_fund(self, asset):
+            return ProviderResult(
+                data={
+                    "asset": asset,
+                    "history": [
+                        {"date": "2026-07-20", "nav": 1.0},
+                        {"date": "2026-07-21", "nav": 1.05},
+                        {"date": "2026-07-22", "nav": 1.1},
+                    ],
+                    "holdings": [
+                        {
+                            "code": "600519.SH",
+                            "name": "贵州茅台",
+                            "weight_pct": 20,
+                            "latest_price": 1500,
+                            "change_pct": 1,
+                        }
+                    ],
+                    "holding_report_date": "2026 Q2",
+                },
+                source_urls=["https://fund-provider.example/025209"],
+                retrieved_at=FIXTURE_NOW,
+                errors={},
+            )
+
+    def fresh_news(asset, region):
+        return [
+            NewsItem(
+                title=f"{asset['code']} {region} sourced update",
+                article_url=f"https://article.example/{asset['id']}/{region.lower()}",
+                source=f"{region} publisher",
+                source_url=f"https://publisher.example/{region.lower()}",
+                published_at=FIXTURE_NOW,
+                retrieved_at=FIXTURE_NOW,
+                region=region,
+            )
+        ]
+
+    data_root = tmp_path / "data"
+    data_root.mkdir()
+    dump(data_root / "watchlist.json", watchlist)
+    run_pipeline(
+        watchlist,
+        {},
+        {
+            "now": FIXTURE_NOW,
+            "fund_provider": FreshFundProvider(),
+            "market_data": {
+                stock["id"]: {
+                    "quality_valuation": 75,
+                    "trend_momentum": 70,
+                    "risk_signals": 80,
+                    "news_events": 65,
+                }
+            },
+            "market_source_urls": {
+                stock["id"]: ["https://market-provider.example/600519"]
+            },
+            "uzi": {stock["id"]: {"overall": 82}},
+            "holding_uzi": {"600519.SH": {"overall": 82}},
+            "news_provider": fresh_news,
+            "output_dir": data_root,
+            "write": True,
+        },
+    )
+
+    assert validate_outputs(data_root) == []
+    dashboard = load(data_root / "dashboard.json")
+    stock_detail = load(data_root / "assets" / f"{stock['id']}.json")
+    fund_detail = load(data_root / "assets" / f"{fund['id']}.json")
+    assert all(not status["stale"] for status in stock_detail["source_status"].values())
+    assert all(not status["stale"] for status in fund_detail["source_status"].values())
+    assert dashboard["source_status"]["pipeline"]["source_urls"]
+    assert stock_detail["source_status"]["market"]["source_urls"] == [
+        "https://market-provider.example/600519"
+    ]
+    assert stock_detail["source_status"]["uzi"]["source_urls"]
+    assert stock_detail["source_status"]["news_CN"]["source_urls"] == [
+        "https://publisher.example/cn"
+    ]
+    assert fund_detail["source_status"]["market"]["source_urls"] == [
+        "https://fund-provider.example/025209"
+    ]
 
 
 def test_validator_reports_parity_duplicate_orphan_and_unsafe_ids(tmp_path):

@@ -25,6 +25,8 @@ else:
 
 
 PIPELINE_VERSION = "4.1"
+PIPELINE_SOURCE_URL = "https://github.com/NORIX521/fund-monitor-025209/blob/main/scripts/update_monitor.py"
+UZI_SOURCE_URL = "https://github.com/wbh604/UZI-Skill/tree/fce996c33e70eddce8e375f53cd252b549eb3d7c"
 SAFE_ASSET_ID = re.compile(r"[a-z0-9][a-z0-9-]{0,119}$")
 STATES = {"暂不纳入", "等待确认", "风险偏高", "优先研究", "持续观察"}
 STATUS_FIELDS = {"provider", "source_urls", "attempted_at", "retrieved_at", "last_success_at", "stale", "error", "coverage"}
@@ -115,6 +117,21 @@ def _url(value: Any) -> bool:
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
 
+def _source_urls(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, (list, tuple)):
+        raise ValueError("source URLs must be a list")
+    result: list[str] = []
+    for item in value:
+        if not _url(item):
+            raise ValueError("source URLs must contain HTTP(S) URLs")
+        normalized = str(item)
+        if normalized not in result:
+            result.append(normalized)
+    return result
+
+
 def _validate_news(news: dict[str, Any]) -> None:
     if set(news) != {"CN", "INTL"}:
         raise ValueError("news must contain CN and INTL streams")
@@ -148,6 +165,18 @@ def _validate_source_status(source_status: dict[str, Any]) -> None:
                 raise ValueError("invalid source_status timestamp")
             if timestamp:
                 _iso(timestamp)
+        if value["stale"]:
+            if not value["error"].strip() and not value["last_success_at"]:
+                raise ValueError("stale source_status needs an error or last_success_at")
+        elif (
+            value["error"]
+            or not value["source_urls"]
+            or not value["retrieved_at"]
+            or not value["last_success_at"]
+        ):
+            raise ValueError(
+                "fresh source_status requires provenance, success timestamps, and no error"
+            )
 
 
 def _validate_detail(detail: dict[str, Any]) -> None:
@@ -190,7 +219,15 @@ def _atomic_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 def _component_status(previous: dict[str, Any], key: str, *, attempted_at: str, provider: str, source_urls: list[str], error: str, succeeded: bool, retrieved_at: str, coverage: dict[str, Any] | None = None) -> dict[str, Any]:
-    return _status(stale=not succeeded, attempted_at=attempted_at, provider=provider, source_urls=source_urls, error=error, retrieved_at=retrieved_at if succeeded else "", last_success_at=retrieved_at if succeeded else _last_success(previous, key), coverage=coverage)
+    urls = _source_urls(source_urls)
+    proven_success = succeeded and bool(urls) and not error
+    prior_success = _last_success(previous, key)
+    status_error = error or (
+        "source_provenance_unavailable" if succeeded and not urls else ""
+    )
+    if not proven_success and not status_error and not prior_success:
+        status_error = f"{key}_no_reliable_update"
+    return _status(stale=not proven_success, attempted_at=attempted_at, provider=provider, source_urls=urls, error=status_error, retrieved_at=retrieved_at if proven_success else "", last_success_at=retrieved_at if proven_success else prior_success, coverage=coverage)
 
 
 def _fund_market(asset: dict[str, Any], previous: dict[str, Any], options: dict[str, Any], now: str) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -222,7 +259,7 @@ def _fund_market(asset: dict[str, Any], previous: dict[str, Any], options: dict[
             "quotes": _component_status(previous, "quotes", attempted_at=now, provider=provider_name, source_urls=urls, error=quote_error, succeeded=quotes_ok, retrieved_at=retrieved, coverage=coverage),
         }
         any_success = history_ok or holdings_ok or quotes_ok
-        statuses["market"] = _component_status(previous, "market", attempted_at=now, provider=provider_name, source_urls=urls, error="; ".join(str(value) for value in merge_errors.values()), succeeded=any_success, retrieved_at=retrieved)
+        statuses["market"] = _component_status(previous, "market", attempted_at=now, provider=provider_name, source_urls=urls, error="; ".join(str(value) for value in merge_errors.values()), succeeded=any_success and not merge_errors, retrieved_at=retrieved)
         return market, statuses
     except Exception as error:
         statuses = {key: _component_status(previous, key, attempted_at=now, provider=type(provider).__name__, source_urls=[], error=str(error), succeeded=False, retrieved_at="") for key in ("history", "holdings", "quotes", "market")}
@@ -253,7 +290,11 @@ def _news_streams(asset: dict[str, Any], previous: dict[str, Any], options: dict
         try:
             fetched = [_news_item(item, region) for item in provider(asset, region)]
             streams[region] = fetched or list(previous_news.get(region, []))
-            statuses[status_key] = _status(stale=not bool(fetched), attempted_at=now, provider=getattr(provider, "__name__", type(provider).__name__), error="" if fetched else "no_reliable_update", retrieved_at=now if fetched else "", last_success_at=now if fetched else _last_success(previous, status_key))
+            source_urls = _source_urls(
+                [item.get("source_url") for item in fetched if isinstance(item, dict)]
+            )
+            succeeded = bool(fetched) and bool(source_urls)
+            statuses[status_key] = _status(stale=not succeeded, attempted_at=now, provider=getattr(provider, "__name__", type(provider).__name__), source_urls=source_urls, error="" if succeeded else "source_provenance_unavailable" if fetched else "no_reliable_update", retrieved_at=now if succeeded else "", last_success_at=now if succeeded else _last_success(previous, status_key))
         except Exception as error:
             streams[region] = list(previous_news.get(region, []))
             statuses[status_key] = _status(stale=True, attempted_at=now, provider=getattr(provider, "__name__", type(provider).__name__), error=str(error), last_success_at=_last_success(previous, status_key))
@@ -278,11 +319,22 @@ def run_pipeline(watchlist: dict[str, Any], previous: dict[str, Any], options: d
         if asset.get("asset_type") == "stock":
             incoming_market = _as_dict(_as_dict(options.get("market_data")).get(asset_id))
             market = _merge_market(prior, incoming_market, {})
-            statuses["market"] = _status(stale=not bool(incoming_market), attempted_at=now, provider="market_data", error="" if incoming_market else "market_data_unavailable", retrieved_at=now if incoming_market else "", last_success_at=now if incoming_market else _last_success(prior, "market"))
+            market_urls = _source_urls(
+                _as_dict(options.get("market_source_urls")).get(asset_id)
+            )
+            market_ok = bool(incoming_market) and bool(market_urls)
+            market_error = (
+                ""
+                if market_ok
+                else "market_data_unavailable"
+                if not incoming_market
+                else "market_provenance_unavailable"
+            )
+            statuses["market"] = _status(stale=not market_ok, attempted_at=now, provider="market_data", source_urls=market_urls, error=market_error, retrieved_at=now if market_ok else "", last_success_at=now if market_ok else _last_success(prior, "market"))
             incoming_uzi = _as_dict(_as_dict(options.get("uzi")).get(asset_id))
             uzi_ok = incoming_uzi.get("overall") not in (None, "") or incoming_uzi.get("overall_score") not in (None, "")
             uzi = incoming_uzi if uzi_ok else _as_dict(prior.get("uzi"))
-            statuses["uzi"] = _status(stale=not uzi_ok, attempted_at=now, provider="uzi", error="" if uzi_ok else "direct_uzi_unavailable", retrieved_at=now if uzi_ok else "", last_success_at=now if uzi_ok else _last_success(prior, "uzi"))
+            statuses["uzi"] = _status(stale=not uzi_ok, attempted_at=now, provider="uzi", source_urls=[UZI_SOURCE_URL] if uzi_ok else [], error="" if uzi_ok else "direct_uzi_unavailable", retrieved_at=now if uzi_ok else "", last_success_at=now if uzi_ok else _last_success(prior, "uzi"))
             score = _score_dict(score_stock(asset, market, uzi))
         elif asset.get("asset_type") in {"fund", "etf", "lof"}:
             market, fund_statuses = _fund_market(asset, prior, options, now)
@@ -301,7 +353,7 @@ def run_pipeline(watchlist: dict[str, Any], previous: dict[str, Any], options: d
         _validate_detail(detail)
         records[asset_id] = detail
         summaries.append({"id": asset_id, "code": asset.get("code"), "name": asset.get("name"), "asset_type": asset.get("asset_type"), "state": recommendation["state"], "confidence": recommendation["confidence"], "stale": stale})
-    dashboard = {"generated_at": now, "pipeline_version": PIPELINE_VERSION, "source_status": {"pipeline": _status(stale=any(item["stale"] for item in summaries), attempted_at=now, provider="update_monitor", retrieved_at=now, last_success_at=now)}, "stale_count": sum(1 for item in summaries if item["stale"]), "asset_count": len(summaries), "assets": summaries}
+    dashboard = {"generated_at": now, "pipeline_version": PIPELINE_VERSION, "source_status": {"pipeline": _status(stale=any(item["stale"] for item in summaries), attempted_at=now, provider="update_monitor", source_urls=[PIPELINE_SOURCE_URL], retrieved_at=now, last_success_at=now)}, "stale_count": sum(1 for item in summaries if item["stale"]), "asset_count": len(summaries), "assets": summaries}
     _validate_dashboard(dashboard)
     if options.get("write"):
         output_dir = Path(options.get("output_dir") or "data")
