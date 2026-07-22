@@ -83,6 +83,32 @@ def test_fund_only_watchlist_never_calls_private_uzi_runner(tmp_path, monkeypatc
         run_uzi_guarded.run_watchlist(_make_uzi_root(tmp_path), watchlist, "lite")
 
 
+@pytest.mark.parametrize("code", ["510300.SH", "161725.SZ"])
+def test_mislabeled_fund_namespace_stock_never_calls_private_uzi_runner(
+    tmp_path, monkeypatch, code
+):
+    watchlist = tmp_path / "mislabeled.json"
+    watchlist.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "assets": [
+                    {"code": code, "asset_type": "stock", "enabled": True},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        run_uzi_guarded,
+        "_run_uzi_portfolio",
+        lambda *args: pytest.fail(f"{code} reached UZI"),
+    )
+
+    with pytest.raises(ValueError, match="fund namespace"):
+        run_uzi_guarded.run_watchlist(_make_uzi_root(tmp_path), watchlist, "lite")
+
+
 def test_private_runner_configures_utf8_and_guard_before_other_uzi_imports(tmp_path, monkeypatch):
     events = []
 

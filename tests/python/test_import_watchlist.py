@@ -81,3 +81,49 @@ def test_lof_import_keeps_six_digit_fund_code():
 
     assert asset["code"] == "161725"
     assert asset["market"] == "CN"
+
+
+@pytest.mark.parametrize("code", ["000001", "000001.SZ"])
+def test_untyped_six_digit_cn_code_requires_asset_type(code):
+    with pytest.raises(ValueError, match="asset_type"):
+        parse_rows(code, "text")
+
+
+@pytest.mark.parametrize("code", ["510300", "510300.SH", "161725", "161725.SZ"])
+def test_known_cn_fund_namespaces_cannot_be_declared_stock(code):
+    with pytest.raises(ValueError, match="fund namespace"):
+        parse_rows(f"{code},mislabeled,stock", "text")
+
+
+@pytest.mark.parametrize(
+    ("code", "kind"),
+    [
+        ("025209", "fund"),
+        ("510300", "etf"),
+        ("161725", "lof"),
+    ],
+)
+def test_explicit_fund_types_keep_unsuffixed_six_digit_codes(code, kind):
+    asset = parse_rows(f"{code},named,{kind}", "text")[0]
+
+    assert asset["code"] == code
+    assert asset["asset_type"] == kind
+    assert asset["market"] == "CN"
+
+
+@pytest.mark.parametrize(
+    ("code", "expected_code", "expected_market"),
+    [
+        ("600519", "600519.SH", "CN"),
+        ("000001", "000001.SZ", "CN"),
+        ("600519.SH", "600519.SH", "CN"),
+        ("00700.HK", "00700.HK", "HK"),
+        ("AAPL", "AAPL", "US"),
+    ],
+)
+def test_explicit_stock_paths_remain_valid(code, expected_code, expected_market):
+    asset = parse_rows(f"{code},named,stock", "text")[0]
+
+    assert asset["code"] == expected_code
+    assert asset["asset_type"] == "stock"
+    assert asset["market"] == expected_market

@@ -9,6 +9,11 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
+if __package__:
+    from .domain import validate_stock_security_code
+else:
+    from domain import validate_stock_security_code
+
 
 UZI_MODEL = "UZI-Skill"
 UZI_VERSION = "3.9.2"
@@ -46,23 +51,26 @@ def build_uzi_portfolio(assets: Iterable[Mapping[str, Any]], path: str | Path) -
     if not stocks:
         raise ValueError("UZI portfolio requires at least one enabled stock")
 
+    rows: list[dict[str, Any]] = []
+    weight = round(1.0 / len(stocks), 10)
+    for asset in stocks:
+        ticker = validate_stock_security_code(str(asset.get("code") or ""))
+        if not ticker:
+            raise ValueError("stock asset requires a code")
+        rows.append(
+            {
+                "ticker": ticker,
+                "weight": weight,
+                "note": str(asset.get("name") or asset.get("note") or "").strip(),
+            }
+        )
+
     output = Path(path)
     output.parent.mkdir(parents=True, exist_ok=True)
-    weight = round(1.0 / len(stocks), 10)
     with output.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=["ticker", "weight", "note"])
         writer.writeheader()
-        for asset in stocks:
-            ticker = str(asset.get("code") or "").strip().upper()
-            if not ticker:
-                raise ValueError("stock asset requires a code")
-            writer.writerow(
-                {
-                    "ticker": ticker,
-                    "weight": weight,
-                    "note": str(asset.get("name") or asset.get("note") or "").strip(),
-                }
-            )
+        writer.writerows(rows)
     return output
 
 

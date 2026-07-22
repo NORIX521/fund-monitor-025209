@@ -40,6 +40,15 @@ def test_uzi_portfolio_contains_stocks_only(tmp_path):
     assert rows == [{"ticker": "600519.SH", "weight": "1.0", "note": "贵州茅台"}]
 
 
+@pytest.mark.parametrize("code", ["510300.SH", "161725.SZ"])
+def test_uzi_portfolio_rejects_mislabeled_fund_namespace_stock(tmp_path, code):
+    with pytest.raises(ValueError, match="fund namespace"):
+        build_uzi_portfolio(
+            [{"code": code, "name": "mislabeled", "asset_type": "stock", "enabled": True}],
+            tmp_path / "portfolio.csv",
+        )
+
+
 def test_normalize_uzi_cache_writes_publication_safe_results(tmp_path):
     fixture = load_fixture("uzi_panel.json")
     ticker_cache = tmp_path / "cache" / "600519.SH"

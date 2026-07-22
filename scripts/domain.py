@@ -17,6 +17,7 @@ _TYPE_ALIASES = {
     "交易型开放式指数基金": "etf",
 }
 _CN_SECURITIES = re.compile(r"\d{6}\.(?:SH|SZ|BJ)$")
+_CN_CODE_WITH_OPTIONAL_EXCHANGE = re.compile(r"(\d{6})(?:\.(?:SH|SZ|BJ))?$")
 _HK_SECURITIES = re.compile(r"\d{5}\.HK$")
 _US_SECURITIES = re.compile(r"[A-Z][A-Z0-9.-]{0,9}$")
 _FUND_CODE = re.compile(r"\d{6}$")
@@ -45,10 +46,23 @@ def _asset_type(raw_type: Any, code: str) -> str:
     kind = clean(raw_type).lower()
     kind = _TYPE_ALIASES.get(kind, kind)
     if not kind:
-        kind = "fund" if re.fullmatch(r"0\d{5}", code) else "stock"
+        if _CN_CODE_WITH_OPTIONAL_EXCHANGE.fullmatch(code.upper()):
+            raise ValueError("six-digit CN codes are ambiguous; asset_type is required")
+        kind = "stock"
     if kind not in ASSET_TYPES:
         raise ValueError(f"unsupported asset type: {kind}")
     return kind
+
+
+def validate_stock_security_code(code: str) -> str:
+    """Reject deterministic mainland fund namespaces before a code reaches stock tooling."""
+    normalized = clean(code).upper()
+    match = _CN_CODE_WITH_OPTIONAL_EXCHANGE.fullmatch(normalized)
+    if match and match.group(1).startswith(("5", "1")):
+        raise ValueError(
+            f"{normalized} is in a known CN fund namespace and cannot be asset_type stock"
+        )
+    return normalized
 
 
 def _normalize_code(code: str, kind: str) -> str:
@@ -60,6 +74,8 @@ def _normalize_code(code: str, kind: str) -> str:
         if not _FUND_CODE.fullmatch(normalized):
             raise ValueError(f"invalid {kind} code: {normalized}")
         return normalized
+
+    normalized = validate_stock_security_code(normalized)
 
     if re.fullmatch(r"\d{6}", normalized):
         suffix = "SH" if normalized.startswith(("5", "6", "9")) else "BJ" if normalized.startswith(("4", "8")) else "SZ"
