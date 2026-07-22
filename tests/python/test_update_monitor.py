@@ -248,3 +248,27 @@ def test_quote_no_data_retains_prior_fields_without_advancing_quote_success():
     assert detail["source_status"]["quotes"]["stale"] is True
     assert detail["source_status"]["quotes"]["error"] == "quote_no_data"
     assert detail["source_status"]["quotes"]["last_success_at"] == "2026-07-20T00:00:00+00:00"
+
+
+@pytest.mark.parametrize(
+    ("holdings", "error", "stale", "covered", "total"),
+    [
+        ([{"code": "600519.SH", "name": "disclosure only", "weight_pct": 10, "latest_price": None, "change_pct": None}], "quote_no_data", True, 0, 1),
+        ([{"code": "600519.SH", "weight_pct": 10, "latest_price": 100, "change_pct": None}, {"code": "000001.SZ", "weight_pct": 8, "latest_price": None, "change_pct": None}], "quote_partial_data", True, 1, 2),
+        ([{"code": "600519.SH", "weight_pct": 10, "latest_price": 100, "change_pct": None}, {"code": "000001.SZ", "weight_pct": 8, "latest_price": None, "change_pct": 2}], "", False, 2, 2),
+    ],
+)
+def test_quote_coverage_requires_price_or_change(holdings, error, stale, covered, total):
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import run_pipeline
+
+    class Provider:
+        def fetch_fund(self, asset):
+            return ProviderResult(data={"asset": asset, "holdings": holdings}, source_urls=["https://provider.test/quotes"], retrieved_at=NOW, errors={})
+
+    before = previous_detail()
+    before["market"]["holdings"] = [{"code": "600519.SH", "latest_price": 90, "change_pct": 1}, {"code": "000001.SZ", "latest_price": 80, "change_pct": 1}]
+    before["source_status"] = {"quotes": {"last_success_at": "2026-07-20T00:00:00+00:00"}}
+    status = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": Provider(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]["source_status"]["quotes"]
+    assert (status["error"], status["stale"], status["coverage"]) == (error, stale, {"covered": covered, "total": total, "pct": covered / total * 100})
+    assert status["last_success_at"] == (NOW if not stale else "2026-07-20T00:00:00+00:00")

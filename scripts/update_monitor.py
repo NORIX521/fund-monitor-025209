@@ -19,7 +19,7 @@ from scripts.scoring import score_fund, score_stock
 PIPELINE_VERSION = "4.1"
 SAFE_ASSET_ID = re.compile(r"[a-z0-9][a-z0-9-]{0,119}$")
 STATES = {"暂不纳入", "等待确认", "风险偏高", "优先研究", "持续观察"}
-STATUS_FIELDS = {"provider", "source_urls", "attempted_at", "retrieved_at", "last_success_at", "stale", "error"}
+STATUS_FIELDS = {"provider", "source_urls", "attempted_at", "retrieved_at", "last_success_at", "stale", "error", "coverage"}
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
@@ -41,8 +41,8 @@ def _iso(value: Any | None = None) -> str:
     return parsed.isoformat()
 
 
-def _status(*, stale: bool, attempted_at: str, provider: str, source_urls: list[str] | None = None, error: str | None = None, retrieved_at: str | None = None, last_success_at: str | None = None) -> dict[str, Any]:
-    result: dict[str, Any] = {"provider": provider, "source_urls": list(source_urls or []), "attempted_at": attempted_at, "retrieved_at": retrieved_at or "", "last_success_at": last_success_at or "", "stale": stale, "error": error or ""}
+def _status(*, stale: bool, attempted_at: str, provider: str, source_urls: list[str] | None = None, error: str | None = None, retrieved_at: str | None = None, last_success_at: str | None = None, coverage: dict[str, Any] | None = None) -> dict[str, Any]:
+    result: dict[str, Any] = {"provider": provider, "source_urls": list(source_urls or []), "attempted_at": attempted_at, "retrieved_at": retrieved_at or "", "last_success_at": last_success_at or "", "stale": stale, "error": error or "", "coverage": dict(coverage or {})}
     return result
 
 
@@ -131,6 +131,9 @@ def _validate_source_status(source_status: dict[str, Any]) -> None:
             raise ValueError("invalid source_status provider or URL")
         if type(value["stale"]) is not bool or not isinstance(value["error"], str) or not isinstance(value["attempted_at"], str) or not value["attempted_at"]:
             raise ValueError("invalid source_status fields")
+        coverage = value["coverage"]
+        if not isinstance(coverage, dict) or (coverage and (set(coverage) != {"covered", "total", "pct"} or not isinstance(coverage["covered"], int) or not isinstance(coverage["total"], int) or coverage["total"] <= 0 or not isinstance(coverage["pct"], (int, float)))):
+            raise ValueError("invalid source_status coverage")
         _iso(value["attempted_at"])
         for timestamp in (value["retrieved_at"], value["last_success_at"]):
             if not isinstance(timestamp, str):
@@ -178,8 +181,8 @@ def _atomic_json(path: Path, payload: dict[str, Any]) -> None:
     os.replace(temporary, path)
 
 
-def _component_status(previous: dict[str, Any], key: str, *, attempted_at: str, provider: str, source_urls: list[str], error: str, succeeded: bool, retrieved_at: str) -> dict[str, Any]:
-    return _status(stale=not succeeded, attempted_at=attempted_at, provider=provider, source_urls=source_urls, error=error, retrieved_at=retrieved_at if succeeded else "", last_success_at=retrieved_at if succeeded else _last_success(previous, key))
+def _component_status(previous: dict[str, Any], key: str, *, attempted_at: str, provider: str, source_urls: list[str], error: str, succeeded: bool, retrieved_at: str, coverage: dict[str, Any] | None = None) -> dict[str, Any]:
+    return _status(stale=not succeeded, attempted_at=attempted_at, provider=provider, source_urls=source_urls, error=error, retrieved_at=retrieved_at if succeeded else "", last_success_at=retrieved_at if succeeded else _last_success(previous, key), coverage=coverage)
 
 
 def _fund_market(asset: dict[str, Any], previous: dict[str, Any], options: dict[str, Any], now: str) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -197,15 +200,18 @@ def _fund_market(asset: dict[str, Any], previous: dict[str, Any], options: dict[
         provider_name = type(provider).__name__
         history_ok = "history" in incoming and incoming.get("history") not in (None, [], {}) and "history" not in errors
         holdings_ok = "holdings" in incoming and incoming.get("holdings") not in (None, [], {}) and "holdings" not in errors
-        quote_values = [holding.get(field) for holding in incoming.get("holdings", []) if isinstance(holding, dict) for field in ("name", "latest_price", "change_pct")]
-        quote_error = str(errors.get("quotes", "")) or ("quote_no_data" if holdings_ok and not any(value not in (None, "") for value in quote_values) else "")
+        quote_holdings = [holding for holding in incoming.get("holdings", []) if isinstance(holding, dict)]
+        covered = sum(1 for holding in quote_holdings if holding.get("latest_price") is not None or holding.get("change_pct") is not None)
+        total = len(quote_holdings)
+        coverage = {"covered": covered, "total": total, "pct": covered / total * 100} if total else {}
+        quote_error = str(errors.get("quotes", "")) or ("quote_no_data" if holdings_ok and covered == 0 else "quote_partial_data" if holdings_ok and covered < total else "")
         quotes_ok = holdings_ok and not quote_error
         merge_errors = {**errors, **({"quotes": quote_error} if quote_error else {})}
         market = _merge_market(previous, incoming, merge_errors)
         statuses = {
             "history": _component_status(previous, "history", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("history", "")), succeeded=history_ok, retrieved_at=retrieved),
             "holdings": _component_status(previous, "holdings", attempted_at=now, provider=provider_name, source_urls=urls, error=str(errors.get("holdings", "")), succeeded=holdings_ok, retrieved_at=retrieved),
-            "quotes": _component_status(previous, "quotes", attempted_at=now, provider=provider_name, source_urls=urls, error=quote_error, succeeded=quotes_ok, retrieved_at=retrieved),
+            "quotes": _component_status(previous, "quotes", attempted_at=now, provider=provider_name, source_urls=urls, error=quote_error, succeeded=quotes_ok, retrieved_at=retrieved, coverage=coverage),
         }
         any_success = history_ok or holdings_ok or quotes_ok
         statuses["market"] = _component_status(previous, "market", attempted_at=now, provider=provider_name, source_urls=urls, error="; ".join(str(value) for value in merge_errors.values()), succeeded=any_success, retrieved_at=retrieved)

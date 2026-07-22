@@ -9,7 +9,8 @@
       "retrieved_at": "",
       "last_success_at": "",
       "stale": true,
-      "error": "pipeline_refresh_required"
+      "error": "pipeline_refresh_required",
+      "coverage": {}
     }
   },
   "stale_count": 0,
