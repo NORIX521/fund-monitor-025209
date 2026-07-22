@@ -1,0 +1,29 @@
+{
+  "ticker": "600519.SH",
+  "synthesis": {
+    "overall_score": 68.4,
+    "verdict_label": "持续观察",
+    "risks": [
+      "估值波动需持续跟踪"
+    ]
+  },
+  "panel": {
+    "panel_consensus": 66.2,
+    "signal_distribution": {
+      "bullish": 28,
+      "neutral": 14,
+      "bearish": 9,
+      "skip": 0
+    },
+    "school_scores": {
+      "A": {
+        "consensus": 70.5,
+        "avg_score": 69.0
+      },
+      "D": {
+        "consensus": 61.0,
+        "avg_score": 59.5
+      }
+    }
+  }
+}

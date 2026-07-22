@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>International Research Feed</title>
+  <link rel="alternate" href="https://news.example.com/research" />
+  <entry>
+    <title>Issuer files a market update</title>
+    <link rel="alternate" href="https://articles.example.com/filings/abc?ref=rss&amp;item=7" />
+    <id>intl-1</id>
+    <published>2026-07-21T01:00:00Z</published>
+    <source>
+      <title>Issuer newsroom</title>
+      <link rel="alternate" href="https://source.example.com/issuer" />
+    </source>
+  </entry>
+</feed>

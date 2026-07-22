@@ -1,36 +1,42 @@
-# 025209 存储基金监控面板
+# 多资产 UZI 研究监控面板
 
-监控 **永赢先锋半导体智选混合发起C（025209）**：
+面板把股票、基金、ETF 和 LOF 放进同一份研究观察清单，展示可追溯的数据源、时效状态、评分覆盖率与失效条件。在线地址：<https://norix521.github.io/fund-monitor-025209/>。
 
-- 最新单位净值及相对阶段高点回撤
-- 2.25–2.35 元观察区、2.25 元风险线、2.50 元修复线
-- 前十大重仓股与当日行情广度
-- DRAM / NAND Flash 合约价格方向
-- 触发关键信号时自动创建 GitHub Issue
-- GitHub Pages 跨终端访问，支持安装为 PWA
+## 导入观察清单
+
+网页导入中心支持两种本地输入格式：
+
+- 粘贴文本：每行 `代码,名称,类型,板块,备注`，例如 `600519.SH,贵州茅台,stock,消费,示例`。
+- CSV：表头使用 `code,name,asset_type,sector,note,enabled`；引号内可以包含逗号或换行。
+
+浏览器只负责校验与生成 Issue 链接，不直接写仓库。打开链接后提交标题以 `[watchlist-import]` 开头、正文包含 `WATCHLIST_IMPORT_V1` 数据块的 Issue。GitHub Actions 仅接受仓库 `OWNER`、`MEMBER` 或 `COLLABORATOR` 的导入；其他同名请求只会收到最小权限说明，不会检出代码或改数据。每次最多导入 50 项，支持的规范类型是 `stock`、`fund`、`etf`、`lof`。
+
+Issue 处理不是即时接口：Actions 排队或平台负载可能造成延迟。成功处理并提交到 `main` 后，机器人会回复新增、更新和总数、附运行链接，并关闭 Issue；失败时只提供通用运行链接，Issue 保持开启，且不会暴露正文或异常细节。
+
+## 自动刷新与 UZI 边界
+
+- 工作日北京时间 21:30 运行 `lite` 刷新；周六北京时间 10:15 运行 `medium` 刷新。
+- 手动运行只能选择 `lite` 或 `medium`。自动化不会宣称执行 `deep` Agent 深度分析。
+- `medium` 按稳定顺序每批最多 10 只股票运行；单批失败不会覆盖已验证的其他批次结果。
+- UZI-Skill 固定到上游提交 `fce996c33e70eddce8e375f53cd252b549eb3d7c`，只接收已启用的规范股票代码；基金、ETF、LOF 实体不会送入 UZI。
+- 股票必须有本次直接 UZI 证据，否则输出明确的失败/陈旧状态，绝不把缺失标成成功。
+- 股票综合分只使用已规范化的本轮 UZI 证据：UZI 总分、基本面分，以及 D 技术流派分；缺失项不补零，原设计中的独立风险/新闻分在没有同等级结构化证据时保持缺失并降低覆盖率。
+- 基金使用基金净值、持仓和行情模型；持仓股票只有本轮刷新成功的 UZI 结果会进入评分，旧缓存仅作为显式 `stale` 记录，未覆盖权重会明确保留。
+
+工作流先运行完整 Python 与 Node 测试，再只提交 `data/watchlist.json`、`data/dashboard.json`、`data/assets`、`data/uzi` 和 `data/new_alerts.json`。Pages 使用同一次运行产生的白名单 `_site` 构件，不依赖机器人提交再触发第二个工作流。
+
+## 数据来源、时效与免责声明
+
+- 基金净值、定期持仓与持仓行情来自东方财富公开页面/接口。
+- 默认新闻来自按资产名称、代码和板块查询的 Google News CN 与 INTL RSS；记录保留文章链接、发布者链接、抓取时间和来源状态。
+- UZI 仅作为股票研究复核信号。来源失败时保留可验证的上一版字段，并将对应组件标记为 `stale`、写入尝试时间、上次成功时间和错误；基金定期持仓不代表实时仓位。
+- GitHub 定时任务可能延迟，外部页面结构也可能变化。界面中的时间和来源状态应与评分一起阅读，不能把旧数据当成实时数据。
+
+本项目只用于研究记录和信息整理，不构成投资建议、收益承诺、买卖指令或自动决策系统。请独立核验原始来源并自行承担决策风险。
 
 ## 部署
 
-1. 创建一个公开 GitHub 仓库，例如 `fund-monitor-025209`。
-2. 把本项目全部文件上传到仓库默认分支 `main`。
-3. 进入 **Settings → Pages → Build and deployment → Source**，选择 **GitHub Actions**。
-4. 打开 **Actions**，手动运行 `Update fund data and deploy Pages`，或等待首次 push 自动执行。
-5. 部署完成后，在 **Settings → Pages** 点击网站地址。
-
-项目型 Pages 地址通常为：
-
-```text
-https://<你的GitHub用户名>.github.io/fund-monitor-025209/
-```
-
-## 自动更新
-
-工作流默认在周一至周五北京时间 21:30 运行。GitHub Actions 的定时任务可能有数分钟延迟。
-
-## 数据源与限制
-
-- 基金净值、定期持仓与股票行情：东方财富公开页面/接口。
-- 存储行业价格信号：TrendForce 公开新闻页面。
-- 基金持仓仅按定期报告披露，不代表实时仓位。
-- 数据源网页结构变化时，抓取脚本可能需要维护。
-- 本项目仅供研究，不构成投资建议。
+1. 将仓库默认分支设为 `main`。
+2. 在 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。
+3. 在 Actions 中手动运行 **Secure UZI monitor refresh and Pages deploy**，或等待 `main` push/定时任务。
+4. 部署完成后访问上述在线地址；fork 用户的项目型地址通常是 `https://<用户名>.github.io/<仓库名>/`。

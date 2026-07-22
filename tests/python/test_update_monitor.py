@@ -1,0 +1,650 @@
+import json
+from pathlib import Path
+
+import pytest
+
+
+NOW = "2026-07-22T00:00:00+00:00"
+FUND = {
+    "id": "fund-cn-025209",
+    "code": "025209",
+    "name": "测试基金",
+    "asset_type": "fund",
+    "market": "CN",
+    "enabled": True,
+}
+
+
+def previous_detail():
+    return {
+        "asset": FUND,
+        "market": {"history": [{"date": "2026-07-20", "nav": 1.23}]},
+        "news": [{"title": "last good", "article_url": "https://example.test/article"}],
+        "score": {"overall": 61, "confidence": 0.7, "components": {}},
+        "recommendation": {"state": "持续观察"},
+        "source_status": {"market": {"stale": False}},
+    }
+
+
+class FailedProvider:
+    def fetch_fund(self, asset):
+        raise RuntimeError("fixture refresh failed")
+
+
+def test_failed_refresh_preserves_previous_market_and_marks_stale():
+    from scripts.update_monitor import run_pipeline
+
+    result = run_pipeline(
+        {"assets": [FUND]},
+        {"assets": {FUND["id"]: previous_detail()}},
+        {
+            "now": NOW,
+            "fund_provider": FailedProvider(),
+            "news_provider": lambda asset, region: [],
+            "holding_uzi": {},
+            "write": False,
+        },
+    )
+
+    detail = result["assets"][FUND["id"]]
+    assert detail["market"] == previous_detail()["market"]
+    assert detail["market"] != {}
+    assert detail["source_status"]["market"]["stale"] is True
+    assert "fixture refresh failed" in detail["source_status"]["market"]["error"]
+    assert result["dashboard"]["stale_count"] == 1
+
+
+def test_stock_without_direct_uzi_has_explicit_failure():
+    from scripts.update_monitor import run_pipeline
+
+    stock = {
+        "id": "stock-cn-600519-sh",
+        "code": "600519.SH",
+        "name": "测试股票",
+        "asset_type": "stock",
+        "market": "CN",
+        "enabled": True,
+    }
+    result = run_pipeline(
+        {"assets": [stock]},
+        {},
+        {
+            "now": NOW,
+            "market_data": {stock["id"]: {"quality_valuation": 70}},
+            "uzi": {},
+            "news_provider": lambda asset, region: [],
+            "write": False,
+        },
+    )
+
+    detail = result["assets"][stock["id"]]
+    assert detail["source_status"]["uzi"]["stale"] is True
+    assert detail["source_status"]["uzi"]["error"] == "direct_uzi_unavailable"
+    assert detail["recommendation"]["state"] == "暂不纳入"
+
+
+def test_stock_with_current_uzi_only_waits_instead_of_hard_exclusion():
+    from scripts.update_monitor import run_pipeline
+
+    stock = {
+        "id": "stock-us-aapl",
+        "code": "AAPL",
+        "name": "Apple",
+        "asset_type": "stock",
+        "market": "US",
+        "enabled": True,
+    }
+    result = run_pipeline(
+        {"assets": [stock]},
+        {},
+        {
+            "now": NOW,
+            "market_data": {},
+            "uzi": {stock["id"]: {"overall": 82}},
+            "news_provider": lambda asset, region: [],
+            "write": False,
+        },
+    )
+
+    detail = result["assets"][stock["id"]]
+    assert detail["score"]["components"] == {"uzi_consensus": 82.0}
+    assert detail["source_status"]["market"]["error"] == "market_data_unavailable"
+    assert detail["recommendation"]["risk"]["hard_failures"] == []
+    assert detail["recommendation"]["state"] == "等待确认"
+
+
+def test_stock_market_data_without_source_url_is_stale_not_falsely_fresh():
+    from scripts.update_monitor import run_pipeline
+
+    stock = {
+        "id": "stock-cn-600519-sh",
+        "code": "600519.SH",
+        "name": "测试股票",
+        "asset_type": "stock",
+        "market": "CN",
+        "enabled": True,
+    }
+    detail = run_pipeline(
+        {"assets": [stock]},
+        {},
+        {
+            "now": NOW,
+            "market_data": {stock["id"]: {"quality_valuation": 70}},
+            "uzi": {stock["id"]: {"overall": 80}},
+            "news_provider": lambda *_: [],
+        },
+    )["assets"][stock["id"]]
+
+    assert detail["market"]["quality_valuation"] == 70
+    assert detail["source_status"]["market"]["stale"] is True
+    assert detail["source_status"]["market"]["error"] == "market_provenance_unavailable"
+
+
+def test_pipeline_writes_valid_versioned_outputs_atomically(tmp_path):
+    from scripts.update_monitor import run_pipeline
+
+    previous = previous_detail()
+    result = run_pipeline(
+        {"assets": [FUND]},
+        {"assets": {FUND["id"]: previous}},
+        {
+            "now": NOW,
+            "fund_provider": FailedProvider(),
+            "news_provider": lambda asset, region: [],
+            "holding_uzi": {},
+            "output_dir": tmp_path,
+            "write": True,
+        },
+    )
+
+    dashboard_path = tmp_path / "dashboard.json"
+    detail_path = tmp_path / "assets" / f"{FUND['id']}.json"
+    dashboard = json.loads(dashboard_path.read_text(encoding="utf-8"))
+    detail = json.loads(detail_path.read_text(encoding="utf-8"))
+
+    assert dashboard["pipeline_version"] == result["dashboard"]["pipeline_version"]
+    assert dashboard["asset_count"] == 1
+    assert dashboard["assets"] == [result["dashboard"]["assets"][0]]
+    assert detail["asset"]["id"] == FUND["id"]
+    assert not list(tmp_path.rglob("*.tmp"))
+
+
+def test_pipeline_calls_and_stores_both_news_regions_and_serializes_items(tmp_path):
+    from scripts.providers.news import NewsItem
+    from scripts.update_monitor import run_pipeline
+
+    calls = []
+    def news(asset, region):
+        calls.append(region)
+        return [NewsItem("traceable", f"https://example.test/{region}", "source", "https://source.test", NOW, NOW, region)]
+
+    result = run_pipeline(
+        {"assets": [FUND]},
+        {},
+        {"now": NOW, "news_provider": news, "write": True, "output_dir": tmp_path},
+    )
+    detail = result["assets"][FUND["id"]]
+    assert calls == ["CN", "INTL"]
+    assert set(detail["news"]) == {"CN", "INTL"}
+    assert detail["news"]["CN"][0]["article_url"] == "https://example.test/CN"
+    assert json.loads((tmp_path / "assets" / f"{FUND['id']}.json").read_text(encoding="utf-8"))["news"]["INTL"]
+
+
+def test_failed_stock_uzi_retains_previous_evidence_but_excludes_asset():
+    from scripts.update_monitor import run_pipeline
+
+    stock = {"id": "stock-cn-600519-sh", "code": "600519.SH", "name": "测试股票", "asset_type": "stock", "market": "CN", "enabled": True}
+    previous = {"assets": {stock["id"]: {"asset": stock, "market": {"quality_valuation": 70}, "uzi": {"overall": 80}, "news": {"CN": [], "INTL": []}, "score": {"overall": 80, "confidence": .8}, "recommendation": {"state": "优先研究"}, "source_status": {}}}}
+    detail = run_pipeline({"assets": [stock]}, previous, {"now": NOW, "market_data": {stock["id"]: {"quality_valuation": 70}}, "uzi": {}, "news_provider": lambda *_: []})["assets"][stock["id"]]
+    assert detail["uzi"] == {"overall": 80}
+    assert detail["source_status"]["uzi"]["stale"] is True
+    assert detail["recommendation"]["state"] == "暂不纳入"
+
+
+def test_pipeline_generates_timezone_timestamp_and_rejects_unsafe_asset_id():
+    from scripts.update_monitor import run_pipeline
+
+    result = run_pipeline({"assets": [FUND]}, {}, {"news_provider": lambda *_: []})
+    assert result["dashboard"]["generated_at"].endswith("+00:00")
+    unsafe = {**FUND, "id": "../unsafe"}
+    with pytest.raises(ValueError, match="safe"):
+        run_pipeline({"assets": [unsafe]}, {}, {"news_provider": lambda *_: []})
+
+
+def test_partial_fund_merge_keeps_prior_holdings_and_component_provenance():
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import run_pipeline
+
+    class PartialProvider:
+        def fetch_fund(self, asset):
+            return ProviderResult(data={"asset": asset, "history": [{"date": "2026-07-21", "nav": 1.5}]}, source_urls=["https://provider.test/history"], retrieved_at=NOW, errors={"holdings": "holdings unavailable"})
+
+    before = previous_detail()
+    before["market"]["holdings"] = [{"code": "600519.SH", "weight_pct": 20}]
+    result = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": PartialProvider(), "holding_uzi": {}, "news_provider": lambda *_: []})
+    detail = result["assets"][FUND["id"]]
+    assert detail["market"]["holdings"] == before["market"]["holdings"]
+    assert detail["source_status"]["market"]["source_urls"] == ["https://provider.test/history"]
+    assert detail["source_status"]["market"]["attempted_at"] == NOW
+
+
+def test_checked_in_dashboard_satisfies_lightweight_schema_and_nan_is_rejected():
+    from scripts.update_monitor import _validate_dashboard, run_pipeline
+
+    dashboard = json.loads((Path(__file__).parents[2] / "data" / "dashboard.json").read_text(encoding="utf-8"))
+    _validate_dashboard(dashboard)
+    stock = {"id": "stock-cn-600519-sh", "code": "600519.SH", "name": "测试股票", "asset_type": "stock", "market": "CN", "enabled": True}
+    with pytest.raises(ValueError, match="finite"):
+        run_pipeline({"assets": [stock]}, {}, {"now": NOW, "market_data": {stock["id"]: {"quality_valuation": float("nan")}}, "uzi": {stock["id"]: {"overall": 80}}, "news_provider": lambda *_: []})
+
+
+def test_quote_failure_preserves_prior_quote_fields_but_accepts_disclosure():
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import run_pipeline
+
+    class QuoteFailure:
+        def fetch_fund(self, asset):
+            return ProviderResult(data={"asset": asset, "holdings": [{"code": "600519", "name": "new disclosure", "weight_pct": 11, "latest_price": None, "change_pct": None}], "holding_report_date": "2026 Q3"}, source_urls=["https://provider.test/holdings"], retrieved_at=NOW, errors={"quotes": "quote refresh failed"})
+
+    before = previous_detail()
+    before["market"]["holdings"] = [{"code": "600519.SH", "name": "prior quote name", "weight_pct": 10, "latest_price": 100, "change_pct": 1}]
+    detail = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": QuoteFailure(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]
+    holding = detail["market"]["holdings"][0]
+    assert holding["weight_pct"] == 11
+    assert holding["name"] == "prior quote name"
+    assert holding["latest_price"] == 100
+    assert holding["change_pct"] == 1
+    assert detail["market"]["holding_report_date"] == "2026 Q3"
+    assert detail["source_status"]["quotes"]["stale"] is True
+    assert detail["source_status"]["holdings"]["last_success_at"] == NOW
+
+
+def test_total_provider_failure_retains_component_last_success_and_mixed_statuses():
+    from scripts.update_monitor import run_pipeline
+
+    before = previous_detail()
+    before["source_status"] = {
+        "market": {"last_success_at": "2026-07-20T00:00:00+00:00"},
+        "history": {"last_success_at": "2026-07-19T00:00:00+00:00"},
+        "holdings": {"last_success_at": "2026-07-18T00:00:00+00:00"},
+        "quotes": {"last_success_at": "2026-07-17T00:00:00+00:00"},
+    }
+    detail = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": FailedProvider(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]
+    assert detail["source_status"]["market"]["last_success_at"] == "2026-07-20T00:00:00+00:00"
+    assert detail["source_status"]["history"]["last_success_at"] == "2026-07-19T00:00:00+00:00"
+    assert detail["source_status"]["history"]["attempted_at"] == NOW
+    assert detail["source_status"]["holdings"]["stale"] is True
+
+
+@pytest.mark.parametrize("status", [
+    {"provider": "p", "source_urls": ["ftp://bad.test"], "attempted_at": NOW, "retrieved_at": "", "last_success_at": "", "stale": True, "error": "x"},
+    {"provider": "p", "source_urls": [], "attempted_at": NOW, "retrieved_at": "", "last_success_at": "not-a-time", "stale": True, "error": "x"},
+])
+def test_detail_rejects_invalid_source_status_urls_and_timestamps(status):
+    from scripts.update_monitor import _validate_detail
+
+    detail = {"asset": FUND, "market": {}, "uzi": {}, "news": {"CN": [], "INTL": []}, "score": {"overall": None, "confidence": 0.0}, "recommendation": {"state": "等待确认", "confidence": 0.0, "timestamp": NOW}, "source_status": {"market": status}}
+    with pytest.raises(ValueError):
+        _validate_detail(detail)
+
+
+def test_producer_validator_rejects_fresh_status_without_provenance():
+    from scripts.update_monitor import _validate_source_status
+
+    status = {
+        "provider": "market_data",
+        "source_urls": [],
+        "attempted_at": NOW,
+        "retrieved_at": NOW,
+        "last_success_at": NOW,
+        "stale": False,
+        "error": "",
+        "coverage": {},
+    }
+
+    with pytest.raises(ValueError, match="fresh source_status requires provenance"):
+        _validate_source_status({"market": status})
+
+
+def test_quote_no_data_retains_prior_fields_without_advancing_quote_success():
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import run_pipeline
+
+    class NoQuoteData:
+        def fetch_fund(self, asset):
+            return ProviderResult(data={"asset": asset, "holdings": [{"code": "600519.SH", "weight_pct": 12, "name": "", "latest_price": None, "change_pct": None}]}, source_urls=["https://provider.test/holdings"], retrieved_at=NOW, errors={})
+
+    before = previous_detail()
+    before["market"]["holdings"] = [{"code": "600519.SH", "weight_pct": 10, "name": "prior", "latest_price": 100, "change_pct": 1}]
+    before["source_status"] = {"quotes": {"last_success_at": "2026-07-20T00:00:00+00:00"}}
+    detail = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": NoQuoteData(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]
+    holding = detail["market"]["holdings"][0]
+    assert (holding["name"], holding["latest_price"], holding["change_pct"]) == ("prior", 100, 1)
+    assert detail["source_status"]["quotes"]["stale"] is True
+    assert detail["source_status"]["quotes"]["error"] == "quote_no_data"
+    assert detail["source_status"]["quotes"]["last_success_at"] == "2026-07-20T00:00:00+00:00"
+
+
+@pytest.mark.parametrize(
+    ("holdings", "error", "stale", "covered", "total"),
+    [
+        ([{"code": "600519.SH", "name": "disclosure only", "weight_pct": 10, "latest_price": None, "change_pct": None}], "quote_no_data", True, 0, 1),
+        ([{"code": "600519.SH", "weight_pct": 10, "latest_price": 100, "change_pct": None}, {"code": "000001.SZ", "weight_pct": 8, "latest_price": None, "change_pct": None}], "quote_partial_data", True, 1, 2),
+        ([{"code": "600519.SH", "weight_pct": 10, "latest_price": 100, "change_pct": None}, {"code": "000001.SZ", "weight_pct": 8, "latest_price": None, "change_pct": 2}], "", False, 2, 2),
+    ],
+)
+def test_quote_coverage_requires_price_or_change(holdings, error, stale, covered, total):
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import run_pipeline
+
+    class Provider:
+        def fetch_fund(self, asset):
+            return ProviderResult(data={"asset": asset, "holdings": holdings}, source_urls=["https://provider.test/quotes"], retrieved_at=NOW, errors={})
+
+    before = previous_detail()
+    before["market"]["holdings"] = [{"code": "600519.SH", "latest_price": 90, "change_pct": 1}, {"code": "000001.SZ", "latest_price": 80, "change_pct": 1}]
+    before["source_status"] = {"quotes": {"last_success_at": "2026-07-20T00:00:00+00:00"}}
+    status = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": Provider(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]["source_status"]["quotes"]
+    assert (status["error"], status["stale"], status["coverage"]) == (error, stale, {"covered": covered, "total": total, "pct": covered / total * 100})
+    assert status["last_success_at"] == (NOW if not stale else "2026-07-20T00:00:00+00:00")
+
+
+def test_partial_quote_merge_uses_covered_values_and_retains_uncovered_values():
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import run_pipeline
+
+    class Provider:
+        def fetch_fund(self, asset):
+            return ProviderResult(data={"asset": asset, "holdings": [{"code": "600519.SH", "weight_pct": 10, "latest_price": 110, "change_pct": 3}, {"code": "000001.SZ", "weight_pct": 8, "latest_price": None, "change_pct": None}]}, source_urls=["https://provider.test/quotes"], retrieved_at=NOW, errors={})
+
+    before = previous_detail()
+    before["market"]["holdings"] = [{"code": "600519.SH", "latest_price": 100, "change_pct": 1}, {"code": "000001.SZ", "latest_price": 80, "change_pct": 2}]
+    holdings = run_pipeline({"assets": [FUND]}, {"assets": {FUND["id"]: before}}, {"now": NOW, "fund_provider": Provider(), "news_provider": lambda *_: [], "holding_uzi": {}})["assets"][FUND["id"]]["market"]["holdings"]
+    assert (holdings[0]["latest_price"], holdings[0]["change_pct"]) == (110, 3)
+    assert (holdings[1]["latest_price"], holdings[1]["change_pct"]) == (80, 2)
+
+
+def test_current_uzi_selection_excludes_failed_and_unattempted_restored_cache():
+    from scripts.update_monitor import _select_current_uzi
+
+    first = {"id": "stock-cn-600519-sh", "code": "600519.SH", "asset_type": "stock", "enabled": True}
+    second = {"id": "stock-cn-000001-sz", "code": "000001.SZ", "asset_type": "stock", "enabled": True}
+    restored = {
+        "600519.SH": {"ticker": "600519.SH", "overall": 80},
+        "000001.SZ": {"ticker": "000001.SZ", "overall": 70},
+        "300750.SZ": {"ticker": "300750.SZ", "overall": 60},
+    }
+    restored["600519.SH"].update(stale=False, run={"status": "refreshed_this_run"})
+    restored["000001.SZ"].update(stale=True, run={"status": "restored_fallback"})
+    restored["300750.SZ"].update(stale=True, run={"status": "failed"})
+    current = {"tickers": {
+        "600519.SH": {"status": "refreshed_this_run"},
+        "000001.SZ": {"status": "restored_fallback"},
+        "300750.SZ": {"status": "failed"},
+    }}
+
+    direct, holding = _select_current_uzi(
+        {"version": 1, "assets": [first, second]}, restored, current
+    )
+
+    assert direct == {first["id"]: restored["600519.SH"]}
+    assert holding == {"600519.SH": restored["600519.SH"]}
+    assert _select_current_uzi(
+        {"version": 1, "assets": [first]}, restored, None
+    ) == ({}, {})
+
+
+@pytest.mark.parametrize(
+    ("manifest_status", "expected_coverage"),
+    [("refreshed_this_run", 25.0), ("restored_fallback", 0.0), ("failed", 0.0)],
+)
+def test_fund_only_disclosed_holding_uses_only_current_manifest_score(
+    manifest_status, expected_coverage
+):
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import _select_current_uzi, run_pipeline
+
+    class HoldingProvider:
+        def fetch_fund(self, asset):
+            return ProviderResult(
+                data={
+                    "asset": asset,
+                    "history": [
+                        {"date": "2026-07-20", "nav": 1.0},
+                        {"date": "2026-07-21", "nav": 1.1},
+                    ],
+                    "holdings": [
+                        {
+                            "code": "600519.SH",
+                            "name": "贵州茅台",
+                            "weight_pct": 25,
+                            "latest_price": 1500,
+                            "change_pct": 1,
+                        }
+                    ],
+                },
+                source_urls=["https://provider.test/fund"],
+                retrieved_at=NOW,
+                errors={},
+            )
+
+    public = {
+        "600519.SH": {
+            "ticker": "600519.SH",
+            "overall": 76,
+            "stale": manifest_status != "refreshed_this_run",
+            "run": {"status": manifest_status},
+        }
+    }
+    manifest = {"tickers": {"600519.SH": {"status": manifest_status}}}
+    direct, holding = _select_current_uzi({"version": 1, "assets": [FUND]}, public, manifest)
+    assert direct == {}
+    result = run_pipeline(
+        {"version": 1, "assets": [FUND]},
+        {},
+        {
+            "now": NOW,
+            "fund_provider": HoldingProvider(),
+            "holding_uzi": holding,
+            "news_provider": lambda *_: [],
+        },
+    )
+    detail = result["assets"][FUND["id"]]
+    assert detail["score"]["coverage"]["holding_uzi_pct"] == expected_coverage
+    if expected_coverage:
+        assert detail["score"]["components"]["holding_uzi"] == 76
+    else:
+        assert "holding_uzi" not in detail["score"]["components"]
+
+
+def test_fresh_fund_refresh_purges_synthetic_seed_only_market_inputs():
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.providers.news import NewsItem
+    from scripts.update_monitor import run_pipeline
+
+    repo = Path(__file__).parents[2]
+    prior = json.loads(
+        (repo / "data" / "assets" / "fund-cn-025209.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    prior["market"].update(
+        {
+            "fixture_notice": "SYNTHETIC STALE FIXTURE: not live market data",
+            "size_billion": 1,
+            "expense_ratio_pct": 0.5,
+            "age_years": 1,
+            "manager_tenure_years": 1,
+        }
+    )
+
+    class FreshProvider:
+        def fetch_fund(self, asset):
+            return ProviderResult(
+                data={
+                    "asset": asset,
+                    "history": [
+                        {"date": "2026-07-20", "nav": 1.0},
+                        {"date": "2026-07-21", "nav": 1.05},
+                        {"date": "2026-07-22", "nav": 1.1},
+                    ],
+                    "holdings": [
+                        {
+                            "code": "600519.SH",
+                            "name": "贵州茅台",
+                            "weight_pct": 20,
+                            "latest_price": 1500,
+                            "change_pct": 1,
+                        }
+                    ],
+                    "holding_report_date": "2026 Q2",
+                },
+                source_urls=["https://fund-provider.example/025209"],
+                retrieved_at=NOW,
+                errors={},
+            )
+
+    def news(asset, region):
+        return [
+            NewsItem(
+                "fresh",
+                f"https://article.example/{region.lower()}",
+                "publisher",
+                "https://publisher.example",
+                NOW,
+                NOW,
+                region,
+            )
+        ]
+
+    result = run_pipeline(
+        {"version": 1, "assets": [prior["asset"]]},
+        {"assets": {prior["asset"]["id"]: prior}},
+        {
+            "now": NOW,
+            "fund_provider": FreshProvider(),
+            "holding_uzi": {},
+            "news_provider": news,
+        },
+    )
+    detail = result["assets"][prior["asset"]["id"]]
+
+    assert detail["source_status"]["market"]["stale"] is False
+    assert "fixture_notice" not in detail["market"]
+    assert not {
+        "size_billion",
+        "expense_ratio_pct",
+        "age_years",
+        "manager_tenure_years",
+    } & set(detail["market"])
+    assert "stability" not in detail["score"]["components"]
+
+
+def test_run_from_paths_builds_stock_components_from_current_uzi_evidence(
+    tmp_path, monkeypatch
+):
+    from scripts.providers import news as news_module
+    from scripts.providers.news import NewsItem
+    from scripts.update_monitor import run_from_paths
+    from scripts.validate_outputs import validate_outputs
+
+    stock = {
+        "id": "stock-us-aapl",
+        "code": "AAPL",
+        "name": "Apple",
+        "asset_type": "stock",
+        "market": "US",
+        "sector": "Technology",
+        "note": "production-entrypoint fixture",
+        "enabled": True,
+    }
+    data_root = tmp_path / "data"
+    data_root.mkdir()
+    watchlist_path = data_root / "watchlist.json"
+    watchlist_path.write_text(
+        json.dumps(
+            {"version": 1, "updated_at": NOW, "assets": [stock]},
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    cache = tmp_path / "uzi-cache" / "AAPL"
+    cache.mkdir(parents=True)
+    (cache / "synthesis.json").write_text(
+        json.dumps(
+            {
+                "overall_score": 82,
+                "fundamental_score": 78,
+                "school_scores": {"D": {"consensus": 74}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (cache / "panel.json").write_text(
+        json.dumps(
+            {
+                "panel_consensus": 80,
+                "school_scores": {"D": {"consensus": 74}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "attempted_at": NOW,
+                "depth": "lite",
+                "run_id": "run-1",
+                "upstream": {
+                    "repository": "wbh604/UZI-Skill",
+                    "commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+                },
+                "tickers": {
+                    "AAPL": {
+                        "status": "refreshed_this_run",
+                        "attempted_at": NOW,
+                        "last_success_at": NOW,
+                        "run_id": "run-1",
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fresh_news(asset, region):
+        return [
+            NewsItem(
+                "fresh",
+                f"https://article.example/{region.lower()}",
+                "publisher",
+                "https://publisher.example",
+                NOW,
+                NOW,
+                region,
+            )
+        ]
+
+    monkeypatch.setattr(news_module, "fetch_news", fresh_news)
+
+    result = run_from_paths(
+        watchlist_path,
+        data_root,
+        tmp_path / "uzi-cache",
+        manifest,
+        "final",
+    )
+    detail = result["assets"][stock["id"]]
+
+    assert detail["score"]["components"] == {
+        "uzi_consensus": 82.0,
+        "quality_valuation": 78.0,
+        "trend_momentum": 74.0,
+    }
+    assert detail["score"]["coverage"]["weight_pct"] == 80.0
+    assert detail["source_status"]["market"]["provider"] == "uzi_normalized_panel"
+    assert detail["source_status"]["market"]["stale"] is False
+    assert detail["recommendation"]["state"] != "暂不纳入"
+    assert validate_outputs(data_root) == []

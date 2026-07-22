@@ -3,122 +3,138 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0d12" />
-  <meta name="description" content="永赢先锋半导体智选混合C（025209）净值回撤、十大重仓股与存储周期信号监控面板。" />
-  <title>025209｜存储基金监控</title>
+  <meta name="theme-color" content="#0b111a" />
+  <meta name="description" content="覆盖股票、基金、ETF 与 LOF 的多资产研究监控台，呈现 UZI/基金模型、证据覆盖和可追溯趋势来源。" />
+  <title>多资产研究监控台</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
-  <div class="noise" aria-hidden="true"></div>
+  <a class="skip-link" href="#mainContent">跳到主要内容</a>
   <header class="topbar">
-    <div>
-      <div class="eyebrow">SEMICONDUCTOR CYCLE MONITOR</div>
-      <h1>永赢先锋半导体智选混合C</h1>
-      <div class="fund-meta"><span>025209</span><span>高弹性主动权益</span><span>存储主线</span></div>
+    <div class="brand-block">
+      <div class="eyebrow">MULTI-ASSET RESEARCH MONITOR</div>
+      <h1>多资产研究监控台</h1>
+      <p class="header-copy">聚合模型评分、证据覆盖与双源趋势，帮助建立可追溯的研究队列。</p>
     </div>
-    <div class="top-actions">
-      <button id="notifyButton" class="button secondary" type="button">开启浏览器提醒</button>
-      <button id="refreshButton" class="button primary" type="button">刷新数据</button>
+    <div class="top-actions" aria-label="页面操作">
+      <span id="freshnessBadge" class="status-chip neutral">等待数据</span>
+      <button id="refreshButton" class="button secondary" type="button">刷新数据</button>
+      <button id="importButton" class="button primary" type="button">批量导入</button>
     </div>
   </header>
 
-  <main class="layout">
-    <section class="hero-grid">
-      <article class="metric-card featured">
-        <div class="metric-label">最新单位净值</div>
-        <div class="metric-main"><span id="latestNav">—</span><small id="navDate">—</small></div>
-        <div class="metric-foot"><span id="dailyChange" class="pill neutral">—</span><span id="dataFreshness">等待数据</span></div>
-      </article>
-      <article class="metric-card">
-        <div class="metric-label">距阶段高点回撤</div>
-        <div class="metric-main"><span id="drawdown">—</span><small id="peakNav">高点 —</small></div>
-        <div class="progress-track"><div id="drawdownBar" class="progress-bar"></div></div>
-      </article>
-      <article class="metric-card">
-        <div class="metric-label">当前关键区间</div>
-        <div id="zoneName" class="zone-name">—</div>
-        <div id="zoneText" class="metric-description">正在判断净值位置。</div>
-      </article>
-      <article class="metric-card">
-        <div class="metric-label">十大重仓股广度</div>
-        <div class="metric-main"><span id="breadth">—</span><small id="breadthDetail">—</small></div>
-        <div id="holdingSignal" class="metric-description">等待行情数据。</div>
-      </article>
+  <nav class="view-nav" aria-label="看板分区">
+    <a href="#overview">总览</a>
+    <a href="#assetList">资产列表</a>
+    <a href="#assetDetail">研究详情</a>
+    <a href="#trendStreams">趋势来源</a>
+  </nav>
+
+  <main id="mainContent" class="layout" tabindex="-1">
+    <div id="appStatus" class="app-status" role="status" aria-live="polite">正在读取研究数据…</div>
+
+    <section id="overview" aria-labelledby="overviewTitle">
+      <div class="section-heading">
+        <div><div class="eyebrow">OVERVIEW</div><h2 id="overviewTitle">研究队列总览</h2></div>
+        <p id="generatedAt" class="section-note">更新时间 —</p>
+      </div>
+      <div class="summary-grid">
+        <article class="metric-card featured"><span>监控资产</span><strong id="assetCount">—</strong><small>股票 / 基金 / ETF / LOF</small></article>
+        <article class="metric-card"><span>平均置信度</span><strong id="averageConfidence">—</strong><small>仅统计当前有效记录</small></article>
+        <article class="metric-card"><span>需优先研究</span><strong id="priorityCount">—</strong><small>模型状态：优先研究</small></article>
+        <article class="metric-card"><span>过期或异常</span><strong id="staleCount">—</strong><small>需回到来源重新确认</small></article>
+      </div>
     </section>
 
-    <section class="content-grid">
-      <article class="panel chart-panel">
-        <div class="panel-heading">
-          <div><div class="eyebrow">NAV TREND</div><h2>净值走势与观察线</h2></div>
-          <div class="legend"><span><i class="line nav-line"></i>单位净值</span><span><i class="line watch-line"></i>观察区</span></div>
+    <section class="workspace-grid" aria-label="资产工作区">
+      <article id="assetList" class="panel asset-panel" aria-labelledby="assetListTitle">
+        <div class="section-heading compact">
+          <div><div class="eyebrow">WATCHLIST</div><h2 id="assetListTitle">资产列表</h2></div>
+          <span id="resultCount" class="status-chip neutral">0 项</span>
         </div>
-        <div class="chart-wrap"><canvas id="navChart" aria-label="基金净值走势图"></canvas><div id="chartTooltip" class="chart-tooltip"></div></div>
-        <div class="thresholds">
-          <div><strong>2.25</strong><span>风险破位</span></div>
-          <div><strong>2.25–2.35</strong><span>重点观察</span></div>
-          <div><strong>2.50</strong><span>修复确认线</span></div>
-          <div><strong>3.0864</strong><span>阶段高点</span></div>
-        </div>
-      </article>
-
-      <article class="panel signal-panel">
-        <div class="panel-heading"><div><div class="eyebrow">MEMORY PRICING</div><h2>存储价格信号</h2></div><span id="storageBadge" class="pill neutral">—</span></div>
-        <div class="memory-cards">
-          <div class="memory-card"><span>DRAM 合约价</span><strong id="dramRange">—</strong><small id="dramTrend">—</small></div>
-          <div class="memory-card"><span>NAND Flash</span><strong id="nandRange">—</strong><small id="nandTrend">—</small></div>
-        </div>
-        <div class="signal-summary" id="storageSummary">等待最新行业信号。</div>
-        <a id="storageSource" class="source-link" href="#" target="_blank" rel="noreferrer">查看行业信号来源 ↗</a>
-      </article>
-    </section>
-
-    <section class="content-grid lower-grid">
-      <article class="panel holdings-panel">
-        <div class="panel-heading"><div><div class="eyebrow">TOP HOLDINGS</div><h2>前十大重仓股</h2></div><span id="holdingReportDate" class="muted">—</span></div>
-        <div class="table-wrap">
+        <form id="filterForm" class="filter-grid" role="search">
+          <label class="search-field"><span>搜索资产</span><input id="searchInput" type="search" autocomplete="off" placeholder="代码、名称或板块" /></label>
+          <label><span>资产类型</span><select id="typeFilter"><option value="all">全部类型</option><option value="stock">股票</option><option value="fund">基金</option><option value="etf">ETF</option><option value="lof">LOF</option></select></label>
+          <label><span>研究状态</span><select id="stateFilter"><option value="all">全部状态</option><option>优先研究</option><option>持续观察</option><option>等待确认</option><option>风险偏高</option><option>暂不纳入</option></select></label>
+          <label><span>数据时效</span><select id="freshnessFilter"><option value="all">全部时效</option><option value="fresh">当前</option><option value="stale">过期/异常</option></select></label>
+        </form>
+        <div class="table-wrap" tabindex="0" aria-label="可横向滚动的资产表格">
           <table>
-            <thead><tr><th>#</th><th>股票</th><th>代码</th><th>占净值</th><th>最新涨跌</th><th>状态</th></tr></thead>
-            <tbody id="holdingsBody"></tbody>
+            <thead><tr><th scope="col">资产</th><th scope="col">类型</th><th scope="col">研究状态</th><th scope="col">置信度</th><th scope="col">数据</th><th scope="col"><span class="sr-only">操作</span></th></tr></thead>
+            <tbody id="assetRows"></tbody>
           </table>
         </div>
-        <p class="caption">重仓股数据按基金定期报告更新，行情涨跌为最近可获取交易数据，不代表基金实时仓位。</p>
-      </article>
-
-      <article class="panel alert-panel">
-        <div class="panel-heading"><div><div class="eyebrow">TRIGGER LOG</div><h2>关键信号</h2></div><span id="alertCount" class="pill neutral">0</span></div>
-        <div id="alertsList" class="alerts-list"></div>
-        <div class="settings-box">
-          <div><strong>本机提醒设置</strong><p>阈值保存在当前浏览器。网站关闭后不会自行推送；仓库工作流可通过 GitHub Issue 留痕。</p></div>
-          <button id="settingsButton" class="text-button" type="button">调整阈值</button>
+        <div id="assetEmpty" class="empty-state" hidden>
+          <strong>当前没有可显示的资产</strong>
+          <p id="assetEmptyText">调整筛选条件，或通过批量导入建立研究队列。</p>
+          <button id="emptyImportButton" class="button secondary" type="button">打开导入中心</button>
         </div>
       </article>
+
+      <aside id="assetDetail" class="panel detail-panel" aria-label="资产研究详情" aria-busy="false">
+        <div class="detail-placeholder" id="detailPlaceholder">
+          <div class="eyebrow">SELECTED ASSET</div>
+          <h2 id="detailTitle">选择一项资产</h2>
+          <p>从左侧列表打开资产，查看模型、证据和风险失效条件。</p>
+        </div>
+        <div id="detailContent" hidden>
+          <div class="detail-head">
+            <div><div id="detailCode" class="eyebrow">—</div><h2 id="detailName">—</h2><p id="detailMeta" class="section-note">—</p></div>
+            <span id="detailState" class="status-chip neutral">—</span>
+          </div>
+          <div class="score-grid">
+            <div class="score-dial"><span>综合评分</span><strong id="overallScore">—</strong><small id="modelLabel">—</small></div>
+            <div class="confidence-block"><span>置信度</span><strong id="confidenceValue">—</strong><div class="progress-track" aria-hidden="true"><span id="confidenceBar"></span></div><small id="coverageLabel">证据覆盖 —</small></div>
+          </div>
+          <div class="detail-section"><h3>分项证据</h3><div id="componentList" class="component-list"></div></div>
+          <div class="detail-section"><h3>研究依据</h3><ul id="reasonList" class="evidence-list"></ul></div>
+          <div class="risk-grid">
+            <section><h3>主要风险</h3><ul id="riskList" class="evidence-list risk"></ul></section>
+            <section><h3>失效条件</h3><ul id="invalidationList" class="evidence-list"></ul></section>
+          </div>
+          <div class="source-audit"><h3>数据来源与状态</h3><div id="sourceStatusList"></div></div>
+        </div>
+      </aside>
     </section>
 
-    <section class="methodology">
-      <h2>怎么看这个面板</h2>
-      <div class="method-grid">
-        <div><span>01</span><strong>位置</strong><p>净值进入 2.25–2.35 元，不等于确定见底，只代表风险收益比开始改善。</p></div>
-        <div><span>02</span><strong>广度</strong><p>至少 7 只重仓股同涨或同跌，才视作板块级共振，不被单只股票误导。</p></div>
-        <div><span>03</span><strong>产业</strong><p>存储价格仍涨但涨幅收窄，往往意味着景气还强，估值扩张空间却可能下降。</p></div>
+    <section id="trendStreams" class="panel trends-panel" aria-labelledby="trendTitle">
+      <div class="section-heading compact">
+        <div><div class="eyebrow">SOURCED TRENDS</div><h2 id="trendTitle">国内 / 国际趋势流</h2></div>
+        <p class="section-note">只展示带来源链接和时间戳的记录</p>
       </div>
+      <div class="trend-grid">
+        <section aria-labelledby="domesticTitle"><h3 id="domesticTitle">国内趋势</h3><div id="domesticNews" class="news-list"><p class="empty-copy">选择资产后加载。</p></div></section>
+        <section aria-labelledby="internationalTitle"><h3 id="internationalTitle">国际趋势</h3><div id="internationalNews" class="news-list"><p class="empty-copy">选择资产后加载。</p></div></section>
+      </div>
+    </section>
+
+    <section class="disclaimer" aria-labelledby="disclaimerTitle">
+      <div><div class="eyebrow">RESEARCH ONLY</div><h2 id="disclaimerTitle">仅供研究，不构成投资建议</h2></div>
+      <p>评分与状态来自公开数据和模型规则，可能存在延迟、缺失或错误。请核对原始来源并独立判断；本页面不提供交易执行、收益保证或个性化投资建议。</p>
     </section>
   </main>
 
-  <footer><span>数据仅供研究，不构成投资建议。</span><span id="lastUpdated">最后更新：—</span></footer>
+  <footer><span>GitHub Pages · 无账户令牌进入浏览器</span><span id="pipelineVersion">Pipeline —</span></footer>
 
-  <dialog id="settingsDialog">
-    <form method="dialog" id="settingsForm">
-      <div class="dialog-heading"><h2>提醒阈值</h2><button value="cancel" aria-label="关闭">×</button></div>
-      <label>观察区下沿<input id="watchLow" type="number" step="0.01" /></label>
-      <label>观察区上沿<input id="watchHigh" type="number" step="0.01" /></label>
-      <label>修复确认线<input id="recoveryLine" type="number" step="0.01" /></label>
-      <label>阶段高点<input id="peakLine" type="number" step="0.0001" /></label>
-      <div class="dialog-actions"><button value="cancel" class="button secondary">取消</button><button id="saveSettings" value="default" class="button primary">保存</button></div>
-    </form>
+  <dialog id="importDialog" aria-labelledby="importTitle" aria-describedby="importHelp">
+    <div class="dialog-shell">
+      <div class="dialog-heading"><div><div class="eyebrow">SECURE IMPORT</div><h2 id="importTitle">批量导入中心</h2></div><button id="closeImportButton" class="icon-button" type="button" aria-label="关闭导入中心">×</button></div>
+      <p id="importHelp" class="dialog-copy">粘贴代码、名称、类型、板块、备注，或选择带表头的 CSV。一次最多 50 条；浏览器仅生成机器可读的 GitHub Issue，不保存令牌。</p>
+      <div class="import-grid">
+        <label class="paste-field"><span>粘贴资产</span><textarea id="importText" rows="8" placeholder="600519,贵州茅台,stock,消费,长期观察&#10;025209,半导体基金,fund"></textarea></label>
+        <div class="file-field"><label for="csvFile">选择 CSV 文件</label><input id="csvFile" type="file" accept=".csv,text/csv" /><small>支持中英文字段：code/代码、name/名称、asset_type/类型、sector/板块、note/备注。</small></div>
+      </div>
+      <div class="preview-heading"><h3>导入预览</h3><span id="importSummary" class="status-chip neutral">尚未解析</span></div>
+      <div id="importMessage" class="inline-message" role="status" aria-live="polite">输入内容后即可预览。</div>
+      <div class="table-wrap preview-wrap" tabindex="0" aria-label="可横向滚动的导入预览表格">
+        <table><thead><tr><th scope="col">行</th><th scope="col">代码 / 名称</th><th scope="col">类型</th><th scope="col">状态</th></tr></thead><tbody id="previewRows"></tbody></table>
+      </div>
+      <div class="dialog-actions"><button id="clearImportButton" class="button secondary" type="button">清空</button><a id="createIssueLink" class="button primary disabled" aria-disabled="true">创建安全导入 Issue</a></div>
+    </div>
   </dialog>
 
-  <script src="assets/app.js" defer></script>
+  <script type="module" src="assets/app.js"></script>
 </body>
 </html>

@@ -1,0 +1,127 @@
+{
+  "asset": {
+    "id": "fund-cn-025209",
+    "code": "025209",
+    "name": "永赢先锋半导体智选混合发起C",
+    "asset_type": "fund",
+    "market": "CN",
+    "sector": "半导体/存储",
+    "note": "原始监控基金",
+    "enabled": true
+  },
+  "market": {
+    "history": [],
+    "holdings": []
+  },
+  "uzi": {},
+  "news": {
+    "CN": [],
+    "INTL": []
+  },
+  "score": {
+    "overall": null,
+    "components": {},
+    "confidence": 0,
+    "model": "fund-transparent-six-factor",
+    "model_version": "1.0",
+    "coverage": {
+      "available": [],
+      "missing": [
+        "risk_adjusted_return",
+        "drawdown_volatility",
+        "trend_recovery",
+        "stability",
+        "concentration",
+        "holding_uzi"
+      ],
+      "weight_pct": 0,
+      "confidence_penalties": [
+        "holding_uzi_coverage_below_60pct"
+      ],
+      "holding_uzi_pct": 0
+    },
+    "risk_flags": []
+  },
+  "recommendation": {
+    "state": "等待确认",
+    "confidence": 0,
+    "risk": {
+      "hard_flags": [],
+      "warnings": [
+        "awaiting_first_verified_refresh"
+      ],
+      "stale": true,
+      "hard_failures": []
+    },
+    "reasons": [
+      "No verified market evidence is stored in this bootstrap record"
+    ],
+    "invalidation_rules": [
+      "Replace the bootstrap record only after a verified provider refresh",
+      "Do not use an unrefreshed bootstrap record as investment advice"
+    ],
+    "timestamp": "2000-01-01T00:00:00+00:00"
+  },
+  "source_status": {
+    "market": {
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
+      "attempted_at": "2000-01-01T00:00:00+00:00",
+      "retrieved_at": "",
+      "last_success_at": "",
+      "stale": true,
+      "error": "awaiting_first_verified_refresh",
+      "coverage": {}
+    },
+    "history": {
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
+      "attempted_at": "2000-01-01T00:00:00+00:00",
+      "retrieved_at": "",
+      "last_success_at": "",
+      "stale": true,
+      "error": "awaiting_first_verified_refresh",
+      "coverage": {}
+    },
+    "holdings": {
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
+      "attempted_at": "2000-01-01T00:00:00+00:00",
+      "retrieved_at": "",
+      "last_success_at": "",
+      "stale": true,
+      "error": "awaiting_first_verified_refresh",
+      "coverage": {}
+    },
+    "quotes": {
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
+      "attempted_at": "2000-01-01T00:00:00+00:00",
+      "retrieved_at": "",
+      "last_success_at": "",
+      "stale": true,
+      "error": "awaiting_first_verified_refresh",
+      "coverage": {}
+    },
+    "news_CN": {
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
+      "attempted_at": "2000-01-01T00:00:00+00:00",
+      "retrieved_at": "",
+      "last_success_at": "",
+      "stale": true,
+      "error": "awaiting_first_verified_refresh",
+      "coverage": {}
+    },
+    "news_INTL": {
+      "provider": "bootstrap-unrefreshed",
+      "source_urls": [],
+      "attempted_at": "2000-01-01T00:00:00+00:00",
+      "retrieved_at": "",
+      "last_success_at": "",
+      "stale": true,
+      "error": "awaiting_first_verified_refresh",
+      "coverage": {}
+    }
+  }
+}
