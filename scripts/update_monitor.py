@@ -17,11 +17,11 @@ from urllib.parse import urlparse
 if __package__:
     from .recommendation import recommend
     from .scoring import score_fund, score_stock
-    from .uzi_adapter import normalize_uzi_cache
+    from .uzi_adapter import publish_uzi_manifest
 else:
     from recommendation import recommend
     from scoring import score_fund, score_stock
-    from uzi_adapter import normalize_uzi_cache
+    from uzi_adapter import publish_uzi_manifest
 
 
 PIPELINE_VERSION = "4.1"
@@ -346,12 +346,21 @@ def _load_public_uzi(path: Path) -> dict[str, dict[str, Any]]:
 
 def _select_current_uzi(
     watchlist: dict[str, Any],
-    restored: dict[str, dict[str, Any]],
-    run_result: dict[str, Any] | None,
+    published: dict[str, dict[str, Any]],
+    manifest: dict[str, Any] | None,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
-    """Select only scores proven by the current UZI run, never restored cache alone."""
-    if not isinstance(run_result, dict) or run_result.get("status") != "completed":
+    """Select only scores whose manifest and public record prove a current refresh."""
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("tickers"), dict):
         return {}, {}
+    refreshed = {
+        str(ticker).strip().upper(): record
+        for ticker, record in published.items()
+        if isinstance(record, dict)
+        and record.get("stale") is False
+        and _as_dict(record.get("run")).get("status") == "refreshed_this_run"
+        and _as_dict(manifest["tickers"].get(str(ticker).strip().upper())).get("status")
+        == "refreshed_this_run"
+    }
     stocks = [
         asset
         for asset in watchlist.get("assets", [])
@@ -359,34 +368,20 @@ def _select_current_uzi(
         and asset.get("asset_type") == "stock"
         and asset.get("enabled", True) is True
     ]
-    expected_codes = {str(asset.get("code") or "").strip().upper() for asset in stocks}
-    failed_codes = {
-        str(item.get("ticker") or "").strip().upper()
-        for item in run_result.get("failed", [])
-        if isinstance(item, dict)
-    }
-    successful_codes = expected_codes - failed_codes
-    loaded = run_result.get("loaded")
-    if not isinstance(loaded, int) or loaded != len(successful_codes):
-        return {}, {}
-    current = {
-        code: restored[code]
-        for code in successful_codes
-        if code in restored
-    }
     direct = {
-        str(asset["id"]): current[str(asset.get("code") or "").strip().upper()]
+        str(asset["id"]): refreshed[str(asset.get("code") or "").strip().upper()]
         for asset in stocks
-        if str(asset.get("code") or "").strip().upper() in current
+        if str(asset.get("code") or "").strip().upper() in refreshed
     }
-    return direct, current
+    return direct, refreshed
 
 
 def run_from_paths(
     watchlist_path: str | Path,
     data_dir: str | Path,
     uzi_cache: str | Path,
-    uzi_result: str | Path | None = None,
+    uzi_manifest: str | Path | None = None,
+    stage: str = "final",
 ) -> dict[str, Any]:
     """Load local state, refresh sourced evidence, and atomically publish data files."""
     if __package__:
@@ -401,20 +396,19 @@ def run_from_paths(
     watchlist = _load_object(watchlist_file)
     if watchlist.get("version") != 1 or not isinstance(watchlist.get("assets"), list):
         raise ValueError("watchlist must be a version 1 object with an assets array")
+    if stage not in {"prepare", "final"}:
+        raise ValueError("stage must be prepare or final")
     previous = _load_previous(output_dir, watchlist)
-    public_uzi_dir = output_dir / "uzi"
-    public_uzi_dir.mkdir(parents=True, exist_ok=True)
     cache_path = Path(uzi_cache)
-    normalized = (
-        normalize_uzi_cache(cache_path, public_uzi_dir)
-        if cache_path.is_dir()
-        else _load_public_uzi(public_uzi_dir)
-    )
-    result_path = Path(uzi_result) if uzi_result else None
-    current_result = _load_object(result_path) if result_path and result_path.is_file() else None
-    direct_uzi, holding_uzi = _select_current_uzi(
-        watchlist, normalized, current_result
-    )
+    direct_uzi: dict[str, dict[str, Any]] = {}
+    holding_uzi: dict[str, dict[str, Any]] = {}
+    if stage == "final":
+        manifest_path = Path(uzi_manifest) if uzi_manifest else None
+        if manifest_path is None or not manifest_path.is_file():
+            raise ValueError("final stage requires --uzi-manifest")
+        manifest = _load_object(manifest_path)
+        published = publish_uzi_manifest(cache_path, manifest, output_dir / "uzi")
+        direct_uzi, holding_uzi = _select_current_uzi(watchlist, published, manifest)
     result = run_pipeline(
         watchlist,
         previous,
@@ -436,14 +430,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--watchlist", type=Path, default=Path("data/watchlist.json"))
     parser.add_argument("--data-dir", type=Path, default=Path("data"))
     parser.add_argument("--uzi-cache", type=Path, required=True)
-    parser.add_argument("--uzi-result", type=Path)
+    parser.add_argument("--uzi-manifest", type=Path)
+    parser.add_argument("--stage", choices=("prepare", "final"), default="final")
     args = parser.parse_args(argv)
     try:
         result = run_from_paths(
             args.watchlist,
             args.data_dir,
             args.uzi_cache,
-            args.uzi_result,
+            args.uzi_manifest,
+            args.stage,
         )
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print(str(error), file=sys.stderr)
@@ -452,6 +448,7 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(
             {
                 "status": "success",
+                "stage": args.stage,
                 "asset_count": result["dashboard"]["asset_count"],
                 "stale_count": result["dashboard"]["stale_count"],
             },

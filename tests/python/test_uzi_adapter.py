@@ -134,3 +134,52 @@ def test_weighted_holding_uzi_rejects_invalid_scores_without_coverage():
 
     assert result["score"] is None
     assert result["coverage_pct"] == 0.0
+
+
+def test_manifest_publication_is_atomic_current_universe_only_and_truthful(tmp_path):
+    from scripts.uzi_adapter import publish_uzi_manifest
+
+    cache = tmp_path / "cache"
+    for ticker, score in (("600519.SH", 78), ("000001.SZ", 66)):
+        target = cache / ticker
+        target.mkdir(parents=True)
+        (target / "synthesis.json").write_text(
+            json.dumps({"overall_score": score}), encoding="utf-8"
+        )
+        (target / "panel.json").write_text(
+            json.dumps({"panel_consensus": score}), encoding="utf-8"
+        )
+    public = tmp_path / "public"
+    public.mkdir()
+    (public / "ORPHAN.json").write_text('{"overall":99}', encoding="utf-8")
+    manifest = {
+        "schema_version": 1,
+        "status": "partial",
+        "attempted_at": "2026-07-22T08:00:00+00:00",
+        "depth": "lite",
+        "run_id": "run-42",
+        "upstream": {"repository": "wbh604/UZI-Skill", "commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c"},
+        "tickers": {
+            "600519.SH": {"status": "refreshed_this_run", "attempted_at": "2026-07-22T08:00:00+00:00", "last_success_at": "2026-07-22T08:00:00+00:00", "stale": False, "error": "", "run_id": "run-42"},
+            "000001.SZ": {"status": "restored_fallback", "attempted_at": "2026-07-22T08:00:00+00:00", "last_success_at": "2026-07-20T08:00:00+00:00", "stale": True, "error": "current_run_output_missing_or_invalid", "run_id": "run-42"},
+            "300750.SZ": {"status": "failed", "attempted_at": "2026-07-22T08:00:00+00:00", "last_success_at": "", "stale": True, "error": "current_run_output_missing_or_invalid", "run_id": "run-42"},
+        },
+    }
+
+    published = publish_uzi_manifest(cache, manifest, public)
+
+    assert set(published) == {"600519.SH", "000001.SZ", "300750.SZ"}
+    assert {path.stem for path in public.glob("*.json")} == set(published)
+    assert published["600519.SH"]["overall"] == 78
+    assert published["600519.SH"]["stale"] is False
+    assert published["000001.SZ"]["overall"] == 66
+    assert published["000001.SZ"]["stale"] is True
+    assert published["000001.SZ"]["error"] == "current_run_output_missing_or_invalid"
+    assert "overall" not in published["300750.SZ"]
+    assert published["300750.SZ"]["run"] == {
+        "id": "run-42",
+        "depth": "lite",
+        "status": "failed",
+    }
+    assert published["600519.SH"]["upstream"]["commit"] == manifest["upstream"]["commit"]
+    assert not list(tmp_path.glob(".public-*"))

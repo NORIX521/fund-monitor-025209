@@ -58,8 +58,11 @@ jobs:
     timeout-minutes: 330
     permissions:
       contents: write
-      issues: write
-      pages: write
+    outputs:
+      imported_count: ${{ steps.import-summary.outputs.imported_count }}
+      added_count: ${{ steps.import-summary.outputs.added_count }}
+      updated_count: ${{ steps.import-summary.outputs.updated_count }}
+      total_count: ${{ steps.import-summary.outputs.total_count }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -89,10 +92,7 @@ jobs:
           echo "UZI_ROOT=$UZI_ROOT" >> "$GITHUB_ENV"
 
       - name: Install pinned project and UZI dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m pip install --disable-pip-version-check -r requirements-actions.txt
+        run: python -m pip install --disable-pip-version-check -r requirements-actions.txt
 
       - name: Restore UZI cache
         uses: actions/cache@v4
@@ -115,36 +115,32 @@ jobs:
 
       - name: Import authorized watchlist Issue
         if: github.event_name == 'issues'
+        run: >-
+          python scripts/import_watchlist.py
+          --issue-body-file "$WATCHLIST_IMPORT_BODY_FILE"
+          --watchlist data/watchlist.json
+          --summary-file "$RUNNER_TEMP/watchlist-import-summary.json"
+
+      - name: Export validated import summary
+        id: import-summary
+        if: github.event_name == 'issues'
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/import_watchlist.py \
-            --issue-body-file "$WATCHLIST_IMPORT_BODY_FILE" \
-            --watchlist data/watchlist.json \
-            --summary-file "$RUNNER_TEMP/watchlist-import-summary.json"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
 
-      - name: Comment on and close successful import
-        if: github.event_name == 'issues'
-        uses: actions/github-script@v7
-        env:
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            const summary = JSON.parse(fs.readFileSync(path.join(process.env.RUNNER_TEMP, 'watchlist-import-summary.json'), 'utf8'));
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `Imported ${summary.imported_count} entries (${summary.added_count} added, ${summary.updated_count} updated; ${summary.total_count} total). Run: ${process.env.RUN_URL}`
-            });
-            await github.rest.issues.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              state: 'closed'
-            });
+          summary = json.loads((Path(os.environ["RUNNER_TEMP"]) / "watchlist-import-summary.json").read_text(encoding="utf-8"))
+          keys = ("imported_count", "added_count", "updated_count", "total_count")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              for key in keys:
+                  value = summary.get(key)
+                  if type(value) is not int or value < 0:
+                      raise ValueError("invalid import summary")
+                  output.write(f"{key}={value}\n")
+          PY
 
       - name: Select bounded automated depth
         id: depth
@@ -163,16 +159,17 @@ jobs:
           fi
           echo "depth=$DEPTH" >> "$GITHUB_OUTPUT"
 
-      - name: Count enabled stocks
-        id: stocks
+      - name: Prepare fund disclosures before UZI
         shell: bash
         run: |
           set -euo pipefail
-          COUNT="$(python -c 'import json; data=json.load(open("data/watchlist.json", encoding="utf-8")); print(sum(1 for asset in data["assets"] if asset.get("asset_type") == "stock" and asset.get("enabled", True) is True))')"
-          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          python scripts/update_monitor.py \
+            --watchlist data/watchlist.json \
+            --data-dir data \
+            --uzi-cache "$UZI_ROOT/skills/deep-analysis/scripts/.cache" \
+            --stage prepare
 
-      - name: Run guarded UZI stock refresh
-        if: steps.stocks.outputs.count != '0'
+      - name: Run guarded UZI direct-stock and disclosed-holding refresh
         id: uzi
         continue-on-error: true
         timeout-minutes: 300
@@ -183,10 +180,12 @@ jobs:
           set -euo pipefail
           python scripts/run_uzi_guarded.py data/watchlist.json \
             --uzi-root "$UZI_ROOT" \
+            --details-dir data/assets \
             --depth "$DEPTH" \
-            --result-file "$RUNNER_TEMP/uzi-run-result.json"
+            --run-id "${{ github.run_id }}" \
+            --result-file "$RUNNER_TEMP/uzi-run-manifest.json"
 
-      - name: Build schema-validated monitor data
+      - name: Build final schema-validated monitor data
         shell: bash
         run: |
           set -euo pipefail
@@ -194,7 +193,8 @@ jobs:
             --watchlist data/watchlist.json \
             --data-dir data \
             --uzi-cache "$UZI_ROOT/skills/deep-analysis/scripts/.cache" \
-            --uzi-result "$RUNNER_TEMP/uzi-run-result.json"
+            --uzi-manifest "$RUNNER_TEMP/uzi-run-manifest.json" \
+            --stage final
 
       - name: Test Python before committing
         run: python -m pytest tests/python -q
@@ -229,13 +229,69 @@ jobs:
           test ! -e _site/scripts
           test ! -e _site/.venv
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
+
+  finalize-authorized-import:
+    needs: refresh-and-stage
+    if: >-
+      needs.refresh-and-stage.result == 'success' &&
+      github.event_name == 'issues' &&
+      startsWith(github.event.issue.title, '[watchlist-import]') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Confirm committed import and close Issue
+        uses: actions/github-script@v7
+        env:
+          IMPORTED_COUNT: ${{ needs.refresh-and-stage.outputs.imported_count }}
+          ADDED_COUNT: ${{ needs.refresh-and-stage.outputs.added_count }}
+          UPDATED_COUNT: ${{ needs.refresh-and-stage.outputs.updated_count }}
+          TOTAL_COUNT: ${{ needs.refresh-and-stage.outputs.total_count }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `The watchlist import was committed to main: ${process.env.IMPORTED_COUNT} entries (${process.env.ADDED_COUNT} added, ${process.env.UPDATED_COUNT} updated; ${process.env.TOTAL_COUNT} total). Run: ${process.env.RUN_URL}`
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed'
+            });
+
+  authorized-import-failure-feedback:
+    needs: refresh-and-stage
+    if: >-
+      always() &&
+      github.event_name == 'issues' &&
+      startsWith(github.event.issue.title, '[watchlist-import]') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) &&
+      needs.refresh-and-stage.result == 'failure'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Link incomplete authorized import run
+        uses: actions/github-script@v7
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `This authorized import did not complete and the Issue remains open. Review the run and correct the payload before retrying: ${process.env.RUN_URL}`
+            });
 
   deploy:
     needs: refresh-and-stage
@@ -247,6 +303,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

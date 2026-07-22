@@ -46,6 +46,30 @@ def test_workflow_uses_secure_issue_file_import_and_closes_only_after_success():
     assert "github.rest.issues.update" in WORKFLOW
     assert "state: 'closed'" in WORKFLOW
     assert "github.run_id" in WORKFLOW
+    refresh = WORKFLOW.split("  refresh-and-stage:", 1)[1].split("\n  finalize-authorized-import:", 1)[0]
+    assert "github.rest.issues.createComment" not in refresh
+    assert "github.rest.issues.update" not in refresh
+    for output in ("imported_count", "added_count", "updated_count", "total_count"):
+        assert f"{output}: ${{{{ steps.import-summary.outputs.{output} }}}}" in refresh
+    success = WORKFLOW.split("  finalize-authorized-import:", 1)[1].split("\n  authorized-import-failure-feedback:", 1)[0]
+    assert "needs: refresh-and-stage" in success
+    assert "needs.refresh-and-stage.result == 'success'" in success
+    assert "permissions:\n      issues: write" in success
+    assert "committed" in success.lower()
+    assert "needs.refresh-and-stage.outputs.imported_count" in success
+
+
+def test_authorized_import_failure_feedback_is_generic_and_leaves_issue_open():
+    failure = WORKFLOW.split("  authorized-import-failure-feedback:", 1)[1].split("\n  deploy:", 1)[0]
+    assert "needs: refresh-and-stage" in failure
+    assert "always()" in failure
+    assert "needs.refresh-and-stage.result == 'failure'" in failure
+    assert "permissions:\n      issues: write" in failure
+    assert "github.rest.issues.createComment" in failure
+    assert "github.run_id" in failure
+    assert "context.payload.issue.body" not in failure
+    assert "error" not in failure.lower()
+    assert "github.rest.issues.update" not in failure
 
 
 def test_workflow_pins_uzi_bounds_depth_and_restores_only_its_cache():
@@ -64,7 +88,8 @@ def test_workflow_pins_uzi_bounds_depth_and_restores_only_its_cache():
     assert "python scripts/run_uzi_guarded.py data/watchlist.json" in WORKFLOW
     assert "--depth \"$DEPTH\"" in WORKFLOW
     assert "--result-file" in WORKFLOW
-    assert "--uzi-result" in WORKFLOW
+    assert "--details-dir data/assets" in WORKFLOW
+    assert "--uzi-manifest" in WORKFLOW
     depth_input = re.search(r"(?ms)^\s{6}depth:\s*$.*?(?=^\s{2}schedule:)", WORKFLOW)
     assert depth_input and "deep" not in depth_input.group(0)
 
@@ -93,9 +118,26 @@ def test_workflow_tests_before_generated_only_commit_and_deploys_same_run():
     for excluded in (".git", ".github", ".uzi", "tests", "scripts", ".venv"):
         assert excluded in WORKFLOW
     upload = _position("actions/upload-pages-artifact@v4")
+    configure = _position("actions/configure-pages@v5")
     deploy = _position("actions/deploy-pages@v4")
-    assert upload < deploy
+    deploy_job = _position("  deploy:")
+    assert upload < deploy_job < configure < deploy
     assert re.search(r"(?m)^\s{4}needs:\s*refresh-and-stage\s*$", WORKFLOW)
+
+
+def test_refresh_job_is_contents_only_and_runs_two_stage_holding_universe():
+    refresh = WORKFLOW.split("  refresh-and-stage:", 1)[1].split("\n  finalize-authorized-import:", 1)[0]
+    permissions = re.search(r"(?ms)^\s{4}permissions:\s*$.*?(?=^\s{4}steps:)", refresh)
+    assert permissions
+    assert "contents: write" in permissions.group(0)
+    assert "issues:" not in permissions.group(0)
+    assert "pages:" not in permissions.group(0)
+    assert "actions/configure-pages@v5" not in refresh
+    prepare = _position("--stage prepare")
+    uzi = _position("python scripts/run_uzi_guarded.py data/watchlist.json")
+    final = _position("--stage final")
+    assert prepare < uzi < final
+    assert "Count enabled stocks" not in refresh
 
 
 def test_actions_dependency_lock_uses_exact_direct_versions_and_main_checkout():
@@ -182,8 +224,8 @@ def test_import_cli_atomically_merges_and_writes_machine_summary(tmp_path):
 def test_monitor_cli_and_uzi_cli_expose_typed_workflow_arguments():
     commands = {
         "scripts/import_watchlist.py": ("--issue-body-file", "--summary-file"),
-        "scripts/update_monitor.py": ("--watchlist", "--data-dir", "--uzi-cache", "--uzi-result"),
-        "scripts/run_uzi_guarded.py": ("watchlist_json", "--depth", "--uzi-root", "--result-file"),
+        "scripts/update_monitor.py": ("--watchlist", "--data-dir", "--uzi-cache", "--uzi-manifest", "--stage"),
+        "scripts/run_uzi_guarded.py": ("watchlist_json", "--depth", "--uzi-root", "--result-file", "--details-dir"),
     }
     for script, expected in commands.items():
         result = subprocess.run(
@@ -208,3 +250,11 @@ def test_monitor_help_does_not_require_network_provider_dependencies():
     )
     assert result.returncode == 0, result.stderr
     assert "--uzi-cache" in result.stdout
+
+
+def test_readme_describes_event_queue_delay_and_open_failure_feedback():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "Actions 排队或平台负载可能造成延迟" in readme
+    assert "Actions 排队、定时任务" not in readme
+    assert "失败" in readme and "保持开启" in readme
+    assert "本轮刷新成功的 UZI 结果" in readme

@@ -299,11 +299,14 @@ def test_current_uzi_selection_excludes_failed_and_unattempted_restored_cache():
         "000001.SZ": {"ticker": "000001.SZ", "overall": 70},
         "300750.SZ": {"ticker": "300750.SZ", "overall": 60},
     }
-    current = {
-        "status": "completed",
-        "loaded": 1,
-        "failed": [{"ticker": "000001.SZ"}],
-    }
+    restored["600519.SH"].update(stale=False, run={"status": "refreshed_this_run"})
+    restored["000001.SZ"].update(stale=True, run={"status": "restored_fallback"})
+    restored["300750.SZ"].update(stale=True, run={"status": "failed"})
+    current = {"tickers": {
+        "600519.SH": {"status": "refreshed_this_run"},
+        "000001.SZ": {"status": "restored_fallback"},
+        "300750.SZ": {"status": "failed"},
+    }}
 
     direct, holding = _select_current_uzi(
         {"version": 1, "assets": [first, second]}, restored, current
@@ -314,3 +317,66 @@ def test_current_uzi_selection_excludes_failed_and_unattempted_restored_cache():
     assert _select_current_uzi(
         {"version": 1, "assets": [first]}, restored, None
     ) == ({}, {})
+
+
+@pytest.mark.parametrize(
+    ("manifest_status", "expected_coverage"),
+    [("refreshed_this_run", 25.0), ("restored_fallback", 0.0), ("failed", 0.0)],
+)
+def test_fund_only_disclosed_holding_uses_only_current_manifest_score(
+    manifest_status, expected_coverage
+):
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import _select_current_uzi, run_pipeline
+
+    class HoldingProvider:
+        def fetch_fund(self, asset):
+            return ProviderResult(
+                data={
+                    "asset": asset,
+                    "history": [
+                        {"date": "2026-07-20", "nav": 1.0},
+                        {"date": "2026-07-21", "nav": 1.1},
+                    ],
+                    "holdings": [
+                        {
+                            "code": "600519.SH",
+                            "name": "贵州茅台",
+                            "weight_pct": 25,
+                            "latest_price": 1500,
+                            "change_pct": 1,
+                        }
+                    ],
+                },
+                source_urls=["https://provider.test/fund"],
+                retrieved_at=NOW,
+                errors={},
+            )
+
+    public = {
+        "600519.SH": {
+            "ticker": "600519.SH",
+            "overall": 76,
+            "stale": manifest_status != "refreshed_this_run",
+            "run": {"status": manifest_status},
+        }
+    }
+    manifest = {"tickers": {"600519.SH": {"status": manifest_status}}}
+    direct, holding = _select_current_uzi({"version": 1, "assets": [FUND]}, public, manifest)
+    assert direct == {}
+    result = run_pipeline(
+        {"version": 1, "assets": [FUND]},
+        {},
+        {
+            "now": NOW,
+            "fund_provider": HoldingProvider(),
+            "holding_uzi": holding,
+            "news_provider": lambda *_: [],
+        },
+    )
+    detail = result["assets"][FUND["id"]]
+    assert detail["score"]["coverage"]["holding_uzi_pct"] == expected_coverage
+    if expected_coverage:
+        assert detail["score"]["components"]["holding_uzi"] == 76
+    else:
+        assert "holding_uzi" not in detail["score"]["components"]

@@ -14,6 +14,18 @@ def _make_uzi_root(tmp_path):
     return root
 
 
+def _write_valid_cache(root, ticker, overall=72):
+    target = root / "skills" / "deep-analysis" / "scripts" / ".cache" / ticker
+    target.mkdir(parents=True, exist_ok=True)
+    (target / "synthesis.json").write_text(
+        json.dumps({"overall_score": overall}), encoding="utf-8"
+    )
+    (target / "panel.json").write_text(
+        json.dumps({"panel_consensus": overall}), encoding="utf-8"
+    )
+    return target
+
+
 def _write_watchlist(tmp_path):
     path = tmp_path / "watchlist.json"
     path.write_text(
@@ -43,6 +55,7 @@ def test_watchlist_runner_builds_temporary_stock_only_portfolio(tmp_path, monkey
         captured["path"] = Path(portfolio_csv)
         with Path(portfolio_csv).open(encoding="utf-8-sig", newline="") as handle:
             captured["rows"] = list(csv.DictReader(handle))
+        _write_valid_cache(Path(uzi_root), "600519.SH")
         return {"status": "completed"}
 
     monkeypatch.setattr(run_uzi_guarded, "_run_uzi_portfolio", fake_runner, raising=False)
@@ -51,14 +64,15 @@ def test_watchlist_runner_builds_temporary_stock_only_portfolio(tmp_path, monkey
         _make_uzi_root(tmp_path), _write_watchlist(tmp_path), "lite"
     )
 
-    assert result == {"status": "completed"}
+    assert result["status"] == "completed"
+    assert result["tickers"]["600519.SH"]["status"] == "refreshed_this_run"
     assert captured["rows"] == [
         {"ticker": "600519.SH", "weight": "1.0", "note": "贵州茅台"}
     ]
     assert not captured["path"].exists()
 
 
-def test_fund_only_watchlist_never_calls_private_uzi_runner(tmp_path, monkeypatch):
+def test_fund_only_watchlist_without_disclosed_holdings_skips_private_uzi_runner(tmp_path, monkeypatch):
     watchlist = tmp_path / "funds.json"
     watchlist.write_text(
         json.dumps(
@@ -79,8 +93,10 @@ def test_fund_only_watchlist_never_calls_private_uzi_runner(tmp_path, monkeypatc
         lambda *args: pytest.fail("fund entity reached UZI"),
     )
 
-    with pytest.raises(ValueError, match="enabled stock"):
-        run_uzi_guarded.run_watchlist(_make_uzi_root(tmp_path), watchlist, "lite")
+    result = run_uzi_guarded.run_watchlist(
+        _make_uzi_root(tmp_path), watchlist, "lite", details_dir=tmp_path / "details"
+    )
+    assert result["status"] == "skipped_no_targets"
 
 
 @pytest.mark.parametrize("code", ["025209", "025209.SZ", "510300.SH", "161725.SZ"])
@@ -211,7 +227,9 @@ def test_private_runner_rejects_non_object_uzi_result(tmp_path, monkeypatch):
     ],
 )
 def test_cli_exit_status_requires_completed(monkeypatch, result, expected):
-    monkeypatch.setattr(run_uzi_guarded, "run_watchlist", lambda *args: result, raising=False)
+    monkeypatch.setattr(
+        run_uzi_guarded, "run_watchlist", lambda *args, **kwargs: result, raising=False
+    )
 
     assert run_uzi_guarded.main(["watchlist.json"]) == expected
 
@@ -236,7 +254,7 @@ def test_cli_writes_current_run_result_for_downstream_failure_provenance(tmp_pat
         "loaded": 1,
         "failed": [{"ticker": "000001.SZ", "weight": 0.5}],
     }
-    monkeypatch.setattr(run_uzi_guarded, "run_watchlist", lambda *args: expected)
+    monkeypatch.setattr(run_uzi_guarded, "run_watchlist", lambda *args, **kwargs: expected)
 
     exit_code = run_uzi_guarded.main(
         ["watchlist.json", "--result-file", str(result_file)]
@@ -245,3 +263,118 @@ def test_cli_writes_current_run_result_for_downstream_failure_provenance(tmp_pat
     assert exit_code == 0
     assert json.loads(result_file.read_text(encoding="utf-8")) == expected
     assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_pipeline_exception_with_old_cache_is_restored_fallback_not_fresh(tmp_path, monkeypatch):
+    root = _make_uzi_root(tmp_path)
+    old_cache = _write_valid_cache(root, "600519.SH", overall=61)
+    old_synthesis = (old_cache / "synthesis.json").read_bytes()
+
+    def failing_runner(uzi_root, portfolio_csv, depth):
+        assert not old_cache.exists(), "restored target cache reached upstream resume path"
+        raise RuntimeError("upstream exploded")
+
+    monkeypatch.setattr(run_uzi_guarded, "_run_uzi_portfolio", failing_runner)
+
+    manifest = run_uzi_guarded.run_watchlist(
+        root,
+        _write_watchlist(tmp_path),
+        "lite",
+        details_dir=tmp_path / "details",
+        run_id="run-123",
+    )
+
+    entry = manifest["tickers"]["600519.SH"]
+    assert entry["status"] == "restored_fallback"
+    assert entry["stale"] is True
+    assert entry["error"] == "current_run_output_missing_or_invalid"
+    assert entry["run_id"] == "run-123"
+    assert (old_cache / "synthesis.json").read_bytes() == old_synthesis
+
+
+def test_fund_disclosed_holdings_form_uzi_universe_and_empty_union_skips_runner(tmp_path, monkeypatch):
+    root = _make_uzi_root(tmp_path)
+    watchlist = tmp_path / "fund-watchlist.json"
+    watchlist.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "assets": [
+                    {
+                        "id": "fund-cn-025209",
+                        "code": "025209",
+                        "asset_type": "fund",
+                        "enabled": True,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    details = tmp_path / "details"
+    details.mkdir()
+    (details / "fund-cn-025209.json").write_text(
+        json.dumps({"market": {"holdings": [{"code": "600519.SH", "name": "贵州茅台"}]}}),
+        encoding="utf-8",
+    )
+    calls = []
+
+    def refreshing_runner(uzi_root, portfolio_csv, depth):
+        with Path(portfolio_csv).open(encoding="utf-8-sig", newline="") as handle:
+            calls.extend(row["ticker"] for row in csv.DictReader(handle))
+        _write_valid_cache(Path(uzi_root), "600519.SH", overall=76)
+        return {"status": "completed", "loaded": 1, "failed": []}
+
+    monkeypatch.setattr(run_uzi_guarded, "_run_uzi_portfolio", refreshing_runner)
+    manifest = run_uzi_guarded.run_watchlist(
+        root, watchlist, "lite", details_dir=details, run_id="fund-run"
+    )
+
+    assert calls == ["600519.SH"]
+    assert manifest["tickers"]["600519.SH"]["status"] == "refreshed_this_run"
+    from scripts.providers.eastmoney import ProviderResult
+    from scripts.update_monitor import _select_current_uzi, run_pipeline
+    from scripts.uzi_adapter import publish_uzi_manifest
+
+    public = publish_uzi_manifest(
+        root / "skills" / "deep-analysis" / "scripts" / ".cache",
+        manifest,
+        tmp_path / "public-uzi",
+    )
+    _, holding_uzi = _select_current_uzi(
+        json.loads(watchlist.read_text(encoding="utf-8")), public, manifest
+    )
+
+    class FundProvider:
+        def fetch_fund(self, asset):
+            return ProviderResult(
+                data={
+                    "asset": asset,
+                    "history": [{"date": "2026-07-20", "nav": 1.0}, {"date": "2026-07-21", "nav": 1.1}],
+                    "holdings": [{"code": "600519.SH", "name": "贵州茅台", "weight_pct": 25, "latest_price": 1500, "change_pct": 1}],
+                },
+                source_urls=["https://provider.test/fund"],
+                retrieved_at="2026-07-22T08:00:00+00:00",
+                errors={},
+            )
+
+    scored = run_pipeline(
+        json.loads(watchlist.read_text(encoding="utf-8")),
+        {},
+        {"now": "2026-07-22T08:00:00+00:00", "fund_provider": FundProvider(), "holding_uzi": holding_uzi, "news_provider": lambda *_: []},
+    )
+    assert scored["assets"]["fund-cn-025209"]["score"]["coverage"]["holding_uzi_pct"] == 25.0
+
+    (details / "fund-cn-025209.json").write_text(
+        json.dumps({"market": {"holdings": []}}), encoding="utf-8"
+    )
+    monkeypatch.setattr(
+        run_uzi_guarded,
+        "_run_uzi_portfolio",
+        lambda *args: pytest.fail("empty universe reached UZI"),
+    )
+    skipped = run_uzi_guarded.run_watchlist(
+        root, watchlist, "lite", details_dir=details, run_id="empty-run"
+    )
+    assert skipped["status"] == "skipped_no_targets"
+    assert skipped["tickers"] == {}

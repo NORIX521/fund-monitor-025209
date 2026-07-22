@@ -11,7 +11,7 @@
 
 浏览器只负责校验与生成 Issue 链接，不直接写仓库。打开链接后提交标题以 `[watchlist-import]` 开头、正文包含 `WATCHLIST_IMPORT_V1` 数据块的 Issue。GitHub Actions 仅接受仓库 `OWNER`、`MEMBER` 或 `COLLABORATOR` 的导入；其他同名请求只会收到最小权限说明，不会检出代码或改数据。每次最多导入 50 项，支持的规范类型是 `stock`、`fund`、`etf`、`lof`。
 
-Issue 处理不是即时接口：Actions 排队、定时任务或平台负载会造成延迟。成功处理后机器人会回复新增、更新和总数、附运行链接，并关闭 Issue。
+Issue 处理不是即时接口：Actions 排队或平台负载可能造成延迟。成功处理并提交到 `main` 后，机器人会回复新增、更新和总数、附运行链接，并关闭 Issue；失败时只提供通用运行链接，Issue 保持开启，且不会暴露正文或异常细节。
 
 ## 自动刷新与 UZI 边界
 
@@ -19,7 +19,7 @@ Issue 处理不是即时接口：Actions 排队、定时任务或平台负载会
 - 手动运行只能选择 `lite` 或 `medium`。自动化不会宣称执行 `deep` Agent 深度分析。
 - UZI-Skill 固定到上游提交 `fce996c33e70eddce8e375f53cd252b549eb3d7c`，只接收已启用的规范股票代码；基金、ETF、LOF 实体不会送入 UZI。
 - 股票必须有本次直接 UZI 证据，否则输出明确的失败/陈旧状态，绝不把缺失标成成功。
-- 基金使用基金净值、持仓和行情模型；持仓股票若有 UZI 缓存则按已覆盖权重汇总，未覆盖权重会明确保留。
+- 基金使用基金净值、持仓和行情模型；持仓股票只有本轮刷新成功的 UZI 结果会进入评分，旧缓存仅作为显式 `stale` 记录，未覆盖权重会明确保留。
 
 工作流先运行完整 Python 与 Node 测试，再只提交 `data/watchlist.json`、`data/dashboard.json`、`data/assets`、`data/uzi` 和 `data/new_alerts.json`。Pages 使用同一次运行产生的白名单 `_site` 构件，不依赖机器人提交再触发第二个工作流。
 
