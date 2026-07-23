@@ -124,6 +124,8 @@ def test_cn_trend_stream_excludes_fund_reports_and_market_notices():
       <item><title>上交所发布半导体产业重要运行数据</title><link>https://news.google.com/rss/articles/trend</link><pubDate>Tue, 21 Jul 2026 09:00:00 +0000</pubDate><source url="https://www.sse.com.cn/news">上海证券交易所</source></item>
       <item><title>某半导体交易型开放式指数证券投资基金2026年季度报告</title><link>https://news.google.com/rss/articles/fund</link><pubDate>Wed, 22 Jul 2026 09:00:00 +0000</pubDate><source url="https://www.sse.com.cn/disclosure">上海证券交易所</source></item>
       <item><title>半导体芯片基金溢价风险提示公告</title><link>https://news.google.com/rss/articles/risk</link><pubDate>Wed, 22 Jul 2026 08:00:00 +0000</pubDate><source url="https://www.sse.com.cn/disclosure">上海证券交易所</source></item>
+      <item><title>证监会同意某半导体公司首次公开发行股票注册批复</title><link>https://news.google.com/rss/articles/ipo</link><pubDate>Wed, 22 Jul 2026 07:00:00 +0000</pubDate><source url="https://www.csrc.gov.cn/news">中国证监会</source></item>
+      <item><title>关于同意某半导体公司发行股份购买资产注册的批复</title><link>https://news.google.com/rss/articles/merger</link><pubDate>Wed, 22 Jul 2026 06:00:00 +0000</pubDate><source url="https://www.csrc.gov.cn/news">中国证监会</source></item>
     </channel></rss>"""
 
     class Session:

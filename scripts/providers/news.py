@@ -54,7 +54,15 @@ RELEVANCE_TERMS = {
     "INTL": ("semiconductor", "memory chip", "dram", "nand", "hbm", "chip"),
 }
 EXCLUSION_TERMS = {
-    "CN": ("证券投资基金", "基金产品资料", "停牌公告", "溢价风险提示"),
+    "CN": (
+        "证券投资基金",
+        "基金产品资料",
+        "停牌公告",
+        "溢价风险提示",
+        "首次公开发行股票注册",
+        "发行股份购买资产",
+        "注册批复",
+    ),
     "INTL": (),
 }
 
