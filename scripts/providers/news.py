@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from email.utils import parsedate_to_datetime
 from typing import Any
@@ -18,6 +18,38 @@ TIMEOUT = (5, 25)
 USER_AGENT = "fund-monitor-025209/1.0 (+https://github.com/NORIX521/fund-monitor-025209)"
 GOOGLE_NEWS_RSS = "https://news.google.com/rss/search"
 TRACKING_PARAMETERS = {"gclid", "fbclid", "ref", "source", "from"}
+MAX_ITEMS = 6
+MAX_AGE = timedelta(days=120)
+TRUSTED_HOSTS = {
+    "CN": frozenset(
+        {
+            "www.miit.gov.cn",
+            "wap.miit.gov.cn",
+            "www.ndrc.gov.cn",
+            "zfxxgk.ndrc.gov.cn",
+            "www.gov.cn",
+            "www.csrc.gov.cn",
+            "www.sse.com.cn",
+            "www.szse.cn",
+        }
+    ),
+    "INTL": frozenset(
+        {
+            "semi.org",
+            "www.semi.org",
+            "wsts.org",
+            "www.wsts.org",
+            "commerce.gov",
+            "www.commerce.gov",
+            "bis.gov",
+            "www.bis.gov",
+        }
+    ),
+}
+RELEVANCE_TERMS = {
+    "CN": ("半导体", "集成电路", "存储芯片", "芯片", "电子信息制造业"),
+    "INTL": ("semiconductor", "memory chip", "dram", "nand", "hbm", "chip"),
+}
 
 
 @dataclass(frozen=True)
@@ -32,13 +64,24 @@ class NewsItem:
 
 
 def default_feeds(asset: dict[str, Any], region: str) -> tuple[str, ...]:
-    """Build one Google News RSS search URL from the supplied asset identity."""
+    """Build official-source Google News discovery feeds for the asset sector."""
     if region not in {"CN", "INTL"}:
         raise ValueError("region must be CN or INTL")
-    terms = [str(asset.get(key) or "").strip() for key in ("name", "code", "sector")]
-    query = " ".join(term for term in terms if term) or "financial research"
-    parameters = {"q": query, "hl": "zh-CN" if region == "CN" else "en-US", "gl": "CN" if region == "CN" else "US", "ceid": "CN:zh-Hans" if region == "CN" else "US:en"}
-    return (f"{GOOGLE_NEWS_RSS}?{urlencode(parameters)}",)
+    if region == "CN":
+        queries = (
+            '(半导体 OR 集成电路 OR 存储芯片 OR 电子信息制造业) (site:miit.gov.cn OR site:ndrc.gov.cn OR site:gov.cn)',
+            '(半导体 OR 集成电路 OR 存储芯片) (site:csrc.gov.cn OR site:sse.com.cn OR site:szse.cn)',
+        )
+        locale = {"hl": "zh-CN", "gl": "CN", "ceid": "CN:zh-Hans"}
+    else:
+        queries = (
+            'semiconductor OR "memory chip" OR DRAM OR NAND OR HBM (site:semi.org OR site:wsts.org)',
+            'semiconductor OR "memory chip" OR DRAM OR NAND OR HBM (site:commerce.gov OR site:bis.gov)',
+        )
+        locale = {"hl": "en-US", "gl": "US", "ceid": "US:en"}
+    return tuple(
+        f"{GOOGLE_NEWS_RSS}?{urlencode({'q': query, **locale})}" for query in queries
+    )
 
 
 def _text(element: ElementTree.Element | None, name: str) -> str:
@@ -88,6 +131,39 @@ def _parse_feed(text: str, region: str, retrieved_at: str) -> list[NewsItem]:
     raise ValueError("unsupported news feed format")
 
 
+def _response_text(response: Any) -> str:
+    content = getattr(response, "content", None)
+    if isinstance(content, (bytes, bytearray)):
+        return bytes(content).decode("utf-8-sig")
+    return str(response.text)
+
+
+def _timestamp(value: str) -> datetime | None:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (AttributeError, ValueError):
+        return None
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return None
+    return parsed.astimezone(timezone.utc)
+
+
+def _trusted_relevant_fresh(item: NewsItem, region: str, retrieved_at: str) -> bool:
+    host = (urlparse(item.source_url).hostname or "").lower().rstrip(".")
+    if host not in TRUSTED_HOSTS[region]:
+        return False
+    title = item.title.lower()
+    if not any(term.lower() in title for term in RELEVANCE_TERMS[region]):
+        return False
+    published = _timestamp(item.published_at)
+    retrieved = _timestamp(retrieved_at)
+    return bool(
+        published
+        and retrieved
+        and timedelta(0) <= retrieved - published <= MAX_AGE
+    )
+
+
 def _canonical_url(value: str) -> str:
     parsed = urlparse(value)
     params = [(key, val) for key, val in parse_qsl(parsed.query, keep_blank_values=True) if key.lower() not in TRACKING_PARAMETERS and not key.lower().startswith("utm_")]
@@ -116,13 +192,25 @@ def fetch_news(asset: dict[str, Any], region: str, *, session: requests.Session 
     if normalized_region not in {"CN", "INTL"}:
         raise ValueError("region must be CN or INTL")
     timestamp = retrieved_at or datetime.now(timezone.utc).isoformat()
+    production_discovery = feeds is None
     sources = tuple(feeds) if feeds is not None else default_feeds(asset, normalized_region)
     client = session or requests.Session()
     selected: list[NewsItem] = []
     for feed_url in sources:
-        response = client.get(feed_url, timeout=TIMEOUT, headers={"User-Agent": USER_AGENT})
-        response.raise_for_status()
-        for item in _parse_feed(response.text, normalized_region, timestamp):
-            if item.article_url and not _duplicate(item, selected):
+        try:
+            response = client.get(feed_url, timeout=TIMEOUT, headers={"User-Agent": USER_AGENT})
+            response.raise_for_status()
+            items = _parse_feed(_response_text(response), normalized_region, timestamp)
+        except (requests.RequestException, ElementTree.ParseError, UnicodeError, ValueError):
+            continue
+        for item in items:
+            if (
+                item.article_url
+                and (not production_discovery or _trusted_relevant_fresh(item, normalized_region, timestamp))
+                and not _duplicate(item, selected)
+            ):
                 selected.append(item)
+    if production_discovery:
+        selected.sort(key=lambda item: _timestamp(item.published_at) or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+        return selected[:MAX_ITEMS]
     return selected

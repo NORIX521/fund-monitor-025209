@@ -77,7 +77,7 @@ def test_fetch_news_rejects_unknown_region_without_network():
     assert session.calls == []
 
 
-def test_default_feeds_are_allowlisted_google_searches_for_asset_identity():
+def test_default_feeds_are_allowlisted_google_searches_for_asset_sector():
     from urllib.parse import unquote
     from scripts.providers.news import default_feeds
 
@@ -85,11 +85,12 @@ def test_default_feeds_are_allowlisted_google_searches_for_asset_identity():
     cn = default_feeds(asset, "CN")
     intl = default_feeds(asset, "INTL")
 
-    assert len(cn) == len(intl) == 1
-    assert "news.google.com/rss/search" in cn[0]
-    assert "600519.SH" in unquote(cn[0]) and "半导体" in unquote(cn[0])
-    assert "hl=zh-CN" in cn[0]
-    assert "hl=en-US" in intl[0]
+    assert len(cn) == len(intl) == 2
+    assert all("news.google.com/rss/search" in url for url in (*cn, *intl))
+    assert all("半导体" in unquote(url) for url in cn)
+    assert all("600519.SH" not in unquote(url) and "研究标的" not in unquote(url) for url in (*cn, *intl))
+    assert all("hl=zh-CN" in url for url in cn)
+    assert all("hl=en-US" in url for url in intl)
     assert "NORIX521/fund-monitor-025209" in __import__("scripts.providers.news", fromlist=["USER_AGENT"]).USER_AGENT
 
 
