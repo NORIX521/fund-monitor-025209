@@ -10,117 +10,359 @@
     "enabled": true
   },
   "market": {
-    "history": [],
-    "holdings": []
+    "history": [
+      {
+        "date": "2026-06-25",
+        "nav": 3.1948,
+        "change_pct": 6.15
+      },
+      {
+        "date": "2026-06-26",
+        "nav": 3.1968,
+        "change_pct": 0.06
+      },
+      {
+        "date": "2026-06-29",
+        "nav": 3.2764,
+        "change_pct": 2.49
+      },
+      {
+        "date": "2026-06-30",
+        "nav": 3.3176,
+        "change_pct": 1.26
+      },
+      {
+        "date": "2026-07-01",
+        "nav": 3.2822,
+        "change_pct": -1.07
+      },
+      {
+        "date": "2026-07-02",
+        "nav": 3.0786,
+        "change_pct": -6.2
+      },
+      {
+        "date": "2026-07-03",
+        "nav": 3.1324,
+        "change_pct": 1.75
+      },
+      {
+        "date": "2026-07-06",
+        "nav": 3.1475,
+        "change_pct": 0.48
+      },
+      {
+        "date": "2026-07-07",
+        "nav": 3.0265,
+        "change_pct": -3.84
+      },
+      {
+        "date": "2026-07-08",
+        "nav": 2.9623,
+        "change_pct": -2.12
+      },
+      {
+        "date": "2026-07-09",
+        "nav": 3.0864,
+        "change_pct": 4.19
+      },
+      {
+        "date": "2026-07-10",
+        "nav": 2.9679,
+        "change_pct": -3.84
+      },
+      {
+        "date": "2026-07-13",
+        "nav": 2.7834,
+        "change_pct": -6.22
+      },
+      {
+        "date": "2026-07-14",
+        "nav": 2.8621,
+        "change_pct": 2.83
+      },
+      {
+        "date": "2026-07-15",
+        "nav": 2.7322,
+        "change_pct": -4.54
+      },
+      {
+        "date": "2026-07-16",
+        "nav": 2.6081,
+        "change_pct": -4.54
+      },
+      {
+        "date": "2026-07-17",
+        "nav": 2.377,
+        "change_pct": -8.86
+      },
+      {
+        "date": "2026-07-20",
+        "nav": 2.2573,
+        "change_pct": -5.04
+      },
+      {
+        "date": "2026-07-21",
+        "nav": 2.4767,
+        "change_pct": 9.72
+      },
+      {
+        "date": "2026-07-22",
+        "nav": 2.4075,
+        "change_pct": -2.79
+      }
+    ],
+    "holdings": [
+      {
+        "code": "603986.SH",
+        "name": "兆易创新",
+        "weight_pct": 7.92,
+        "change_pct": null,
+        "latest_price": null
+      },
+      {
+        "code": "300223.SZ",
+        "name": "北京君正",
+        "weight_pct": 7.56,
+        "change_pct": null,
+        "latest_price": null
+      },
+      {
+        "code": "001309.SZ",
+        "name": "德明利",
+        "weight_pct": 7.16,
+        "change_pct": null,
+        "latest_price": null
+      },
+      {
+        "code": "301308.SZ",
+        "name": "江波龙",
+        "weight_pct": 7.06,
+        "change_pct": null,
+        "latest_price": null
+      },
+      {
+        "code": "688766.SH",
+        "name": "普冉股份",
+        "weight_pct": 6.99,
+        "change_pct": null,
+        "latest_price": null
+      },
+      {
+        "code": "300475.SZ",
+        "name": "香农芯创",
+        "weight_pct": 6.84,
+        "change_pct": null,
+        "latest_price": null
+      },
+      {
+        "code": "688525.SH",
+        "name": "佰维存储",
+        "weight_pct": 6.76,
+        "change_pct": null,
+        "latest_price": null
+      },
+      {
+        "code": "300661.SZ",
+        "name": "圣邦股份",
+        "weight_pct": 3.49,
+        "change_pct": null,
+        "latest_price": null
+      },
+      {
+        "code": "688536.SH",
+        "name": "思瑞浦",
+        "weight_pct": 3.32,
+        "change_pct": null,
+        "latest_price": null
+      },
+      {
+        "code": "605111.SH",
+        "name": "新洁能",
+        "weight_pct": 2.95,
+        "change_pct": null,
+        "latest_price": null
+      }
+    ],
+    "holding_report_date": "2026 Q2"
   },
   "uzi": {},
   "news": {
-    "CN": [],
+    "CN": [
+      {
+        "title": "芯片加速下跌，跌得太快了，存储芯片我今天止盈！ - 财富号",
+        "article_url": "https://news.google.com/rss/articles/CBMia0FVX3lxTFAyUmtBVDRjTjRyZ254bXNNYkR3b2FlY3FnRXlrYVhoTy1LbUZkREFHcFNySTdYX2YxdHdvbkJGaS00a2M0WnJsS2tuN3VJNEQ4WmtWMjRIbWpmTTM2aXBwVzhLQUZIVlBWelk4?oc=5",
+        "source": "财富号",
+        "source_url": "https://caifuhao.eastmoney.com",
+        "published_at": "2026-07-16T06:05:00+00:00",
+        "retrieved_at": "2026-07-23T01:11:14.584074+00:00",
+        "region": "CN"
+      },
+      {
+        "title": "永赢先锋半导体智选混合发起C净值下跌3.84% - 新浪财经",
+        "article_url": "https://news.google.com/rss/articles/CBMifkFVX3lxTE9xUDBlMUZJMEE2Mkk2dlMzZmRBTlMxYi0xRkV1VlVRMkZEZHo2UUlMSW5NUFQ3bjhpQlRhTlR4RnNHazdKVGxVRkFudDFCVUdwSGQ3UXZWbzB1YmEwNlpHZTU4YTRrS2xWVnQyRnppQktIM0ZDeWdqZnlEUzZuZw?oc=5",
+        "source": "新浪财经",
+        "source_url": "https://cj.sina.cn",
+        "published_at": "2026-07-10T22:01:30+00:00",
+        "retrieved_at": "2026-07-23T01:11:14.584074+00:00",
+        "region": "CN"
+      },
+      {
+        "title": "7.9|半导体暴力上涨，带动CPO触底反弹！科技支棱起来了！ - 财富号",
+        "article_url": "https://news.google.com/rss/articles/CBMia0FVX3lxTFB5Zi1QdEdEU2N1dkpNcHh6TzZUU1BqLTZxN0N3OVZVWm53R0N3a1JlcjZOdFdFMlZUd0laZHhGcDUxaWhBbG5LRWdMdnplSHdnSHp3aUszcW44cDhWYlF1azcxWmlJY05DLVJJ?oc=5",
+        "source": "财富号",
+        "source_url": "https://caifuhao.eastmoney.com",
+        "published_at": "2026-07-09T07:01:00+00:00",
+        "retrieved_at": "2026-07-23T01:11:14.584074+00:00",
+        "region": "CN"
+      }
+    ],
     "INTL": []
   },
   "score": {
-    "overall": null,
-    "components": {},
-    "confidence": 0,
+    "overall": 18.8,
+    "components": {
+      "risk_adjusted_return": 0.0,
+      "drawdown_volatility": 0.24,
+      "trend_recovery": 7.44,
+      "concentration": 79.95
+    },
+    "confidence": 0.44,
     "model": "fund-transparent-six-factor",
     "model_version": "1.0",
     "coverage": {
-      "available": [],
-      "missing": [
+      "available": [
         "risk_adjusted_return",
         "drawdown_volatility",
         "trend_recovery",
+        "concentration"
+      ],
+      "missing": [
         "stability",
-        "concentration",
         "holding_uzi"
       ],
-      "weight_pct": 0,
+      "weight_pct": 70.0,
+      "holding_uzi_pct": 0.0,
       "confidence_penalties": [
         "holding_uzi_coverage_below_60pct"
-      ],
-      "holding_uzi_pct": 0
+      ]
     },
-    "risk_flags": []
+    "risk_flags": [
+      "low_holding_uzi_coverage",
+      "large_drawdown",
+      "high_volatility"
+    ]
   },
   "recommendation": {
     "state": "等待确认",
-    "confidence": 0,
+    "confidence": 0.44,
     "risk": {
-      "hard_flags": [],
+      "hard_flags": [
+        "large_drawdown",
+        "high_volatility"
+      ],
       "warnings": [
-        "awaiting_first_verified_refresh"
+        "low_holding_uzi_coverage"
       ],
       "stale": true,
       "hard_failures": []
     },
     "reasons": [
-      "No verified market evidence is stored in this bootstrap record"
+      "component risk_adjusted_return=0.0",
+      "component drawdown_volatility=0.24",
+      "component trend_recovery=7.44",
+      "component concentration=79.95",
+      "evidence source_status=stale"
     ],
     "invalidation_rules": [
-      "Replace the bootstrap record only after a verified provider refresh",
-      "Do not use an unrefreshed bootstrap record as investment advice"
+      "confidence < 0.45",
+      "stale evidence requires confirmation",
+      "hard_risk_flags or overall < 40 requires renewed research review"
     ],
-    "timestamp": "2000-01-01T00:00:00+00:00"
+    "timestamp": "2026-07-23T01:11:11.897986+00:00"
   },
   "source_status": {
-    "market": {
-      "provider": "bootstrap-unrefreshed",
-      "source_urls": [],
-      "attempted_at": "2000-01-01T00:00:00+00:00",
-      "retrieved_at": "",
-      "last_success_at": "",
-      "stale": true,
-      "error": "awaiting_first_verified_refresh",
-      "coverage": {}
-    },
     "history": {
-      "provider": "bootstrap-unrefreshed",
-      "source_urls": [],
-      "attempted_at": "2000-01-01T00:00:00+00:00",
-      "retrieved_at": "",
-      "last_success_at": "",
-      "stale": true,
-      "error": "awaiting_first_verified_refresh",
+      "provider": "EastmoneyProvider",
+      "source_urls": [
+        "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
+        "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month=",
+        "https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C0.001309%2C0.301308%2C1.688766%2C0.300475%2C1.688525%2C0.300661%2C1.688536%2C1.605111&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2"
+      ],
+      "attempted_at": "2026-07-23T01:11:11.897986+00:00",
+      "retrieved_at": "2026-07-23T01:11:14.583574+00:00",
+      "last_success_at": "2026-07-23T01:11:14.583574+00:00",
+      "stale": false,
+      "error": "",
       "coverage": {}
     },
     "holdings": {
-      "provider": "bootstrap-unrefreshed",
-      "source_urls": [],
-      "attempted_at": "2000-01-01T00:00:00+00:00",
-      "retrieved_at": "",
-      "last_success_at": "",
-      "stale": true,
-      "error": "awaiting_first_verified_refresh",
+      "provider": "EastmoneyProvider",
+      "source_urls": [
+        "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
+        "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month=",
+        "https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C0.001309%2C0.301308%2C1.688766%2C0.300475%2C1.688525%2C0.300661%2C1.688536%2C1.605111&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2"
+      ],
+      "attempted_at": "2026-07-23T01:11:11.897986+00:00",
+      "retrieved_at": "2026-07-23T01:11:14.583574+00:00",
+      "last_success_at": "2026-07-23T01:11:14.583574+00:00",
+      "stale": false,
+      "error": "",
       "coverage": {}
     },
     "quotes": {
-      "provider": "bootstrap-unrefreshed",
-      "source_urls": [],
-      "attempted_at": "2000-01-01T00:00:00+00:00",
+      "provider": "EastmoneyProvider",
+      "source_urls": [
+        "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
+        "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month=",
+        "https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C0.001309%2C0.301308%2C1.688766%2C0.300475%2C1.688525%2C0.300661%2C1.688536%2C1.605111&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2"
+      ],
+      "attempted_at": "2026-07-23T01:11:11.897986+00:00",
       "retrieved_at": "",
       "last_success_at": "",
       "stale": true,
-      "error": "awaiting_first_verified_refresh",
+      "error": "quote_no_data",
+      "coverage": {
+        "covered": 0,
+        "total": 10,
+        "pct": 0.0
+      }
+    },
+    "market": {
+      "provider": "EastmoneyProvider",
+      "source_urls": [
+        "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
+        "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month=",
+        "https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C0.001309%2C0.301308%2C1.688766%2C0.300475%2C1.688525%2C0.300661%2C1.688536%2C1.605111&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2"
+      ],
+      "attempted_at": "2026-07-23T01:11:11.897986+00:00",
+      "retrieved_at": "",
+      "last_success_at": "",
+      "stale": true,
+      "error": "quote_no_data",
       "coverage": {}
     },
     "news_CN": {
-      "provider": "bootstrap-unrefreshed",
-      "source_urls": [],
-      "attempted_at": "2000-01-01T00:00:00+00:00",
-      "retrieved_at": "",
-      "last_success_at": "",
-      "stale": true,
-      "error": "awaiting_first_verified_refresh",
+      "provider": "fetch_news",
+      "source_urls": [
+        "https://caifuhao.eastmoney.com",
+        "https://cj.sina.cn"
+      ],
+      "attempted_at": "2026-07-23T01:11:11.897986+00:00",
+      "retrieved_at": "2026-07-23T01:11:11.897986+00:00",
+      "last_success_at": "2026-07-23T01:11:11.897986+00:00",
+      "stale": false,
+      "error": "",
       "coverage": {}
     },
     "news_INTL": {
-      "provider": "bootstrap-unrefreshed",
+      "provider": "fetch_news",
       "source_urls": [],
-      "attempted_at": "2000-01-01T00:00:00+00:00",
+      "attempted_at": "2026-07-23T01:11:11.897986+00:00",
       "retrieved_at": "",
       "last_success_at": "",
       "stale": true,
-      "error": "awaiting_first_verified_refresh",
+      "error": "no_reliable_update",
       "coverage": {}
     }
   }
