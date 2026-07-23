@@ -66,3 +66,52 @@ def test_default_discovery_survives_one_feed_failure_and_keeps_only_fresh_releva
     ]
     assert len(session.calls) >= 2
     assert all("é" not in item.title for item in items)
+
+
+def test_cn_stream_reads_recent_electronics_updates_directly_from_miit():
+    from scripts.providers.news import MIIT_INDEX_URL, fetch_news
+
+    index = """<html><body>
+      <a href="/jgsj/yxj/xxfb/art/2026/art_one.html">2026年1—5月电子信息制造业运行情况</a>
+      <a href="/jgsj/yxj/xxfb/art/2026/art_two.html">半导体产业运行更新</a>
+      <a href="/jgsj/yxj/xxfb/art/2026/art_three.html">集成电路行业月度数据</a>
+      <a href="/jgsj/yxj/xxfb/art/2026/art_four.html">芯片制造业后续更新</a>
+      <a href="/jgsj/yxj/xxfb/art/2026/art_other.html">通信业运行情况</a>
+    </body></html>"""
+
+    class RouteSession:
+        def __init__(self):
+            self.calls = []
+
+        def get(self, url, **kwargs):
+            self.calls.append((url, kwargs))
+            if url == MIIT_INDEX_URL:
+                return FeedResponse(index)
+            if "/art/2026/art_" in url:
+                slug = url.rsplit("_", 1)[-1].removesuffix(".html")
+                titles = {
+                    "one": "2026年1—5月电子信息制造业运行情况",
+                    "two": "半导体产业运行更新",
+                    "three": "集成电路行业月度数据",
+                }
+                return FeedResponse(
+                    f'<html><head><meta name="ArticleTitle" content="{titles[slug]}">'
+                    '<meta name="PubDate" content="2026-07-01 14:27"></head></html>'
+                )
+            return FeedResponse("<rss><channel></channel></rss>")
+
+    session = RouteSession()
+    items = fetch_news(
+        {"code": "025209", "name": "永赢先锋半导体智选混合发起A", "sector": "半导体/存储"},
+        "CN",
+        session=session,
+        retrieved_at="2026-07-23T00:00:00+00:00",
+    )
+
+    assert len(items) == 3
+    assert items[0].title == "2026年1—5月电子信息制造业运行情况"
+    assert items[0].published_at == "2026-07-01T14:27:00+08:00"
+    assert items[0].source == "工业和信息化部"
+    assert items[0].source_url == "https://www.miit.gov.cn"
+    assert items[0].article_url.startswith("https://wap.miit.gov.cn/jgsj/yxj/xxfb/art/")
+    assert len([url for url, _ in session.calls if "/art/2026/art_" in url]) == 3

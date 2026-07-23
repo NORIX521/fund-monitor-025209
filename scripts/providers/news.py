@@ -8,15 +8,18 @@ from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from email.utils import parsedate_to_datetime
 from typing import Any
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 from xml.etree import ElementTree
 
 import requests
+from bs4 import BeautifulSoup
 
 
 TIMEOUT = (5, 25)
 USER_AGENT = "fund-monitor-025209/1.0 (+https://github.com/NORIX521/fund-monitor-025209)"
 GOOGLE_NEWS_RSS = "https://news.google.com/rss/search"
+MIIT_INDEX_URL = "https://wap.miit.gov.cn/jgsj/yxj/index.html"
+MIIT_SOURCE_URL = "https://www.miit.gov.cn"
 TRACKING_PARAMETERS = {"gclid", "fbclid", "ref", "source", "from"}
 MAX_ITEMS = 6
 MAX_AGE = timedelta(days=120)
@@ -164,6 +167,63 @@ def _trusted_relevant_fresh(item: NewsItem, region: str, retrieved_at: str) -> b
     )
 
 
+def _fetch_miit_items(client: Any, retrieved_at: str) -> list[NewsItem]:
+    response = client.get(
+        MIIT_INDEX_URL,
+        timeout=TIMEOUT,
+        headers={"User-Agent": USER_AGENT},
+    )
+    response.raise_for_status()
+    soup = BeautifulSoup(_response_text(response), "html.parser")
+    candidates: list[str] = []
+    for anchor in soup.find_all("a", href=True):
+        href = str(anchor.get("href") or "")
+        title = anchor.get_text(" ", strip=True)
+        if (
+            "/jgsj/yxj/xxfb/art/" in href
+            and any(term in title for term in RELEVANCE_TERMS["CN"])
+        ):
+            article_url = urljoin(MIIT_INDEX_URL, href)
+            if article_url not in candidates:
+                candidates.append(article_url)
+        if len(candidates) == 3:
+            break
+
+    items: list[NewsItem] = []
+    china_standard_time = timezone(timedelta(hours=8))
+    for article_url in candidates:
+        try:
+            article_response = client.get(
+                article_url,
+                timeout=TIMEOUT,
+                headers={"User-Agent": USER_AGENT},
+            )
+            article_response.raise_for_status()
+            article = BeautifulSoup(_response_text(article_response), "html.parser")
+            title_meta = article.find("meta", attrs={"name": "ArticleTitle"})
+            date_meta = article.find("meta", attrs={"name": "PubDate"})
+            title = str(title_meta.get("content") or "").strip() if title_meta else ""
+            date_text = str(date_meta.get("content") or "").strip() if date_meta else ""
+            published = datetime.strptime(date_text, "%Y-%m-%d %H:%M").replace(
+                tzinfo=china_standard_time
+            )
+        except (requests.RequestException, UnicodeError, ValueError):
+            continue
+        if title and any(term in title for term in RELEVANCE_TERMS["CN"]):
+            items.append(
+                NewsItem(
+                    title=title,
+                    article_url=article_url,
+                    source="工业和信息化部",
+                    source_url=MIIT_SOURCE_URL,
+                    published_at=published.isoformat(),
+                    retrieved_at=retrieved_at,
+                    region="CN",
+                )
+            )
+    return items
+
+
 def _canonical_url(value: str) -> str:
     parsed = urlparse(value)
     params = [(key, val) for key, val in parse_qsl(parsed.query, keep_blank_values=True) if key.lower() not in TRACKING_PARAMETERS and not key.lower().startswith("utm_")]
@@ -196,6 +256,14 @@ def fetch_news(asset: dict[str, Any], region: str, *, session: requests.Session 
     sources = tuple(feeds) if feeds is not None else default_feeds(asset, normalized_region)
     client = session or requests.Session()
     selected: list[NewsItem] = []
+    if production_discovery and normalized_region == "CN":
+        try:
+            direct_items = _fetch_miit_items(client, timestamp)
+        except (requests.RequestException, UnicodeError, ValueError):
+            direct_items = []
+        for item in direct_items:
+            if _trusted_relevant_fresh(item, normalized_region, timestamp) and not _duplicate(item, selected):
+                selected.append(item)
     for feed_url in sources:
         try:
             response = client.get(feed_url, timeout=TIMEOUT, headers={"User-Agent": USER_AGENT})
