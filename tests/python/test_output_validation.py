@@ -148,19 +148,20 @@ def test_cli_generates_a_repeatable_browser_demo_and_prints_its_path(tmp_path, c
     assert validate_outputs(site_root / "data") == []
 
 
-def test_validator_accepts_checked_in_production_seed():
+def test_validator_accepts_checked_in_production_data():
     assert validate_outputs(REPO / "data") == []
     watchlist = load(REPO / "data" / "watchlist.json")
-    assert [asset["id"] for asset in watchlist["assets"]] == ["fund-cn-025209"]
+    assert watchlist["assets"]
     dashboard = load(REPO / "data" / "dashboard.json")
     assert dashboard["pipeline_version"] == "4.1"
-    detail = load(REPO / "data" / "assets" / "fund-cn-025209.json")
-    assert detail["market"] == {"history": [], "holdings": []}
-    assert detail["market"]["holdings"] == []
-    assert detail["score"]["overall"] is None
-    assert detail["score"]["components"] == {}
-    assert detail["score"]["coverage"]["holding_uzi_pct"] == 0
-    serialized = json.dumps({"dashboard": dashboard, "detail": detail}, ensure_ascii=False).lower()
+    details = [
+        load(REPO / "data" / "assets" / f"{asset['id']}.json")
+        for asset in watchlist["assets"]
+    ]
+    serialized = json.dumps(
+        {"watchlist": watchlist, "dashboard": dashboard, "details": details},
+        ensure_ascii=False,
+    ).lower()
     assert "synthetic" not in serialized
     assert "fixture" not in serialized
     assert ".example" not in serialized

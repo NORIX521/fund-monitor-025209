@@ -102,11 +102,12 @@ jobs:
 
       - name: Restore UZI cache
         if: github.event_name != 'push'
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/UZI-Skill/skills/deep-analysis/scripts/.cache
-          key: uzi-${{ runner.os }}-${{ env.UZI_SHA }}-${{ hashFiles('data/watchlist.json') }}
+          key: uzi-${{ runner.os }}-${{ env.UZI_SHA }}-${{ hashFiles('data/watchlist.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
+            uzi-${{ runner.os }}-${{ env.UZI_SHA }}-${{ hashFiles('data/watchlist.json') }}-
             uzi-${{ runner.os }}-${{ env.UZI_SHA }}-
 
       - name: Save authorized Issue body to a private runner file
@@ -193,6 +194,13 @@ jobs:
             --depth "$DEPTH" \
             --run-id "${{ github.run_id }}" \
             --result-file "$RUNNER_TEMP/uzi-run-manifest.json"
+
+      - name: Save UZI cache checkpoint
+        if: github.event_name != 'push' && steps.uzi.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/UZI-Skill/skills/deep-analysis/scripts/.cache
+          key: uzi-${{ runner.os }}-${{ env.UZI_SHA }}-${{ hashFiles('data/watchlist.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Build final schema-validated monitor data
         if: github.event_name != 'push'

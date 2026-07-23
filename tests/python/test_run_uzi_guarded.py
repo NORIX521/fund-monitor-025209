@@ -61,7 +61,10 @@ def test_watchlist_runner_builds_temporary_stock_only_portfolio(tmp_path, monkey
     monkeypatch.setattr(run_uzi_guarded, "_run_uzi_portfolio", fake_runner, raising=False)
 
     result = run_uzi_guarded.run_watchlist(
-        _make_uzi_root(tmp_path), _write_watchlist(tmp_path), "lite"
+        _make_uzi_root(tmp_path),
+        _write_watchlist(tmp_path),
+        "lite",
+        details_dir=tmp_path / "details",
     )
 
     assert result["status"] == "completed"

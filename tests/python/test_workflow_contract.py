@@ -80,7 +80,8 @@ def test_workflow_pins_uzi_bounds_depth_and_restores_only_its_cache():
     assert re.search(r"git\s+[^\n]*checkout --detach", WORKFLOW)
     timeout = re.search(r"timeout-minutes:\s*(\d+)", WORKFLOW)
     assert timeout and int(timeout.group(1)) <= 330
-    assert "actions/cache@v4" in WORKFLOW
+    assert "actions/cache/restore@v4" in WORKFLOW
+    assert "actions/cache/save@v4" in WORKFLOW
     cache_block = re.search(r"(?ms)^\s{6}- name: Restore UZI cache\s*$.*?(?=^\s{6}- name:|^\s{2}\w)", WORKFLOW)
     assert cache_block
     assert "UZI-Skill/skills/deep-analysis/scripts/.cache" in cache_block.group(0)
@@ -95,6 +96,17 @@ def test_workflow_pins_uzi_bounds_depth_and_restores_only_its_cache():
     assert depth_input and "deep" not in depth_input.group(0)
 
 
+def test_workflow_checkpoints_uzi_cache_before_mutable_data_tests():
+    restore = _position("actions/cache/restore@v4")
+    uzi = _position("python scripts/run_uzi_guarded.py data/watchlist.json")
+    save = _position("actions/cache/save@v4")
+    tests = _position("python -m pytest tests/python -q")
+
+    assert restore < uzi < save < tests
+    assert "github.run_id" in WORKFLOW
+    assert "github.run_attempt" in WORKFLOW
+
+
 def test_push_deploy_skips_data_refresh_and_preserves_checked_in_evidence():
     refresh = WORKFLOW.split("  refresh-and-stage:", 1)[1].split(
         "\n  finalize-authorized-import:", 1
@@ -105,6 +117,7 @@ def test_push_deploy_skips_data_refresh_and_preserves_checked_in_evidence():
         "Restore UZI cache",
         "Prepare fund disclosures before UZI",
         "Run guarded UZI direct-stock and disclosed-holding refresh",
+        "Save UZI cache checkpoint",
         "Build final schema-validated monitor data",
         "Commit generated data only",
     ):
