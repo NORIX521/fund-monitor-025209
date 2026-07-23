@@ -6,7 +6,7 @@
 
 网页导入中心支持两种本地输入格式：
 
-- 粘贴文本：每行 `代码,名称,类型,板块,备注`，例如 `600519.SH,贵州茅台,stock,消费,示例`。
+- 粘贴文本：每行只填一个代码即可，例如 `025209` 或 `600519`；也兼容 `代码,名称,类型,板块,备注` 完整格式。
 - CSV：表头使用 `code,name,asset_type,sector,note,enabled`；引号内可以包含逗号或换行。
 
 浏览器只负责校验与生成 Issue 链接，不直接写仓库。打开链接后提交标题以 `[watchlist-import]` 开头、正文包含 `WATCHLIST_IMPORT_V1` 数据块的 Issue。GitHub Actions 仅接受仓库 `OWNER`、`MEMBER` 或 `COLLABORATOR` 的导入；其他同名请求只会收到最小权限说明，不会检出代码或改数据。每次最多导入 50 项，支持的规范类型是 `stock`、`fund`、`etf`、`lof`。

@@ -123,6 +123,9 @@ def merge_watchlist(current: Mapping[str, Any], incoming: Sequence[Mapping[str, 
             positions[asset["id"]] = len(merged)
             merged.append(asset)
         else:
+            for field in ("name", "sector", "note"):
+                if not asset[field]:
+                    asset[field] = merged[position][field]
             merged[position] = asset
 
     result: dict[str, Any] = {"version": 1, "assets": merged}

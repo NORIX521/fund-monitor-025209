@@ -1,4 +1,4 @@
-const CACHE = 'fund-monitor-v2';
+const CACHE = 'fund-monitor-v3';
 const SHELL = [
   './',
   'index.html',

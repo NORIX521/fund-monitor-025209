@@ -48,9 +48,15 @@ def _asset_type(raw_type: Any, code: str) -> str:
     kind = clean(raw_type).lower()
     kind = _TYPE_ALIASES.get(kind, kind)
     if not kind:
-        if _CN_CODE_WITH_OPTIONAL_EXCHANGE.fullmatch(code.upper()):
-            raise ValueError("six-digit CN codes are ambiguous; asset_type is required")
-        kind = "stock"
+        match = _CN_CODE_WITH_OPTIONAL_EXCHANGE.fullmatch(code.upper())
+        if match and not match.group(2):
+            security_code = match.group(1)
+            is_equity_namespace = security_code.startswith(
+                _SH_EQUITY_PREFIXES + _SZ_EQUITY_PREFIXES + ("4", "8")
+            )
+            kind = "stock" if is_equity_namespace else "fund"
+        else:
+            kind = "stock"
     if kind not in ASSET_TYPES:
         raise ValueError(f"unsupported asset type: {kind}")
     return kind

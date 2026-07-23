@@ -83,10 +83,35 @@ def test_lof_import_keeps_six_digit_fund_code():
     assert asset["market"] == "CN"
 
 
-@pytest.mark.parametrize("code", ["000001", "000001.SZ"])
-def test_untyped_six_digit_cn_code_requires_asset_type(code):
-    with pytest.raises(ValueError, match="asset_type"):
-        parse_rows(code, "text")
+def test_bare_codes_import_directly_with_deterministic_types():
+    assets = parse_rows("025209\n600519", "text")
+
+    assert [(asset["code"], asset["asset_type"], asset["market"]) for asset in assets] == [
+        ("025209", "fund", "CN"),
+        ("600519.SH", "stock", "CN"),
+    ]
+
+
+def test_code_only_reimport_preserves_existing_descriptive_fields():
+    current = {
+        "version": 1,
+        "assets": [
+            {
+                "code": "025209",
+                "name": "永赢先锋半导体智选混合发起C",
+                "asset_type": "fund",
+                "sector": "半导体/存储",
+                "note": "原始监控基金",
+            }
+        ],
+    }
+
+    merged = merge_watchlist(current, parse_rows("025209", "text"))
+
+    asset = merged["assets"][0]
+    assert asset["name"] == "永赢先锋半导体智选混合发起C"
+    assert asset["sector"] == "半导体/存储"
+    assert asset["note"] == "原始监控基金"
 
 
 @pytest.mark.parametrize(
