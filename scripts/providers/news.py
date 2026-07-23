@@ -53,6 +53,10 @@ RELEVANCE_TERMS = {
     "CN": ("半导体", "集成电路", "存储芯片", "芯片", "电子信息制造业"),
     "INTL": ("semiconductor", "memory chip", "dram", "nand", "hbm", "chip"),
 }
+EXCLUSION_TERMS = {
+    "CN": ("证券投资基金", "基金产品资料", "停牌公告", "溢价风险提示"),
+    "INTL": (),
+}
 
 
 @dataclass(frozen=True)
@@ -157,6 +161,8 @@ def _trusted_relevant_fresh(item: NewsItem, region: str, retrieved_at: str) -> b
         return False
     title = item.title.lower()
     if not any(term.lower() in title for term in RELEVANCE_TERMS[region]):
+        return False
+    if any(term.lower() in title for term in EXCLUSION_TERMS[region]):
         return False
     published = _timestamp(item.published_at)
     retrieved = _timestamp(retrieved_at)

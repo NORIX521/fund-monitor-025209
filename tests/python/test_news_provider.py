@@ -115,3 +115,34 @@ def test_cn_stream_reads_recent_electronics_updates_directly_from_miit():
     assert items[0].source_url == "https://www.miit.gov.cn"
     assert items[0].article_url.startswith("https://wap.miit.gov.cn/jgsj/yxj/xxfb/art/")
     assert len([url for url, _ in session.calls if "/art/2026/art_" in url]) == 3
+
+
+def test_cn_trend_stream_excludes_fund_reports_and_market_notices():
+    from scripts.providers.news import MIIT_INDEX_URL, fetch_news
+
+    xml = """<rss><channel>
+      <item><title>上交所发布半导体产业重要运行数据</title><link>https://news.google.com/rss/articles/trend</link><pubDate>Tue, 21 Jul 2026 09:00:00 +0000</pubDate><source url="https://www.sse.com.cn/news">上海证券交易所</source></item>
+      <item><title>某半导体交易型开放式指数证券投资基金2026年季度报告</title><link>https://news.google.com/rss/articles/fund</link><pubDate>Wed, 22 Jul 2026 09:00:00 +0000</pubDate><source url="https://www.sse.com.cn/disclosure">上海证券交易所</source></item>
+      <item><title>半导体芯片基金溢价风险提示公告</title><link>https://news.google.com/rss/articles/risk</link><pubDate>Wed, 22 Jul 2026 08:00:00 +0000</pubDate><source url="https://www.sse.com.cn/disclosure">上海证券交易所</source></item>
+    </channel></rss>"""
+
+    class Session:
+        def __init__(self):
+            self.calls = []
+
+        def get(self, url, **kwargs):
+            self.calls.append(url)
+            if url == MIIT_INDEX_URL:
+                return FeedResponse("<html></html>")
+            if len([call for call in self.calls if "news.google.com" in call]) == 1:
+                return FeedResponse(xml)
+            return FeedResponse("<rss><channel></channel></rss>")
+
+    items = fetch_news(
+        {"sector": "半导体/存储"},
+        "CN",
+        session=Session(),
+        retrieved_at="2026-07-23T00:00:00+00:00",
+    )
+
+    assert [item.title for item in items] == ["上交所发布半导体产业重要运行数据"]
