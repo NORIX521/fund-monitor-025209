@@ -26,6 +26,16 @@ test('mixed paste becomes a normalized safe GitHub issue payload', () => {
   );
 });
 
+test('bare codes import directly with a deterministic stock or fund type', () => {
+  const assets = parseImportText('025209\n600519');
+
+  assert.deepEqual(assets.map(({ code, asset_type, market }) => ({ code, asset_type, market })), [
+    { code: '025209', asset_type: 'fund', market: 'CN' },
+    { code: '600519.SH', asset_type: 'stock', market: 'CN' },
+  ]);
+  assert.equal(assets.invalid.length, 0);
+});
+
 test('paste rejects more than fifty rows', () => {
   const rows = Array.from({ length: 51 }, (_, index) => `A${index},Asset ${index},stock`).join('\n');
   assert.throws(() => parseImportText(rows), /at most 50/i);

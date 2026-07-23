@@ -163,10 +163,8 @@ function normalizeType(value, code) {
   let assetType = clean(value).toLowerCase();
   assetType = TYPE_ALIASES.get(assetType) || assetType;
   if (!assetType) {
-    if (/^\d{6}(?:\.(?:SH|SZ|BJ))?$/i.test(code)) {
-      throw new Error('six-digit CN codes are ambiguous; asset_type is required');
-    }
-    assetType = 'stock';
+    const cnMatch = clean(code).toUpperCase().match(/^(\d{6})(?:\.(SH|SZ|BJ))?$/);
+    assetType = cnMatch && !cnMatch[2] && !expectedExchange(cnMatch[1]) ? 'fund' : 'stock';
   }
   if (!ASSET_TYPES.has(assetType)) throw new Error(`unsupported asset type: ${assetType}`);
   return assetType;

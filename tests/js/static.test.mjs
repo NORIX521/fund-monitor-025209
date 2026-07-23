@@ -13,6 +13,11 @@ test('import preview has an accessible scroll-region name and centralized failur
   assert.ok((app.match(/setImportError\(/g) || []).length >= 3);
 });
 
+test('import center makes code-only import the primary path', () => {
+  assert.match(html, /每行只填一个代码即可/);
+  assert.match(html, /placeholder="025209&#10;600519"/);
+});
+
 test('mobile evidence anchors have real 44 by 44px boxes', () => {
   assert.match(css, /\.source-links a, \.news-links a\s*\{[^}]*display:\s*inline-flex/s);
   assert.match(css, /@media \(max-width: 640px\)[\s\S]*\.news-item a, \.source-links a\s*\{\s*min-height:\s*44px/s);

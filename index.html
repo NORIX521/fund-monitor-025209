@@ -121,9 +121,9 @@
   <dialog id="importDialog" aria-labelledby="importTitle" aria-describedby="importHelp">
     <div class="dialog-shell">
       <div class="dialog-heading"><div><div class="eyebrow">SECURE IMPORT</div><h2 id="importTitle">批量导入中心</h2></div><button id="closeImportButton" class="icon-button" type="button" aria-label="关闭导入中心">×</button></div>
-      <p id="importHelp" class="dialog-copy">粘贴代码、名称、类型、板块、备注，或选择带表头的 CSV。一次最多 50 条；浏览器仅生成机器可读的 GitHub Issue，不保存令牌。</p>
+      <p id="importHelp" class="dialog-copy">每行只填一个代码即可，系统会自动判断股票或基金；也支持完整字段和带表头的 CSV。一次最多 50 条；浏览器仅生成机器可读的 GitHub Issue，不保存令牌。</p>
       <div class="import-grid">
-        <label class="paste-field"><span>粘贴资产</span><textarea id="importText" rows="8" placeholder="600519,贵州茅台,stock,消费,长期观察&#10;025209,半导体基金,fund"></textarea></label>
+        <label class="paste-field"><span>粘贴资产代码（每行一个）</span><textarea id="importText" rows="8" placeholder="025209&#10;600519"></textarea></label>
         <div class="file-field"><label for="csvFile">选择 CSV 文件</label><input id="csvFile" type="file" accept=".csv,text/csv" /><small>支持中英文字段：code/代码、name/名称、asset_type/类型、sector/板块、note/备注。</small></div>
       </div>
       <div class="preview-heading"><h3>导入预览</h3><span id="importSummary" class="status-chip neutral">尚未解析</span></div>
