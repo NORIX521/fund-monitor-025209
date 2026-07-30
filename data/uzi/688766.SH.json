@@ -1,0 +1,47 @@
+{
+  "ticker": "688766.SH",
+  "model": "UZI-Skill",
+  "model_version": "3.9.2",
+  "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+  "overall": 54.3,
+  "panel_consensus": 32.9,
+  "fundamental_score": 65.4,
+  "school_scores": {
+    "A": 31.3,
+    "B": 5.9,
+    "C": 46.6,
+    "D": 97.9,
+    "E": 34.1,
+    "F": 27.8,
+    "G": 44.8,
+    "H": 6.0,
+    "I": 3.6
+  },
+  "signal_distribution": {
+    "bullish": 9,
+    "neutral": 12,
+    "bearish": 22,
+    "skip": 23
+  },
+  "verdict": "观望偏空 · 1 派看多 / 6 派看空",
+  "risk_flags": [
+    "当前 PE 119x，估值偏高",
+    "ROE 最低 -2.5%，盈利稳定性不足",
+    "—行业竞争加剧风险",
+    "宏观经济或政策环境变化"
+  ],
+  "attempted_at": "2026-07-30T15:33:48.620857+00:00",
+  "last_success_at": "2026-07-30T15:33:48.620857+00:00",
+  "stale": false,
+  "error": "",
+  "run": {
+    "id": "30557230203",
+    "depth": "lite",
+    "status": "refreshed_this_run"
+  },
+  "upstream": {
+    "repository": "wbh604/UZI-Skill",
+    "commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+    "model_version": "3.9.2"
+  }
+}

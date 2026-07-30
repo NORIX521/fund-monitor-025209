@@ -1,0 +1,44 @@
+{
+  "ticker": "300223.SZ",
+  "model": "UZI-Skill",
+  "model_version": "3.9.2",
+  "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+  "overall": 46.0,
+  "panel_consensus": 18.2,
+  "fundamental_score": 61.4,
+  "school_scores": {
+    "A": 23.0,
+    "B": 0.0,
+    "C": 44.1,
+    "D": 22.7,
+    "E": 24.9,
+    "F": 0.0,
+    "G": 34.5,
+    "H": 6.0,
+    "I": 3.6
+  },
+  "signal_distribution": {
+    "bullish": 5,
+    "neutral": 8,
+    "bearish": 30,
+    "skip": 23
+  },
+  "verdict": "谨慎 · 8 派看空",
+  "risk_flags": [
+    "ROE 最新 0.0% 偏低"
+  ],
+  "attempted_at": "2026-07-30T15:33:48.620857+00:00",
+  "last_success_at": "2026-07-30T15:33:48.620857+00:00",
+  "stale": false,
+  "error": "",
+  "run": {
+    "id": "30557230203",
+    "depth": "lite",
+    "status": "refreshed_this_run"
+  },
+  "upstream": {
+    "repository": "wbh604/UZI-Skill",
+    "commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+    "model_version": "3.9.2"
+  }
+}

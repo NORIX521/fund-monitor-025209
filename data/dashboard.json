@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-23T01:49:32.845073+00:00",
+  "generated_at": "2026-07-30T20:29:23.687414+00:00",
   "pipeline_version": "4.1",
   "source_status": {
     "pipeline": {
@@ -7,15 +7,15 @@
       "source_urls": [
         "https://github.com/NORIX521/fund-monitor-025209/blob/main/scripts/update_monitor.py"
       ],
-      "attempted_at": "2026-07-23T01:49:32.845073+00:00",
-      "retrieved_at": "2026-07-23T01:49:32.845073+00:00",
-      "last_success_at": "2026-07-23T01:49:32.845073+00:00",
-      "stale": false,
+      "attempted_at": "2026-07-30T20:29:23.687414+00:00",
+      "retrieved_at": "2026-07-30T20:29:23.687414+00:00",
+      "last_success_at": "2026-07-30T20:29:23.687414+00:00",
+      "stale": true,
       "error": "",
       "coverage": {}
     }
   },
-  "stale_count": 0,
+  "stale_count": 1,
   "asset_count": 1,
   "assets": [
     {
@@ -24,8 +24,8 @@
       "name": "永赢先锋半导体智选混合发起C",
       "asset_type": "fund",
       "state": "等待确认",
-      "confidence": 0.44,
-      "stale": false
+      "confidence": 0.9,
+      "stale": true
     }
   ]
 }

@@ -1,0 +1,47 @@
+{
+  "ticker": "001309.SZ",
+  "model": "UZI-Skill",
+  "model_version": "3.9.2",
+  "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+  "overall": 55.1,
+  "panel_consensus": 32.0,
+  "fundamental_score": 67.2,
+  "school_scores": {
+    "A": 34.8,
+    "B": 12.0,
+    "C": 40.1,
+    "D": 22.7,
+    "E": 55.8,
+    "F": 47.3,
+    "G": 47.9,
+    "H": 6.0,
+    "I": 3.6
+  },
+  "signal_distribution": {
+    "bullish": 7,
+    "neutral": 16,
+    "bearish": 22,
+    "skip": 21
+  },
+  "verdict": "观望中性 · 5 派看空",
+  "risk_flags": [
+    "资产负债率 64%，财务杠杆偏高",
+    "ROE 最低 2.3%，盈利稳定性不足",
+    "—行业竞争加剧风险",
+    "宏观经济或政策环境变化"
+  ],
+  "attempted_at": "2026-07-30T15:33:48.620857+00:00",
+  "last_success_at": "2026-07-30T15:33:48.620857+00:00",
+  "stale": false,
+  "error": "",
+  "run": {
+    "id": "30557230203",
+    "depth": "lite",
+    "status": "refreshed_this_run"
+  },
+  "upstream": {
+    "repository": "wbh604/UZI-Skill",
+    "commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+    "model_version": "3.9.2"
+  }
+}

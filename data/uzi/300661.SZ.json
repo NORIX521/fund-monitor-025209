@@ -1,0 +1,46 @@
+{
+  "ticker": "300661.SZ",
+  "model": "UZI-Skill",
+  "model_version": "3.9.2",
+  "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+  "overall": 52.9,
+  "panel_consensus": 32.2,
+  "fundamental_score": 64.6,
+  "school_scores": {
+    "A": 34.6,
+    "B": 0.0,
+    "C": 54.0,
+    "D": 100.0,
+    "E": 18.3,
+    "F": 27.8,
+    "G": 49.8,
+    "H": 6.0,
+    "I": 42.7
+  },
+  "signal_distribution": {
+    "bullish": 8,
+    "neutral": 12,
+    "bearish": 23,
+    "skip": 23
+  },
+  "verdict": "观望偏空 · 1 派看多 / 5 派看空",
+  "risk_flags": [
+    "当前 PE 100x，估值偏高",
+    "—行业竞争加剧风险",
+    "宏观经济或政策环境变化"
+  ],
+  "attempted_at": "2026-07-30T15:33:48.620857+00:00",
+  "last_success_at": "2026-07-30T15:33:48.620857+00:00",
+  "stale": false,
+  "error": "",
+  "run": {
+    "id": "30557230203",
+    "depth": "lite",
+    "status": "refreshed_this_run"
+  },
+  "upstream": {
+    "repository": "wbh604/UZI-Skill",
+    "commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+    "model_version": "3.9.2"
+  }
+}
