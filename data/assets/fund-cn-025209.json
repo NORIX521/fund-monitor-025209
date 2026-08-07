@@ -15,84 +15,75 @@
         "code": "603986.SH",
         "name": "兆易创新",
         "weight_pct": 7.92,
-        "change_pct": 8.26,
-        "latest_price": 385.44
+        "change_pct": 8.32,
+        "latest_price": 417.05
       },
       {
         "code": "300223.SZ",
         "name": "北京君正",
         "weight_pct": 7.56,
-        "change_pct": 7.74,
-        "latest_price": 136.03
+        "change_pct": 5.15,
+        "latest_price": 144.05
       },
       {
         "code": "001309.SZ",
         "name": "德明利",
         "weight_pct": 7.16,
-        "change_pct": 6.06,
-        "latest_price": 386.24
+        "change_pct": 4.1,
+        "latest_price": 404.16
       },
       {
         "code": "301308.SZ",
         "name": "江波龙",
         "weight_pct": 7.06,
-        "change_pct": 8.59,
-        "latest_price": 364.92
+        "change_pct": 5.53,
+        "latest_price": 386.6
       },
       {
         "code": "688766.SH",
         "name": "普冉股份",
         "weight_pct": 6.99,
-        "change_pct": 11.35,
-        "latest_price": 373.88
+        "change_pct": 5.02,
+        "latest_price": 393.63
       },
       {
         "code": "300475.SZ",
         "name": "香农芯创",
         "weight_pct": 6.84,
-        "change_pct": 6.43,
-        "latest_price": 151.35
+        "change_pct": 4.0,
+        "latest_price": 158.69
       },
       {
         "code": "688525.SH",
         "name": "佰维存储",
         "weight_pct": 6.76,
-        "change_pct": 7.14,
-        "latest_price": 233.07
+        "change_pct": 5.13,
+        "latest_price": 244.88
       },
       {
         "code": "300661.SZ",
         "name": "圣邦股份",
         "weight_pct": 3.49,
-        "change_pct": 2.42,
-        "latest_price": 104.02
+        "change_pct": 5.12,
+        "latest_price": 111.68
       },
       {
         "code": "688536.SH",
         "name": "思瑞浦",
         "weight_pct": 3.32,
-        "change_pct": 2.34,
-        "latest_price": 238.66
+        "change_pct": 3.53,
+        "latest_price": 251.75
       },
       {
         "code": "605111.SH",
         "name": "新洁能",
         "weight_pct": 2.95,
-        "change_pct": 5.68,
-        "latest_price": 52.29
+        "change_pct": 3.45,
+        "latest_price": 57.03
       }
     ],
+    "holding_report_date": "2026 Q2",
     "history": [
-      {
-        "date": "2026-07-09",
-        "nav": 3.0864,
-        "change_pct": 4.19
-      },
-      {
-        "date": "2026-07-10",
-        "nav": 2.9679,
-        "change_pct": -3.84
-      },
       {
         "date": "2026-07-13",
         "nav": 2.7834,
@@ -182,9 +173,18 @@
         "date": "2026-08-05",
         "nav": 2.2578,
         "change_pct": 5.34
+      },
+      {
+        "date": "2026-08-06",
+        "nav": 2.2731,
+        "change_pct": 0.68
+      },
+      {
+        "date": "2026-08-07",
+        "nav": 2.3641,
+        "change_pct": 4.0
       }
-    ],
-    "holding_report_date": "2026 Q2"
+    ]
   },
   "uzi": {},
   "news": {
@@ -195,16 +195,7 @@
         "source": "sse.com.cn",
         "source_url": "http://www.sse.com.cn",
         "published_at": "2026-08-05T04:10:07+00:00",
-        "retrieved_at": "2026-08-05T19:52:02.984874+00:00",
-        "region": "CN"
-      },
-      {
-        "title": "关于对西安派瑞功率半导体变流技术股份有限公司、刘强、白杰、郭伟采取出具警示函措施的决定 - csrc.gov.cn",
-        "article_url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE5Bc2ZaeEkzSmhETG5SOU9QZ3BpaWVPRl91NHcwZlJkbjBSYWNTcGFrS2VlWHhVM0k0QUZ2OHVXZVZwcUhpRHV6YnZBUm1iSHVKSUtTaHpIa3R4QmEwZlpVSGVtQ25QUDM2TzYxNEpOYw?oc=5",
-        "source": "csrc.gov.cn",
-        "source_url": "https://www.csrc.gov.cn",
-        "published_at": "2026-07-31T07:00:00+00:00",
-        "retrieved_at": "2026-08-05T19:52:02.984874+00:00",
+        "retrieved_at": "2026-08-07T19:15:18.336803+00:00",
         "region": "CN"
       },
       {
@@ -213,7 +204,7 @@
         "source": "工业和信息化部",
         "source_url": "https://www.miit.gov.cn",
         "published_at": "2026-07-31T14:41:00+08:00",
-        "retrieved_at": "2026-08-05T19:52:02.984874+00:00",
+        "retrieved_at": "2026-08-07T19:15:18.336803+00:00",
         "region": "CN"
       },
       {
@@ -222,18 +213,54 @@
         "source": "csrc.gov.cn",
         "source_url": "https://www.csrc.gov.cn",
         "published_at": "2026-07-03T14:37:47+00:00",
-        "retrieved_at": "2026-08-05T19:52:02.984874+00:00",
+        "retrieved_at": "2026-08-07T19:15:18.336803+00:00",
         "region": "CN"
       }
     ],
     "INTL": [
+      {
+        "title": "SEMI Applauds Statement from Senators Crapo and Wyden Supporting U.S. Tax Credit for Semiconductor Manufacturing - SEMI.org",
+        "article_url": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxNRV85S3hzUGVnTFhGV3lWcEt3am10QlVnX2NKUzZ1cVdrRXBMV3dXZHQ1OFdsaDVqc1lScG92UUs4V3cyejhuWmpjM3ZQYjk3UDN1WEFTaEpQbmZkRG9WeHpxejFLd1BVUzBIQkNaY2tTaUZCRktxdFZ0alV0cjVPU3piLXVJT1ZQejRyU3Z2REJMV2JUbjNiaU02bUhCTG5nNUp5WmxqUVNQTVBJRTdFVmxpd3ZDRy1rOC1URUNQUnFiX3k5TjFVNmlQMFhyVUVUU2lnWU5qYmV6eHpBbnljazJtc3FYT3ZI?oc=5",
+        "source": "SEMI.org",
+        "source_url": "https://www.semi.org",
+        "published_at": "2026-08-06T17:34:49+00:00",
+        "retrieved_at": "2026-08-07T19:15:22.356716+00:00",
+        "region": "INTL"
+      },
+      {
+        "title": "ECDA Opens 2026 Spark Excellence Award Nominations Spotlighting Inclusion in Europe’s Semiconductor Industry - SEMI.org",
+        "article_url": "https://news.google.com/rss/articles/CBMi5AFBVV95cUxQTUFkN1pwZ1lNNVExZ3kyd0xRM0RocURJWFkxajZuNFRUcTlMZzVxYk5QbVg3aVF5UzVoRkVTWWZaNmRhZzlTWm1OQ2w0X0NYaTJkNURkbVJPbHg4Uk9ObXZIelpFc1dVejJFakJHdktWT1VoS1l0cjNsT3BydVRLMDBDa2VOZ3JFaWpYcm93X0tVazZfZG1YN2dhNmh2eUl1WkJ2WEdRRlBQSm5faXVldGU3ZWk5TW93TnV2Nll1b3N3T3hhbUVkM1htM3VMa1ZlWTItMElXeGtVMG9iTjhXTnRMMlc?oc=5",
+        "source": "SEMI.org",
+        "source_url": "https://www.semi.org",
+        "published_at": "2026-08-05T14:49:39+00:00",
+        "retrieved_at": "2026-08-07T19:15:22.356716+00:00",
+        "region": "INTL"
+      },
+      {
+        "title": "Scaling Smarter Maintenance in Semiconductor Facilities with AI Agents - SEMI.org",
+        "article_url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxOclk0ZE90dGhIdm5Lem5ERWFBVUh6SmlnZWhxN0NBaHJmWW51d093Nkd0TllkeFI2YmxzaFJ0S2FNS0hJX3J1Q1Q4aDBWTElxQVZ6bndqaldyOFVXdkNfTndJSkppcmZ0STFhZ3d2UVhfaXdvcnJtVTFXLWZUbmdtUmtVQzdleENRZ0NNVlBCTjdsSTFiYTBz?oc=5",
+        "source": "SEMI.org",
+        "source_url": "https://www.semi.org",
+        "published_at": "2026-08-05T02:19:15+00:00",
+        "retrieved_at": "2026-08-07T19:15:22.356716+00:00",
+        "region": "INTL"
+      },
+      {
+        "title": "Chips Act 2.0 – Building Europe’s Trusted Semiconductor Alliances - SEMI.org",
+        "article_url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxPNi1QYkNjT2NmaVVPUF95eEJzUFdSVjJyUHdRTFlRakVoTnd6VkJwazhlZFc0ZG1SVk5VUkZuRWV0TEgtNjRqOHd3QVV0ZnFKZlRJXzNMVU9YSlRrQW9MUHhNT1AzVTM2WkdiUE1MYzQ5REJIajRNWTRTTk1mOUlkd0VKYmxCbDMyb2RyREJPUWI3M0Joa3M0emZMdk0xa0dIQjRFM3pmU3FRSHdVNXFyOEtCUlhScm15UXc?oc=5",
+        "source": "SEMI.org",
+        "source_url": "https://www.semi.org",
+        "published_at": "2026-08-04T19:31:07+00:00",
+        "retrieved_at": "2026-08-07T19:15:22.356716+00:00",
+        "region": "INTL"
+      },
       {
         "title": "Inside the Fab: An Introduction to Semiconductor Manufacturing (Asia/EU) - SEMI.org",
         "article_url": "https://news.google.com/rss/articles/CBMikgFBVV95cUxQbWhzMU8tOFhnWG4teXRLak95NWlBcHA2Xy1NOTRDZmgxRnVOa1pxTnQ3dU1OdkJoNVVidHQ0Mi1PaE1LZWVxbXl4anRrVWtobFNjM3hCNXBpd0tJOWNFTjF6NHF1WVJxcjNqYXR4eXlDV210QUpSY1Rwa1BGOFhEd3hESUtkLU5zUXJkUWlNNnJ6Zw?oc=5",
         "source": "SEMI.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-07-23T19:23:30+00:00",
-        "retrieved_at": "2026-08-05T19:52:05.679222+00:00",
+        "retrieved_at": "2026-08-07T19:15:22.356716+00:00",
         "region": "INTL"
       },
       {
@@ -242,55 +269,19 @@
         "source": "SEMI.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-07-22T07:00:00+00:00",
-        "retrieved_at": "2026-08-05T19:52:05.679222+00:00",
-        "region": "INTL"
-      },
-      {
-        "title": "Trump Administration Secures an Additional $100 Billion U.S. Semiconductor Manufacturing Investment for a Total of $265 Billion from TSMC - commerce.gov",
-        "article_url": "https://news.google.com/rss/articles/CBMivgFBVV95cUxPaG54UF9UdFpjN2RwazJYVldsSEVYX2YyUWxGLThBa0o0eHFwNTNMdEJyVm9hem5BYklxYkZEcGYzdEQzdjY5UzNEOElGZ2R6QmRCQU1ZRHJ3NEwtWHJSUFBGZW1oVU9XLVpXY0p2cF9McGN6QmxPZXpCZV9ST256NzQ1Z2xvWkxCTHZ4QTJHUm0ycGJkdnlHZjFHdF9PMEdWSFZSbXpDZlhDTzVsRjBlck1tMTh3U1JfUkp4ODd3?oc=5",
-        "source": "commerce.gov",
-        "source_url": "https://www.commerce.gov",
-        "published_at": "2026-07-16T07:00:00+00:00",
-        "retrieved_at": "2026-08-05T19:52:05.679222+00:00",
-        "region": "INTL"
-      },
-      {
-        "title": "Global Semiconductor Equipment Sales Forecast to Reach a Record $229 Billion in 2028, SEMI Reports - SEMI.org",
-        "article_url": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxQa0hSdjZtM3hTNm15LVhsSV9tWkE2R1l3TUduSWExNUtUdjFrZW1nOFBuUGZPd2hISy1LZWlFZ2lBUFVLOVlzN2dKWURNNXV2azRrdWY2THdrTXAxVkdSUkQ3NFZtaEpON21xMGhuLVotY2c4ODVCLV9mM21KZjlmWF94c28wcDRQM0VjZkJYc0hSVExLeW5NQVJSZ1dBWkJwT2w1bG9uQ0YzTnR2cDFwMmMxVk5BZW5ZZFZ5anpubkZJbGd4bVlKVmUtYzJYUlB0WG9KY1B3dFhTY3JBVXY0aA?oc=5",
-        "source": "SEMI.org",
-        "source_url": "https://www.semi.org",
-        "published_at": "2026-07-14T07:00:00+00:00",
-        "retrieved_at": "2026-08-05T19:52:05.679222+00:00",
-        "region": "INTL"
-      },
-      {
-        "title": "Overview of Semiconductor Manufacturing (Europe) - SEMI.org",
-        "article_url": "https://news.google.com/rss/articles/CBMigAFBVV95cUxPbXpmaVVNYV9LdWVZS1lLbTJzaUQ4cVAzaHBSVWxzTjFfa3ZxYUowdm82cnp6TmJlM3VrZDdQc0ZSR1JFN0lqbm1JbktyTU1NZlByN0doeFZNNENtTUxMX0RCMTk3VmlRZWJkNm5MOHlGYXBMejNJRFp5YzhuRGlOUg?oc=5",
-        "source": "SEMI.org",
-        "source_url": "https://www.semi.org",
-        "published_at": "2026-05-27T17:54:31+00:00",
-        "retrieved_at": "2026-08-05T19:52:05.679222+00:00",
-        "region": "INTL"
-      },
-      {
-        "title": "From Wafer to Chip: The Basics of Semiconductor Manufacturing (Americas/EU) - SEMI.org",
-        "article_url": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNLU5uT3FSRzc4alQ2WVV5M0t6M0pWN1ZFV3BZTEdXOHYybkxuV2hyQ1MxQ2hpYWdkbmhxX2FwX3RHVl9OdHZfZ0UtZ01kUl9kbDAwZUNXaWZwRDNVVHRPRVhMTTdHV2dteUc1eGVZTTJPSVJIN1FrTi1sV3BvZkZOelM1RjRuSW5SVlgwUXhpOA?oc=5",
-        "source": "SEMI.org",
-        "source_url": "https://www.semi.org",
-        "published_at": "2026-04-08T20:12:05+00:00",
-        "retrieved_at": "2026-08-05T19:52:05.679222+00:00",
+        "retrieved_at": "2026-08-07T19:15:22.356716+00:00",
         "region": "INTL"
       }
     ]
   },
   "score": {
-    "overall": 27.43,
+    "overall": 30.84,
     "components": {
       "risk_adjusted_return": 0.0,
-      "drawdown_volatility": 0.0,
-      "trend_recovery": 10.44,
+      "drawdown_volatility": 0.52,
+      "trend_recovery": 29.68,
       "concentration": 79.95,
-      "holding_uzi": 55.65
+      "holding_uzi": 56.04
     },
     "confidence": 0.9,
     "model": "fund-transparent-six-factor",
@@ -329,10 +320,10 @@
     },
     "reasons": [
       "component risk_adjusted_return=0.0",
-      "component drawdown_volatility=0.0",
-      "component trend_recovery=10.44",
+      "component drawdown_volatility=0.52",
+      "component trend_recovery=29.68",
       "component concentration=79.95",
-      "component holding_uzi=55.65",
+      "component holding_uzi=56.04",
       "evidence source_status=stale"
     ],
     "invalidation_rules": [
@@ -340,7 +331,7 @@
       "stale evidence requires confirmation",
       "hard_risk_flags or overall < 40 requires renewed research review"
     ],
-    "timestamp": "2026-08-05T19:52:00.172353+00:00"
+    "timestamp": "2026-08-07T19:15:14.928671+00:00"
   },
   "source_status": {
     "history": {
@@ -349,9 +340,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-05T19:52:00.172353+00:00",
-      "retrieved_at": "2026-08-05T19:52:02.984311+00:00",
-      "last_success_at": "2026-08-05T19:52:02.984311+00:00",
+      "attempted_at": "2026-08-07T19:15:14.928671+00:00",
+      "retrieved_at": "2026-08-07T19:15:18.336219+00:00",
+      "last_success_at": "2026-08-07T19:15:18.336219+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -362,9 +353,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-05T19:52:00.172353+00:00",
-      "retrieved_at": "2026-08-05T19:52:02.984311+00:00",
-      "last_success_at": "2026-08-05T19:52:02.984311+00:00",
+      "attempted_at": "2026-08-07T19:15:14.928671+00:00",
+      "retrieved_at": "2026-08-07T19:15:18.336219+00:00",
+      "last_success_at": "2026-08-07T19:15:18.336219+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -375,9 +366,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-05T19:52:00.172353+00:00",
+      "attempted_at": "2026-08-07T19:15:14.928671+00:00",
       "retrieved_at": "",
-      "last_success_at": "2026-08-05T15:41:05.936760+00:00",
+      "last_success_at": "2026-08-07T14:34:13.908001+00:00",
       "stale": true,
       "error": "502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C0.001309%2C0.301308%2C1.688766%2C0.300475%2C1.688525%2C0.300661%2C1.688536%2C1.605111&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2",
       "coverage": {
@@ -392,9 +383,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-05T19:52:00.172353+00:00",
+      "attempted_at": "2026-08-07T19:15:14.928671+00:00",
       "retrieved_at": "",
-      "last_success_at": "2026-08-05T15:41:05.936760+00:00",
+      "last_success_at": "2026-08-07T14:34:13.908001+00:00",
       "stale": true,
       "error": "502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C0.001309%2C0.301308%2C1.688766%2C0.300475%2C1.688525%2C0.300661%2C1.688536%2C1.605111&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2",
       "coverage": {}
@@ -403,12 +394,12 @@
       "provider": "fetch_news",
       "source_urls": [
         "http://www.sse.com.cn",
-        "https://www.csrc.gov.cn",
-        "https://www.miit.gov.cn"
+        "https://www.miit.gov.cn",
+        "https://www.csrc.gov.cn"
       ],
-      "attempted_at": "2026-08-05T19:52:00.172353+00:00",
-      "retrieved_at": "2026-08-05T19:52:00.172353+00:00",
-      "last_success_at": "2026-08-05T19:52:00.172353+00:00",
+      "attempted_at": "2026-08-07T19:15:14.928671+00:00",
+      "retrieved_at": "2026-08-07T19:15:14.928671+00:00",
+      "last_success_at": "2026-08-07T19:15:14.928671+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -416,12 +407,11 @@
     "news_INTL": {
       "provider": "fetch_news",
       "source_urls": [
-        "https://www.semi.org",
-        "https://www.commerce.gov"
+        "https://www.semi.org"
       ],
-      "attempted_at": "2026-08-05T19:52:00.172353+00:00",
-      "retrieved_at": "2026-08-05T19:52:00.172353+00:00",
-      "last_success_at": "2026-08-05T19:52:00.172353+00:00",
+      "attempted_at": "2026-08-07T19:15:14.928671+00:00",
+      "retrieved_at": "2026-08-07T19:15:14.928671+00:00",
+      "last_success_at": "2026-08-07T19:15:14.928671+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
