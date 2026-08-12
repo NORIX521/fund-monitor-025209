@@ -27,12 +27,12 @@
   "risk_flags": [
     "ROE 最新 3.1% 偏低"
   ],
-  "attempted_at": "2026-08-11T14:37:58.599125+00:00",
-  "last_success_at": "2026-08-11T14:37:58.599125+00:00",
+  "attempted_at": "2026-08-12T14:39:06.899825+00:00",
+  "last_success_at": "2026-08-12T14:39:06.899825+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "31502519082",
+    "id": "31607831678",
     "depth": "lite",
     "status": "refreshed_this_run"
   },
