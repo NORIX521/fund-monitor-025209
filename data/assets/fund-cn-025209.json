@@ -12,11 +12,6 @@
   "market": {
     "history": [
       {
-        "date": "2026-07-16",
-        "nav": 2.6081,
-        "change_pct": -4.54
-      },
-      {
         "date": "2026-07-17",
         "nav": 2.377,
         "change_pct": -8.86
@@ -110,6 +105,11 @@
         "date": "2026-08-12",
         "nav": 2.398,
         "change_pct": 1.79
+      },
+      {
+        "date": "2026-08-13",
+        "nav": 2.355,
+        "change_pct": -1.79
       }
     ],
     "holdings": [
@@ -195,75 +195,48 @@
         "source": "工业和信息化部",
         "source_url": "https://www.miit.gov.cn",
         "published_at": "2026-07-31T14:41:00+08:00",
-        "retrieved_at": "2026-08-12T19:23:23.226368+00:00",
-        "region": "CN"
-      },
-      {
-        "title": "关于北京君正集成电路股份有限公司境外发行上市备案通知书 - csrc.gov.cn",
-        "article_url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE04a0NmcnJJQ0R1VXVYWmpYQlhnTEZrOFN0YTR2bThFbXVhYl83cmtGbXBtQ1Jfdk9ESkJfVU1DdEVMeEl2Nk0xbEpFdVhhNGNTRnJRNjdBV0lUYkU0Y0dCcGlkaG1EbTZweVh3?oc=5",
-        "source": "csrc.gov.cn",
-        "source_url": "https://www.csrc.gov.cn",
-        "published_at": "2026-07-03T14:37:47+00:00",
-        "retrieved_at": "2026-08-12T19:23:23.226368+00:00",
+        "retrieved_at": "2026-08-13T19:14:13.051405+00:00",
         "region": "CN"
       }
     ],
     "INTL": [
       {
-        "title": "Inside the Fab: An Introduction to Semiconductor Manufacturing (Asia/EU) - SEMI.org",
+        "title": "Inside the Fab: An Introduction to Semiconductor Manufacturing (Asia/EU) - semi.org",
         "article_url": "https://news.google.com/rss/articles/CBMikgFBVV95cUxQbWhzMU8tOFhnWG4teXRLak95NWlBcHA2Xy1NOTRDZmgxRnVOa1pxTnQ3dU1OdkJoNVVidHQ0Mi1PaE1LZWVxbXl4anRrVWtobFNjM3hCNXBpd0tJOWNFTjF6NHF1WVJxcjNqYXR4eXlDV210QUpSY1Rwa1BGOFhEd3hESUtkLU5zUXJkUWlNNnJ6Zw?oc=5",
-        "source": "SEMI.org",
+        "source": "semi.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-07-23T19:23:30+00:00",
-        "retrieved_at": "2026-08-12T19:23:26.116993+00:00",
+        "retrieved_at": "2026-08-13T19:14:17.167747+00:00",
         "region": "INTL"
       },
       {
-        "title": "SEMI Brings Semiconductor Industry Tax Leaders to Capitol Hill to Urge Congress to Extend Section 48D Semiconductor Investment Tax Credit - SEMI.org",
+        "title": "SEMI Brings Semiconductor Industry Tax Leaders to Capitol Hill to Urge Congress to Extend Section 48D Semiconductor Investment Tax Credit - semi.org",
         "article_url": "https://news.google.com/rss/articles/CBMijAJBVV95cUxNY1o0bC1LOUFPMFVLQURaNll0dHIwWWREenRkYXZNZVNraVdYZVdHZXgySnZhell0SlF0QXBNYzRzQXhfU2JoekpFNXUwbTdjZEVySEV0MVNLNEh4R3A0bGZ5a3lRdE54UXo0NDVTYjlfTGkxYWZRYVZiQy0tNFlwQWVtNzRoel80MTZRdzFYcFZRN1BGbXNEQk9YSDMyZnJrenVsemlSV1ByZHdzZnN2bUV0bFpRQk5DTmxfeEpRZURsUXRxb2I2ZFg5Q1dhXzlDZ3BrM24yTU5saUR3WUk1REEwVzEtZTF4SHhaeW9EaXpLdzRQNDN0M1NpeU9VX0pVa3h0UXB3Sk9sUVJo?oc=5",
-        "source": "SEMI.org",
+        "source": "semi.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-07-22T07:00:00+00:00",
-        "retrieved_at": "2026-08-12T19:23:26.116993+00:00",
+        "retrieved_at": "2026-08-13T19:14:17.167747+00:00",
         "region": "INTL"
       },
       {
-        "title": "Trump Administration Secures an Additional $100 Billion U.S. Semiconductor Manufacturing Investment for a Total of $265 Billion from TSMC - commerce.gov",
-        "article_url": "https://news.google.com/rss/articles/CBMivgFBVV95cUxPaG54UF9UdFpjN2RwazJYVldsSEVYX2YyUWxGLThBa0o0eHFwNTNMdEJyVm9hem5BYklxYkZEcGYzdEQzdjY5UzNEOElGZ2R6QmRCQU1ZRHJ3NEwtWHJSUFBGZW1oVU9XLVpXY0p2cF9McGN6QmxPZXpCZV9ST256NzQ1Z2xvWkxCTHZ4QTJHUm0ycGJkdnlHZjFHdF9PMEdWSFZSbXpDZlhDTzVsRjBlck1tMTh3U1JfUkp4ODd3?oc=5",
-        "source": "commerce.gov",
-        "source_url": "https://www.commerce.gov",
-        "published_at": "2026-07-16T07:00:00+00:00",
-        "retrieved_at": "2026-08-12T19:23:26.116993+00:00",
-        "region": "INTL"
-      },
-      {
-        "title": "Global Semiconductor Equipment Sales Forecast to Reach a Record $229 Billion in 2028, SEMI Reports - SEMI.org",
-        "article_url": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxQa0hSdjZtM3hTNm15LVhsSV9tWkE2R1l3TUduSWExNUtUdjFrZW1nOFBuUGZPd2hISy1LZWlFZ2lBUFVLOVlzN2dKWURNNXV2azRrdWY2THdrTXAxVkdSUkQ3NFZtaEpON21xMGhuLVotY2c4ODVCLV9mM21KZjlmWF94c28wcDRQM0VjZkJYc0hSVExLeW5NQVJSZ1dBWkJwT2w1bG9uQ0YzTnR2cDFwMmMxVk5BZW5ZZFZ5anpubkZJbGd4bVlKVmUtYzJYUlB0WG9KY1B3dFhTY3JBVXY0aA?oc=5",
-        "source": "SEMI.org",
-        "source_url": "https://www.semi.org",
-        "published_at": "2026-07-14T07:00:00+00:00",
-        "retrieved_at": "2026-08-12T19:23:26.116993+00:00",
-        "region": "INTL"
-      },
-      {
-        "title": "Overview of Semiconductor Manufacturing (Europe) - SEMI.org",
+        "title": "Overview of Semiconductor Manufacturing (Europe) - semi.org",
         "article_url": "https://news.google.com/rss/articles/CBMigAFBVV95cUxPbXpmaVVNYV9LdWVZS1lLbTJzaUQ4cVAzaHBSVWxzTjFfa3ZxYUowdm82cnp6TmJlM3VrZDdQc0ZSR1JFN0lqbm1JbktyTU1NZlByN0doeFZNNENtTUxMX0RCMTk3VmlRZWJkNm5MOHlGYXBMejNJRFp5YzhuRGlOUg?oc=5",
-        "source": "SEMI.org",
+        "source": "semi.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-05-27T17:54:31+00:00",
-        "retrieved_at": "2026-08-12T19:23:26.116993+00:00",
+        "retrieved_at": "2026-08-13T19:14:17.167747+00:00",
         "region": "INTL"
       }
     ]
   },
   "score": {
-    "overall": 36.76,
+    "overall": 44.79,
     "components": {
-      "risk_adjusted_return": 0.0,
-      "drawdown_volatility": 13.3,
-      "trend_recovery": 48.48,
+      "risk_adjusted_return": 15.7,
+      "drawdown_volatility": 24.84,
+      "trend_recovery": 60.17,
       "concentration": 79.95,
-      "holding_uzi": 55.8
+      "holding_uzi": 55.94
     },
     "confidence": 0.9,
     "model": "fund-transparent-six-factor",
@@ -299,11 +272,11 @@
       "hard_failures": []
     },
     "reasons": [
-      "component risk_adjusted_return=0.0",
-      "component drawdown_volatility=13.3",
-      "component trend_recovery=48.48",
+      "component risk_adjusted_return=15.7",
+      "component drawdown_volatility=24.84",
+      "component trend_recovery=60.17",
       "component concentration=79.95",
-      "component holding_uzi=55.8",
+      "component holding_uzi=55.94",
       "evidence source_status=stale"
     ],
     "invalidation_rules": [
@@ -311,7 +284,7 @@
       "stale evidence requires confirmation",
       "hard_risk_flags or overall < 40 requires renewed research review"
     ],
-    "timestamp": "2026-08-12T19:23:20.412806+00:00"
+    "timestamp": "2026-08-13T19:14:09.408404+00:00"
   },
   "source_status": {
     "history": {
@@ -320,9 +293,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-12T19:23:20.412806+00:00",
-      "retrieved_at": "2026-08-12T19:23:23.225688+00:00",
-      "last_success_at": "2026-08-12T19:23:23.225688+00:00",
+      "attempted_at": "2026-08-13T19:14:09.408404+00:00",
+      "retrieved_at": "2026-08-13T19:14:13.050765+00:00",
+      "last_success_at": "2026-08-13T19:14:13.050765+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -333,9 +306,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-12T19:23:20.412806+00:00",
-      "retrieved_at": "2026-08-12T19:23:23.225688+00:00",
-      "last_success_at": "2026-08-12T19:23:23.225688+00:00",
+      "attempted_at": "2026-08-13T19:14:09.408404+00:00",
+      "retrieved_at": "2026-08-13T19:14:13.050765+00:00",
+      "last_success_at": "2026-08-13T19:14:13.050765+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -346,7 +319,7 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-12T19:23:20.412806+00:00",
+      "attempted_at": "2026-08-13T19:14:09.408404+00:00",
       "retrieved_at": "",
       "last_success_at": "2026-08-12T14:38:27.597759+00:00",
       "stale": true,
@@ -363,7 +336,7 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-12T19:23:20.412806+00:00",
+      "attempted_at": "2026-08-13T19:14:09.408404+00:00",
       "retrieved_at": "",
       "last_success_at": "2026-08-12T14:38:27.597759+00:00",
       "stale": true,
@@ -373,12 +346,11 @@
     "news_CN": {
       "provider": "fetch_news",
       "source_urls": [
-        "https://www.miit.gov.cn",
-        "https://www.csrc.gov.cn"
+        "https://www.miit.gov.cn"
       ],
-      "attempted_at": "2026-08-12T19:23:20.412806+00:00",
-      "retrieved_at": "2026-08-12T19:23:20.412806+00:00",
-      "last_success_at": "2026-08-12T19:23:20.412806+00:00",
+      "attempted_at": "2026-08-13T19:14:09.408404+00:00",
+      "retrieved_at": "2026-08-13T19:14:09.408404+00:00",
+      "last_success_at": "2026-08-13T19:14:09.408404+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -386,12 +358,11 @@
     "news_INTL": {
       "provider": "fetch_news",
       "source_urls": [
-        "https://www.semi.org",
-        "https://www.commerce.gov"
+        "https://www.semi.org"
       ],
-      "attempted_at": "2026-08-12T19:23:20.412806+00:00",
-      "retrieved_at": "2026-08-12T19:23:20.412806+00:00",
-      "last_success_at": "2026-08-12T19:23:20.412806+00:00",
+      "attempted_at": "2026-08-13T19:14:09.408404+00:00",
+      "retrieved_at": "2026-08-13T19:14:09.408404+00:00",
+      "last_success_at": "2026-08-13T19:14:09.408404+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
