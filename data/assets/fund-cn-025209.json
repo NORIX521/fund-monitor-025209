@@ -82,6 +82,7 @@
         "latest_price": 58.24
       }
     ],
+    "holding_report_date": "2026 Q2",
     "history": [
       {
         "date": "2026-07-20",
@@ -183,19 +184,18 @@
         "nav": 2.4191,
         "change_pct": 2.72
       }
-    ],
-    "holding_report_date": "2026 Q2"
+    ]
   },
   "uzi": {},
   "news": {
     "CN": [
       {
-        "title": "关于对西安派瑞功率半导体变流技术股份有限公司、刘强、白杰、郭伟采取出具警示函措施的决定 - csrc.gov.cn",
-        "article_url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE42bGh6ZG9iUk9NYjk3MlpQcUlfckpwUmg3bkFjZGRsMDhZaUZBVkFuQmJLdmlaOG5Kck9EeVFoZkVKN2JjeG9pR05TdnNHUzBLMDZxTDRyQkNoZ0ZRRG4xQTU2THFsR0RCeVBqUjFR?oc=5",
-        "source": "csrc.gov.cn",
-        "source_url": "http://www.csrc.gov.cn",
-        "published_at": "2026-07-31T15:09:10+00:00",
-        "retrieved_at": "2026-08-14T19:23:29.652108+00:00",
+        "title": "广发基金管理有限公司关于增加东海证券为广发中证半导体材料设备主题交易型开放式指数证券 - sse.com.cn",
+        "article_url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQekozUHdHOGpBNkhYZklpaHFkWjl1T19TVzJfSGdQQWxxWlYzSGJUQTlxd2ljaFNHcXdpd3RKVnNfRFppazdQTEM5eTluSk1nWkpMNXVCSjljQ0xFbFpMNkliOTFQdjB4QXNnLUNTa19hUEIyUHlVelJUUTFvWjVNN0IyYVpQTWRUNk5icHJuNkR4aU9HTjVZ?oc=5",
+        "source": "sse.com.cn",
+        "source_url": "http://www.sse.com.cn",
+        "published_at": "2026-08-13T20:36:29+00:00",
+        "retrieved_at": "2026-08-15T07:47:35.979472+00:00",
         "region": "CN"
       },
       {
@@ -204,7 +204,7 @@
         "source": "工业和信息化部",
         "source_url": "https://www.miit.gov.cn",
         "published_at": "2026-07-31T14:41:00+08:00",
-        "retrieved_at": "2026-08-14T19:23:29.652108+00:00",
+        "retrieved_at": "2026-08-15T07:47:35.979472+00:00",
         "region": "CN"
       },
       {
@@ -213,7 +213,7 @@
         "source": "csrc.gov.cn",
         "source_url": "http://www.csrc.gov.cn",
         "published_at": "2026-05-22T07:00:00+00:00",
-        "retrieved_at": "2026-08-14T19:23:29.652108+00:00",
+        "retrieved_at": "2026-08-15T07:47:35.979472+00:00",
         "region": "CN"
       }
     ],
@@ -224,7 +224,7 @@
         "source": "SEMI.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-07-23T19:23:30+00:00",
-        "retrieved_at": "2026-08-14T19:23:32.534462+00:00",
+        "retrieved_at": "2026-08-15T07:47:40.348287+00:00",
         "region": "INTL"
       },
       {
@@ -233,7 +233,7 @@
         "source": "SEMI.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-07-22T07:00:00+00:00",
-        "retrieved_at": "2026-08-14T19:23:32.534462+00:00",
+        "retrieved_at": "2026-08-15T07:47:40.348287+00:00",
         "region": "INTL"
       },
       {
@@ -242,7 +242,7 @@
         "source": "commerce.gov",
         "source_url": "https://www.commerce.gov",
         "published_at": "2026-07-16T07:00:00+00:00",
-        "retrieved_at": "2026-08-14T19:23:32.534462+00:00",
+        "retrieved_at": "2026-08-15T07:47:40.348287+00:00",
         "region": "INTL"
       },
       {
@@ -251,19 +251,19 @@
         "source": "SEMI.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-05-27T17:54:31+00:00",
-        "retrieved_at": "2026-08-14T19:23:32.534462+00:00",
+        "retrieved_at": "2026-08-15T07:47:40.348287+00:00",
         "region": "INTL"
       }
     ]
   },
   "score": {
-    "overall": 51.53,
+    "overall": 51.88,
     "components": {
       "risk_adjusted_return": 33.02,
       "drawdown_volatility": 26.52,
       "trend_recovery": 75.58,
       "concentration": 79.95,
-      "holding_uzi": 55.68
+      "holding_uzi": 57.25
     },
     "confidence": 0.9,
     "model": "fund-transparent-six-factor",
@@ -303,7 +303,7 @@
       "component drawdown_volatility=26.52",
       "component trend_recovery=75.58",
       "component concentration=79.95",
-      "component holding_uzi=55.68",
+      "component holding_uzi=57.25",
       "evidence source_status=stale"
     ],
     "invalidation_rules": [
@@ -311,7 +311,7 @@
       "stale evidence requires confirmation",
       "hard_risk_flags or overall < 40 requires renewed research review"
     ],
-    "timestamp": "2026-08-14T19:23:26.774602+00:00"
+    "timestamp": "2026-08-15T07:47:32.942457+00:00"
   },
   "source_status": {
     "history": {
@@ -320,9 +320,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-14T19:23:26.774602+00:00",
-      "retrieved_at": "2026-08-14T19:23:29.651400+00:00",
-      "last_success_at": "2026-08-14T19:23:29.651400+00:00",
+      "attempted_at": "2026-08-15T07:47:32.942457+00:00",
+      "retrieved_at": "2026-08-15T07:47:35.978894+00:00",
+      "last_success_at": "2026-08-15T07:47:35.978894+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -333,9 +333,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-14T19:23:26.774602+00:00",
-      "retrieved_at": "2026-08-14T19:23:29.651400+00:00",
-      "last_success_at": "2026-08-14T19:23:29.651400+00:00",
+      "attempted_at": "2026-08-15T07:47:32.942457+00:00",
+      "retrieved_at": "2026-08-15T07:47:35.978894+00:00",
+      "last_success_at": "2026-08-15T07:47:35.978894+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -346,9 +346,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-14T19:23:26.774602+00:00",
+      "attempted_at": "2026-08-15T07:47:32.942457+00:00",
       "retrieved_at": "",
-      "last_success_at": "2026-08-14T14:33:02.240453+00:00",
+      "last_success_at": "2026-08-15T03:04:05.683965+00:00",
       "stale": true,
       "error": "502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C0.001309%2C0.301308%2C1.688766%2C0.300475%2C1.688525%2C0.300661%2C1.688536%2C1.605111&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2",
       "coverage": {
@@ -363,9 +363,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-14T19:23:26.774602+00:00",
+      "attempted_at": "2026-08-15T07:47:32.942457+00:00",
       "retrieved_at": "",
-      "last_success_at": "2026-08-14T14:33:02.240453+00:00",
+      "last_success_at": "2026-08-15T03:04:05.683965+00:00",
       "stale": true,
       "error": "502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C0.001309%2C0.301308%2C1.688766%2C0.300475%2C1.688525%2C0.300661%2C1.688536%2C1.605111&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2",
       "coverage": {}
@@ -373,12 +373,13 @@
     "news_CN": {
       "provider": "fetch_news",
       "source_urls": [
-        "http://www.csrc.gov.cn",
-        "https://www.miit.gov.cn"
+        "http://www.sse.com.cn",
+        "https://www.miit.gov.cn",
+        "http://www.csrc.gov.cn"
       ],
-      "attempted_at": "2026-08-14T19:23:26.774602+00:00",
-      "retrieved_at": "2026-08-14T19:23:26.774602+00:00",
-      "last_success_at": "2026-08-14T19:23:26.774602+00:00",
+      "attempted_at": "2026-08-15T07:47:32.942457+00:00",
+      "retrieved_at": "2026-08-15T07:47:32.942457+00:00",
+      "last_success_at": "2026-08-15T07:47:32.942457+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -389,9 +390,9 @@
         "https://www.semi.org",
         "https://www.commerce.gov"
       ],
-      "attempted_at": "2026-08-14T19:23:26.774602+00:00",
-      "retrieved_at": "2026-08-14T19:23:26.774602+00:00",
-      "last_success_at": "2026-08-14T19:23:26.774602+00:00",
+      "attempted_at": "2026-08-15T07:47:32.942457+00:00",
+      "retrieved_at": "2026-08-15T07:47:32.942457+00:00",
+      "last_success_at": "2026-08-15T07:47:32.942457+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
