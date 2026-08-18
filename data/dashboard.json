@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15T07:47:32.942457+00:00",
+  "generated_at": "2026-08-18T18:22:55.668280+00:00",
   "pipeline_version": "4.1",
   "source_status": {
     "pipeline": {
@@ -7,9 +7,9 @@
       "source_urls": [
         "https://github.com/NORIX521/fund-monitor-025209/blob/main/scripts/update_monitor.py"
       ],
-      "attempted_at": "2026-08-15T07:47:32.942457+00:00",
-      "retrieved_at": "2026-08-15T07:47:32.942457+00:00",
-      "last_success_at": "2026-08-15T07:47:32.942457+00:00",
+      "attempted_at": "2026-08-18T18:22:55.668280+00:00",
+      "retrieved_at": "2026-08-18T18:22:55.668280+00:00",
+      "last_success_at": "2026-08-18T18:22:55.668280+00:00",
       "stale": true,
       "error": "",
       "coverage": {}
