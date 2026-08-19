@@ -4,12 +4,12 @@
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
   "overall": 57.7,
-  "panel_consensus": 40.2,
+  "panel_consensus": 40.7,
   "fundamental_score": 66.3,
   "school_scores": {
-    "A": 35.0,
-    "B": 16.0,
-    "C": 55.8,
+    "A": 36.7,
+    "B": 17.5,
+    "C": 56.0,
     "D": 97.9,
     "E": 49.2,
     "F": 27.8,
@@ -23,19 +23,19 @@
     "bearish": 19,
     "skip": 23
   },
-  "verdict": "观望中性 · 1 派看多 / 5 派看空",
+  "verdict": "观望中性 · 1 派看多 / 4 派看空",
   "risk_flags": [
     "资产负债率 56%，财务杠杆偏高",
     "ROE 最低 -13.0%，盈利稳定性不足",
     "—行业竞争加剧风险",
     "宏观经济或政策环境变化"
   ],
-  "attempted_at": "2026-08-18T14:07:38.980041+00:00",
-  "last_success_at": "2026-08-18T14:07:38.980041+00:00",
+  "attempted_at": "2026-08-19T14:07:46.533519+00:00",
+  "last_success_at": "2026-08-19T14:07:46.533519+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "32146363862",
+    "id": "32262092952",
     "depth": "lite",
     "status": "refreshed_this_run"
   },

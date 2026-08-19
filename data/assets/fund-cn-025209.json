@@ -10,85 +10,80 @@
     "enabled": true
   },
   "market": {
+    "holding_report_date": "2026 Q2",
     "holdings": [
       {
         "code": "603986.SH",
         "name": "兆易创新",
         "weight_pct": 7.92,
-        "change_pct": 3.21,
-        "latest_price": 417.48
+        "change_pct": -7.56,
+        "latest_price": 403.71
       },
       {
         "code": "300223.SZ",
         "name": "君正股份",
         "weight_pct": 7.56,
-        "change_pct": 4.47,
-        "latest_price": 143.62
+        "change_pct": -10.15,
+        "latest_price": 137.25
       },
       {
         "code": "001309.SZ",
         "name": "德明利",
         "weight_pct": 7.16,
-        "change_pct": 2.44,
-        "latest_price": 406.19
+        "change_pct": -9.95,
+        "latest_price": 393.8
       },
       {
         "code": "301308.SZ",
         "name": "江波龙",
         "weight_pct": 7.06,
-        "change_pct": 2.38,
-        "latest_price": 406.45
+        "change_pct": -8.05,
+        "latest_price": 378.98
       },
       {
         "code": "688766.SH",
         "name": "普冉股份",
         "weight_pct": 6.99,
-        "change_pct": 7.2,
-        "latest_price": 411.0
+        "change_pct": -4.2,
+        "latest_price": 447.2
       },
       {
         "code": "300475.SZ",
         "name": "香农芯创",
         "weight_pct": 6.84,
-        "change_pct": 2.29,
-        "latest_price": 161.03
+        "change_pct": -11.05,
+        "latest_price": 154.4
       },
       {
         "code": "688525.SH",
         "name": "佰维存储",
         "weight_pct": 6.76,
-        "change_pct": 2.97,
-        "latest_price": 242.0
+        "change_pct": -8.48,
+        "latest_price": 231.7
       },
       {
         "code": "300661.SZ",
         "name": "圣邦股份",
         "weight_pct": 3.49,
-        "change_pct": 3.62,
-        "latest_price": 123.0
+        "change_pct": -8.92,
+        "latest_price": 106.49
       },
       {
         "code": "688536.SH",
         "name": "思瑞浦",
         "weight_pct": 3.32,
-        "change_pct": 4.77,
-        "latest_price": 274.5
+        "change_pct": -8.63,
+        "latest_price": 268.8
       },
       {
         "code": "605111.SH",
         "name": "新洁能",
         "weight_pct": 2.95,
-        "change_pct": -0.48,
-        "latest_price": 58.24
+        "change_pct": -5.12,
+        "latest_price": 60.25
       }
     ],
-    "holding_report_date": "2026 Q2",
     "history": [
-      {
-        "date": "2026-07-22",
-        "nav": 2.4075,
-        "change_pct": -2.79
-      },
       {
         "date": "2026-07-23",
         "nav": 2.3493,
@@ -183,6 +178,11 @@
         "date": "2026-08-18",
         "nav": 2.5427,
         "change_pct": -0.61
+      },
+      {
+        "date": "2026-08-19",
+        "nav": 2.3767,
+        "change_pct": -6.53
       }
     ]
   },
@@ -195,7 +195,7 @@
         "source": "csrc.gov.cn",
         "source_url": "http://www.csrc.gov.cn",
         "published_at": "2026-07-31T15:09:10+00:00",
-        "retrieved_at": "2026-08-18T18:22:59.283647+00:00",
+        "retrieved_at": "2026-08-19T19:06:11.705201+00:00",
         "region": "CN"
       },
       {
@@ -204,7 +204,7 @@
         "source": "工业和信息化部",
         "source_url": "https://www.miit.gov.cn",
         "published_at": "2026-07-31T14:41:00+08:00",
-        "retrieved_at": "2026-08-18T18:22:59.283647+00:00",
+        "retrieved_at": "2026-08-19T19:06:11.705201+00:00",
         "region": "CN"
       },
       {
@@ -213,7 +213,16 @@
         "source": "csrc.gov.cn",
         "source_url": "https://www.csrc.gov.cn",
         "published_at": "2026-07-03T14:37:47+00:00",
-        "retrieved_at": "2026-08-18T18:22:59.283647+00:00",
+        "retrieved_at": "2026-08-19T19:06:11.705201+00:00",
+        "region": "CN"
+      },
+      {
+        "title": "关于全真模拟环境半导体ETF国联安（512480）期权合约调整的公告 - sse.com.cn",
+        "article_url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxOdTBOZ3VQZVdJaTZxVlN2M3A2a0lMNnByMENpN0dka0pQd3l0Y1o3UW1YaWtERkdjY1NLbkk1UjRZVmtnMm51NjZvRmM1Nmg0ZVBFTTdSQ3IwdXZSNUdTc1N5b2JTazVJZWF0RHAyeUxMRVpHOGFJVmNxVTdMMFdLQkFreC0?oc=5",
+        "source": "sse.com.cn",
+        "source_url": "https://www.sse.com.cn",
+        "published_at": "2026-07-02T07:00:00+00:00",
+        "retrieved_at": "2026-08-19T19:06:11.705201+00:00",
         "region": "CN"
       },
       {
@@ -222,27 +231,27 @@
         "source": "csrc.gov.cn",
         "source_url": "http://www.csrc.gov.cn",
         "published_at": "2026-05-22T07:00:00+00:00",
-        "retrieved_at": "2026-08-18T18:22:59.283647+00:00",
+        "retrieved_at": "2026-08-19T19:06:11.705201+00:00",
         "region": "CN"
       }
     ],
     "INTL": [
       {
-        "title": "Inside the Fab: An Introduction to Semiconductor Manufacturing (Asia/EU) - SEMI.org",
+        "title": "Inside the Fab: An Introduction to Semiconductor Manufacturing (Asia/EU) - semi.org",
         "article_url": "https://news.google.com/rss/articles/CBMikgFBVV95cUxQbWhzMU8tOFhnWG4teXRLak95NWlBcHA2Xy1NOTRDZmgxRnVOa1pxTnQ3dU1OdkJoNVVidHQ0Mi1PaE1LZWVxbXl4anRrVWtobFNjM3hCNXBpd0tJOWNFTjF6NHF1WVJxcjNqYXR4eXlDV210QUpSY1Rwa1BGOFhEd3hESUtkLU5zUXJkUWlNNnJ6Zw?oc=5",
-        "source": "SEMI.org",
+        "source": "semi.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-07-23T19:23:30+00:00",
-        "retrieved_at": "2026-08-18T18:23:02.618616+00:00",
+        "retrieved_at": "2026-08-19T19:06:15.531894+00:00",
         "region": "INTL"
       },
       {
-        "title": "SEMI Brings Semiconductor Industry Tax Leaders to Capitol Hill to Urge Congress to Extend Section 48D Semiconductor Investment Tax Credit - SEMI.org",
+        "title": "SEMI Brings Semiconductor Industry Tax Leaders to Capitol Hill to Urge Congress to Extend Section 48D Semiconductor Investment Tax Credit - semi.org",
         "article_url": "https://news.google.com/rss/articles/CBMijAJBVV95cUxNY1o0bC1LOUFPMFVLQURaNll0dHIwWWREenRkYXZNZVNraVdYZVdHZXgySnZhell0SlF0QXBNYzRzQXhfU2JoekpFNXUwbTdjZEVySEV0MVNLNEh4R3A0bGZ5a3lRdE54UXo0NDVTYjlfTGkxYWZRYVZiQy0tNFlwQWVtNzRoel80MTZRdzFYcFZRN1BGbXNEQk9YSDMyZnJrenVsemlSV1ByZHdzZnN2bUV0bFpRQk5DTmxfeEpRZURsUXRxb2I2ZFg5Q1dhXzlDZ3BrM24yTU5saUR3WUk1REEwVzEtZTF4SHhaeW9EaXpLdzRQNDN0M1NpeU9VX0pVa3h0UXB3Sk9sUVJo?oc=5",
-        "source": "SEMI.org",
+        "source": "semi.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-07-22T07:00:00+00:00",
-        "retrieved_at": "2026-08-18T18:23:02.618616+00:00",
+        "retrieved_at": "2026-08-19T19:06:15.531894+00:00",
         "region": "INTL"
       },
       {
@@ -251,37 +260,37 @@
         "source": "commerce.gov",
         "source_url": "https://www.commerce.gov",
         "published_at": "2026-07-16T07:00:00+00:00",
-        "retrieved_at": "2026-08-18T18:23:02.618616+00:00",
+        "retrieved_at": "2026-08-19T19:06:15.531894+00:00",
         "region": "INTL"
       },
       {
-        "title": "Overview of Semiconductor Manufacturing (Europe) - SEMI.org",
+        "title": "Overview of Semiconductor Manufacturing (Europe) - semi.org",
         "article_url": "https://news.google.com/rss/articles/CBMigAFBVV95cUxPbXpmaVVNYV9LdWVZS1lLbTJzaUQ4cVAzaHBSVWxzTjFfa3ZxYUowdm82cnp6TmJlM3VrZDdQc0ZSR1JFN0lqbm1JbktyTU1NZlByN0doeFZNNENtTUxMX0RCMTk3VmlRZWJkNm5MOHlGYXBMejNJRFp5YzhuRGlOUg?oc=5",
-        "source": "SEMI.org",
+        "source": "semi.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-05-27T17:54:31+00:00",
-        "retrieved_at": "2026-08-18T18:23:02.618616+00:00",
+        "retrieved_at": "2026-08-19T19:06:15.531894+00:00",
         "region": "INTL"
       },
       {
-        "title": "SEMI ISS Europe 2026: Navigating Geopolitics and Shaping Europe’s Semiconductor Future - SEMI.org",
+        "title": "SEMI ISS Europe 2026: Navigating Geopolitics and Shaping Europe’s Semiconductor Future - semi.org",
         "article_url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxOTy1NYVBNc0hBSXAxLUU2dzBKTVZfeDJCaFVTWU5QWHZIc1NXWVJQdE1fcVRxZzBQUmVmT0VLZnF1MkIwMVByTTVhZnlNcTJVTFRGTFlEOWlCd2p4STZSeEl3Q2o3amZEYkxhbS11NkpRQ1Z2WlNWU1VXdDl4a1hXRUt1aHk1blZLTURLRlZSSHhURVpWbnBQYzRiUmV6NUJkcDFGMHUtQ3N1Y28tS0sxOU1NMW8?oc=5",
-        "source": "SEMI.org",
+        "source": "semi.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-04-27T07:00:00+00:00",
-        "retrieved_at": "2026-08-18T18:23:02.618616+00:00",
+        "retrieved_at": "2026-08-19T19:06:15.531894+00:00",
         "region": "INTL"
       }
     ]
   },
   "score": {
-    "overall": 46.45,
+    "overall": 43.02,
     "components": {
-      "risk_adjusted_return": 33.71,
-      "drawdown_volatility": 35.78,
-      "trend_recovery": 30.62,
+      "risk_adjusted_return": 22.57,
+      "drawdown_volatility": 35.56,
+      "trend_recovery": 26.17,
       "concentration": 79.95,
-      "holding_uzi": 56.61
+      "holding_uzi": 55.87
     },
     "confidence": 0.9,
     "model": "fund-transparent-six-factor",
@@ -317,11 +326,11 @@
       "hard_failures": []
     },
     "reasons": [
-      "component risk_adjusted_return=33.71",
-      "component drawdown_volatility=35.78",
-      "component trend_recovery=30.62",
+      "component risk_adjusted_return=22.57",
+      "component drawdown_volatility=35.56",
+      "component trend_recovery=26.17",
       "component concentration=79.95",
-      "component holding_uzi=56.61",
+      "component holding_uzi=55.87",
       "evidence source_status=stale"
     ],
     "invalidation_rules": [
@@ -329,7 +338,7 @@
       "stale evidence requires confirmation",
       "hard_risk_flags or overall < 40 requires renewed research review"
     ],
-    "timestamp": "2026-08-18T18:22:55.668280+00:00"
+    "timestamp": "2026-08-19T19:06:07.568337+00:00"
   },
   "source_status": {
     "history": {
@@ -338,9 +347,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-18T18:22:55.668280+00:00",
-      "retrieved_at": "2026-08-18T18:22:59.282975+00:00",
-      "last_success_at": "2026-08-18T18:22:59.282975+00:00",
+      "attempted_at": "2026-08-19T19:06:07.568337+00:00",
+      "retrieved_at": "2026-08-19T19:06:11.704549+00:00",
+      "last_success_at": "2026-08-19T19:06:11.704549+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -351,9 +360,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-18T18:22:55.668280+00:00",
-      "retrieved_at": "2026-08-18T18:22:59.282975+00:00",
-      "last_success_at": "2026-08-18T18:22:59.282975+00:00",
+      "attempted_at": "2026-08-19T19:06:07.568337+00:00",
+      "retrieved_at": "2026-08-19T19:06:11.704549+00:00",
+      "last_success_at": "2026-08-19T19:06:11.704549+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -364,9 +373,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-18T18:22:55.668280+00:00",
+      "attempted_at": "2026-08-19T19:06:07.568337+00:00",
       "retrieved_at": "",
-      "last_success_at": "2026-08-15T03:04:05.683965+00:00",
+      "last_success_at": "2026-08-19T14:07:40.131774+00:00",
       "stale": true,
       "error": "502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C0.001309%2C0.301308%2C1.688766%2C0.300475%2C1.688525%2C0.300661%2C1.688536%2C1.605111&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2",
       "coverage": {
@@ -381,9 +390,9 @@
         "https://api.fund.eastmoney.com/f10/lsjz?fundCode=025209&pageIndex=1&pageSize=180",
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month="
       ],
-      "attempted_at": "2026-08-18T18:22:55.668280+00:00",
+      "attempted_at": "2026-08-19T19:06:07.568337+00:00",
       "retrieved_at": "",
-      "last_success_at": "2026-08-15T03:04:05.683965+00:00",
+      "last_success_at": "2026-08-19T14:07:40.131774+00:00",
       "stale": true,
       "error": "502 Server Error: Bad Gateway for url: https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C0.001309%2C0.301308%2C1.688766%2C0.300475%2C1.688525%2C0.300661%2C1.688536%2C1.605111&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2",
       "coverage": {}
@@ -393,11 +402,12 @@
       "source_urls": [
         "http://www.csrc.gov.cn",
         "https://www.miit.gov.cn",
-        "https://www.csrc.gov.cn"
+        "https://www.csrc.gov.cn",
+        "https://www.sse.com.cn"
       ],
-      "attempted_at": "2026-08-18T18:22:55.668280+00:00",
-      "retrieved_at": "2026-08-18T18:22:55.668280+00:00",
-      "last_success_at": "2026-08-18T18:22:55.668280+00:00",
+      "attempted_at": "2026-08-19T19:06:07.568337+00:00",
+      "retrieved_at": "2026-08-19T19:06:07.568337+00:00",
+      "last_success_at": "2026-08-19T19:06:07.568337+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -408,9 +418,9 @@
         "https://www.semi.org",
         "https://www.commerce.gov"
       ],
-      "attempted_at": "2026-08-18T18:22:55.668280+00:00",
-      "retrieved_at": "2026-08-18T18:22:55.668280+00:00",
-      "last_success_at": "2026-08-18T18:22:55.668280+00:00",
+      "attempted_at": "2026-08-19T19:06:07.568337+00:00",
+      "retrieved_at": "2026-08-19T19:06:07.568337+00:00",
+      "last_success_at": "2026-08-19T19:06:07.568337+00:00",
       "stale": false,
       "error": "",
       "coverage": {}

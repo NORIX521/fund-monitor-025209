@@ -4,7 +4,7 @@
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
   "overall": 52.2,
-  "panel_consensus": 31.1,
+  "panel_consensus": 30.7,
   "fundamental_score": 64.6,
   "school_scores": {
     "A": 31.1,
@@ -25,16 +25,16 @@
   },
   "verdict": "观望偏空 · 1 派看多 / 6 派看空",
   "risk_flags": [
-    "当前 PE 131x，估值偏高",
+    "当前 PE 119x，估值偏高",
     "—行业竞争加剧风险",
     "宏观经济或政策环境变化"
   ],
-  "attempted_at": "2026-08-18T14:07:38.980041+00:00",
-  "last_success_at": "2026-08-18T14:07:38.980041+00:00",
+  "attempted_at": "2026-08-19T14:07:46.533519+00:00",
+  "last_success_at": "2026-08-19T14:07:46.533519+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "32146363862",
+    "id": "32262092952",
     "depth": "lite",
     "status": "refreshed_this_run"
   },

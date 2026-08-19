@@ -3,39 +3,38 @@
   "model": "UZI-Skill",
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
-  "overall": 61.7,
-  "panel_consensus": 50.2,
+  "overall": 62.4,
+  "panel_consensus": 51.5,
   "fundamental_score": 67.6,
   "school_scores": {
-    "A": 50.1,
-    "B": 25.3,
+    "A": 46.6,
+    "B": 34.4,
     "C": 50.2,
     "D": 97.9,
-    "E": 54.6,
+    "E": 60.0,
     "F": 78.9,
     "G": 49.8,
     "H": 24.0,
-    "I": 42.7
+    "I": 3.6
   },
   "signal_distribution": {
-    "bullish": 13,
-    "neutral": 18,
+    "bullish": 15,
+    "neutral": 16,
     "bearish": 14,
     "skip": 21
   },
-  "verdict": "观望偏多 · 2 派看多 / 2 派看空",
+  "verdict": "观望偏多 · 2 派看多 / 3 派看空",
   "risk_flags": [
-    "当前 PE 39x，估值偏高",
     "ROE 最低 1.1%，盈利稳定性不足",
     "半导体行业竞争加剧风险",
     "宏观经济或政策环境变化"
   ],
-  "attempted_at": "2026-08-18T14:07:38.980041+00:00",
-  "last_success_at": "2026-08-18T14:07:38.980041+00:00",
+  "attempted_at": "2026-08-19T14:07:46.533519+00:00",
+  "last_success_at": "2026-08-19T14:07:46.533519+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "32146363862",
+    "id": "32262092952",
     "depth": "lite",
     "status": "refreshed_this_run"
   },
