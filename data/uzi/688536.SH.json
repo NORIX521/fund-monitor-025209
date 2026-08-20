@@ -4,13 +4,13 @@
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
   "overall": 57.9,
-  "panel_consensus": 43.7,
+  "panel_consensus": 43.8,
   "fundamental_score": 63.9,
   "school_scores": {
-    "A": 30.7,
+    "A": 29.0,
     "B": 23.7,
     "C": 50.2,
-    "D": 97.9,
+    "D": 100.0,
     "E": 50.3,
     "F": 44.2,
     "G": 49.8,
@@ -25,17 +25,17 @@
   },
   "verdict": "观望中性 · 1 派看多 / 3 派看空",
   "risk_flags": [
-    "当前 PE 89x，估值偏高",
+    "当前 PE 103x，估值偏高",
     "ROE 最低 -3.6%，盈利稳定性不足",
     "半导体行业竞争加剧风险",
     "宏观经济或政策环境变化"
   ],
-  "attempted_at": "2026-08-19T14:07:46.533519+00:00",
-  "last_success_at": "2026-08-19T14:07:46.533519+00:00",
+  "attempted_at": "2026-08-20T14:09:37.348804+00:00",
+  "last_success_at": "2026-08-20T14:09:37.348804+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "32262092952",
+    "id": "32378372287",
     "depth": "lite",
     "status": "refreshed_this_run"
   },

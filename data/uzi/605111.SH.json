@@ -3,11 +3,11 @@
   "model": "UZI-Skill",
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
-  "overall": 61.1,
-  "panel_consensus": 48.6,
-  "fundamental_score": 66.3,
+  "overall": 60.4,
+  "panel_consensus": 48.8,
+  "fundamental_score": 65.2,
   "school_scores": {
-    "A": 43.2,
+    "A": 44.9,
     "B": 0.0,
     "C": 52.3,
     "D": 97.9,
@@ -25,16 +25,16 @@
   },
   "verdict": "观望偏多 · 2 派看多 / 3 派看空",
   "risk_flags": [
-    "当前 PE 66x，估值偏高",
+    "当前 PE 65x，估值偏高",
     "—行业竞争加剧风险",
     "宏观经济或政策环境变化"
   ],
-  "attempted_at": "2026-08-19T14:07:46.533519+00:00",
-  "last_success_at": "2026-08-19T14:07:46.533519+00:00",
+  "attempted_at": "2026-08-20T14:09:37.348804+00:00",
+  "last_success_at": "2026-08-20T14:09:37.348804+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "32262092952",
+    "id": "32378372287",
     "depth": "lite",
     "status": "refreshed_this_run"
   },
