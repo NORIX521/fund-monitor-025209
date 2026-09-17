@@ -4,12 +4,12 @@
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
   "overall": 54.0,
-  "panel_consensus": 30.5,
+  "panel_consensus": 30.2,
   "fundamental_score": 66.1,
   "school_scores": {
     "A": 34.8,
-    "B": 10.6,
-    "C": 41.4,
+    "B": 12.0,
+    "C": 38.2,
     "D": 22.7,
     "E": 55.8,
     "F": 31.6,
@@ -30,12 +30,12 @@
     "—行业竞争加剧风险",
     "宏观经济或政策环境变化"
   ],
-  "attempted_at": "2026-09-15T17:44:56.248627+00:00",
-  "last_success_at": "2026-09-15T17:44:56.248627+00:00",
+  "attempted_at": "2026-09-17T17:43:28.827484+00:00",
+  "last_success_at": "2026-09-17T17:43:28.827484+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "35003104952",
+    "id": "35254369305",
     "depth": "lite",
     "status": "refreshed_this_run"
   },
