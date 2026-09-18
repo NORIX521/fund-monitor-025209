@@ -3,12 +3,12 @@
   "model": "UZI-Skill",
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
-  "overall": 57.6,
-  "panel_consensus": 43.4,
+  "overall": 57.2,
+  "panel_consensus": 42.9,
   "fundamental_score": 63.9,
   "school_scores": {
     "A": 27.2,
-    "B": 23.7,
+    "B": 20.4,
     "C": 50.2,
     "D": 100.0,
     "E": 50.3,
@@ -19,23 +19,23 @@
   },
   "signal_distribution": {
     "bullish": 16,
-    "neutral": 23,
-    "bearish": 23,
+    "neutral": 22,
+    "bearish": 24,
     "skip": 4
   },
   "verdict": "观望中性 · 1 派看多 / 4 派看空",
   "risk_flags": [
-    "当前 PE 110x，估值偏高",
+    "当前 PE 118x，估值偏高",
     "ROE 最低 -3.6%，盈利稳定性不足",
     "半导体行业竞争加剧风险",
     "宏观经济或政策环境变化"
   ],
-  "attempted_at": "2026-09-17T17:43:28.827484+00:00",
-  "last_success_at": "2026-09-17T17:43:28.827484+00:00",
+  "attempted_at": "2026-09-18T17:10:13.579316+00:00",
+  "last_success_at": "2026-09-18T17:10:13.579316+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "35254369305",
+    "id": "35372659800",
     "depth": "lite",
     "status": "refreshed_this_run"
   },
