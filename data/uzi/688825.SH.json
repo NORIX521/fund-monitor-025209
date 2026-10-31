@@ -1,0 +1,44 @@
+{
+  "ticker": "688825.SH",
+  "model": "UZI-Skill",
+  "model_version": "3.9.2",
+  "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+  "overall": 49.7,
+  "panel_consensus": 26.5,
+  "fundamental_score": 61.4,
+  "school_scores": {
+    "A": 25.1,
+    "B": 13.2,
+    "C": 55.3,
+    "D": 20.0,
+    "E": 43.8,
+    "F": 0.0,
+    "G": 26.9,
+    "H": 6.0,
+    "I": 3.6
+  },
+  "signal_distribution": {
+    "bullish": 6,
+    "neutral": 13,
+    "bearish": 24,
+    "skip": 23
+  },
+  "verdict": "谨慎 · 7 派看空",
+  "risk_flags": [
+    "ROE 最新 0.0% 偏低"
+  ],
+  "attempted_at": "2026-10-31T08:23:50.939053+00:00",
+  "last_success_at": "2026-10-31T08:23:50.939053+00:00",
+  "stale": false,
+  "error": "",
+  "run": {
+    "id": "41184388126",
+    "depth": "medium",
+    "status": "refreshed_this_run"
+  },
+  "upstream": {
+    "repository": "wbh604/UZI-Skill",
+    "commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
+    "model_version": "3.9.2"
+  }
+}
