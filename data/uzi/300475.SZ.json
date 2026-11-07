@@ -3,9 +3,9 @@
   "model": "UZI-Skill",
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
-  "overall": 48.4,
+  "overall": 48.1,
   "panel_consensus": 19.3,
-  "fundamental_score": 64.2,
+  "fundamental_score": 63.7,
   "school_scores": {
     "A": 41.3,
     "B": 17.2,
@@ -29,13 +29,13 @@
     "—行业竞争加剧风险",
     "宏观经济或政策环境变化"
   ],
-  "attempted_at": "2026-11-04T20:31:14.061470+00:00",
-  "last_success_at": "2026-11-04T20:31:14.061470+00:00",
+  "attempted_at": "2026-11-07T08:45:09.497069+00:00",
+  "last_success_at": "2026-11-07T08:45:09.497069+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "41907249407",
-    "depth": "lite",
+    "id": "42356751815",
+    "depth": "medium",
     "status": "refreshed_this_run"
   },
   "upstream": {

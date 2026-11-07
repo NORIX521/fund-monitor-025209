@@ -10,90 +10,79 @@
     "enabled": true
   },
   "market": {
-    "holding_report_date": "2026 Q3",
     "holdings": [
       {
         "code": "603986.SH",
         "name": "兆易创新",
         "weight_pct": 7.76,
-        "change_pct": -4.19,
-        "latest_price": 260.0
+        "change_pct": -8.99,
+        "latest_price": 239.49
       },
       {
         "code": "300223.SZ",
         "name": "君正股份",
         "weight_pct": 7.45,
-        "change_pct": -5.3,
-        "latest_price": 111.0
+        "change_pct": -6.92,
+        "latest_price": 105.2
       },
       {
         "code": "688825.SH",
         "name": "长鑫科技",
         "weight_pct": 7.18,
-        "change_pct": -4.08,
-        "latest_price": 42.29
+        "change_pct": -4.98,
+        "latest_price": 40.41
       },
       {
         "code": "688536.SH",
         "name": "思瑞浦",
         "weight_pct": 6.76,
-        "change_pct": 0.52,
-        "latest_price": 270.64
+        "change_pct": -5.66,
+        "latest_price": 253.98
       },
       {
         "code": "300661.SZ",
         "name": "圣邦股份",
         "weight_pct": 6.63,
-        "change_pct": -2.57,
-        "latest_price": 82.92
+        "change_pct": -5.15,
+        "latest_price": 80.81
       },
       {
         "code": "300475.SZ",
         "name": "香农芯创",
         "weight_pct": 6.53,
-        "change_pct": -3.26,
-        "latest_price": 92.86
+        "change_pct": -6.33,
+        "latest_price": 90.05
       },
       {
         "code": "688766.SH",
         "name": "普冉股份",
         "weight_pct": 6.26,
-        "change_pct": -6.0,
-        "latest_price": 266.0
+        "change_pct": -10.62,
+        "latest_price": 237.75
       },
       {
         "code": "301308.SZ",
         "name": "江波龙",
         "weight_pct": 5.3,
-        "change_pct": -3.58,
-        "latest_price": 215.01
+        "change_pct": -4.87,
+        "latest_price": 214.77
       },
       {
         "code": "605111.SH",
         "name": "新洁能",
         "weight_pct": 4.4,
-        "change_pct": 4.76,
-        "latest_price": 40.48
+        "change_pct": -3.93,
+        "latest_price": 39.35
       },
       {
         "code": "688525.SH",
         "name": "佰维存储",
         "weight_pct": 4.22,
-        "change_pct": -4.25,
-        "latest_price": 128.0
+        "change_pct": -5.9,
+        "latest_price": 126.0
       }
     ],
     "history": [
-      {
-        "date": "2026-10-08",
-        "nav": 2.115,
-        "change_pct": -5.87
-      },
-      {
-        "date": "2026-10-09",
-        "nav": 2.0989,
-        "change_pct": -0.76
-      },
       {
         "date": "2026-10-12",
         "nav": 2.0266,
@@ -183,28 +172,57 @@
         "date": "2026-11-04",
         "nav": 1.9174,
         "change_pct": 8.93
+      },
+      {
+        "date": "2026-11-05",
+        "nav": 1.9007,
+        "change_pct": -0.87
+      },
+      {
+        "date": "2026-11-06",
+        "nav": 1.8134,
+        "change_pct": -4.59
       }
-    ]
+    ],
+    "holding_report_date": "2026 Q3"
   },
   "uzi": {},
   "news": {
     "CN": [
+      {
+        "title": "比亚迪半导体股份有限公司注册阶段问询问题 - 中国证券监督管理委员会",
+        "article_url": "https://news.google.com/rss/articles/CBMia0FVX3lxTFBCNTFhbGdNWWdRSE5MQUowODVXdFhhUWxuRmJZNE1Yczh6eDdHVGdPRlh1VmVoUFJyNktxbzRRT05UZ0VWYk9nZTg0LU9BOEcxM0ZnWHVaY3E5eFRqYWJENUV4RW54SVJ2V0pF?oc=5",
+        "source": "中国证券监督管理委员会",
+        "source_url": "https://www.csrc.gov.cn",
+        "published_at": "2026-11-06T06:45:42+00:00",
+        "retrieved_at": "2026-11-07T12:32:06.915307+00:00",
+        "region": "CN"
+      },
       {
         "title": "2026年1—9月份电子信息制造业运行情况",
         "article_url": "https://wap.miit.gov.cn/jgsj/yxj/xxfb/art/2026/art_a99467d9ccd44dbe8f1494ed7da7a3ff.html",
         "source": "工业和信息化部",
         "source_url": "https://www.miit.gov.cn",
         "published_at": "2026-11-03T12:07:00+08:00",
-        "retrieved_at": "2026-11-05T01:27:32.052287+00:00",
+        "retrieved_at": "2026-11-07T12:32:06.915307+00:00",
         "region": "CN"
       },
       {
-        "title": "国浩律师（上海）事务所关于普冉半导体（上海）股份有限公司首次公开发行股票并在科创板 - 中国证券监督委员会",
-        "article_url": "https://news.google.com/rss/articles/CBMi6gFBVV95cUxQZkw3SzdSWG0wR0FSNkM2MVVSR3NwRzBMNkxGZzlVbmdLQ1Q4NlBjY0gtbnhORGVNQVR3OFFSYUxHMEY3Q0tRbzJPMm8xVC01V3d2V3FiTnJHd05FQVRSZjNDYThlZjJnQnpsOVN6SjNCcWRrcTdJNk1WdW9DN2JXbWpKYXdXVDBmaWY4VWZJbkNQUEFvME10aTN4ODhlMTNnaXZoZnF3dzFFU21DSVg1WXhjc0tIUEtBbzV2U1E5eXVMdUNzYkd3Y3B2VTNFaHRid3NMTy02VDVodFRTSEZnTlBnamtaeGlTU2c?oc=5",
+        "title": "中信证券股份有限公司关于有研半导体硅材料股份公司首次公开发行股票并在科创板上市辅导基 - 中国证券监督委员会",
+        "article_url": "https://news.google.com/rss/articles/CBMi4AVBVV95cUxQVUZYc0xsdU5XWC1kbG5TaVJySEVYa1BDeDEyY3F2YWx2ZWVEQ25yWGRHNGhKdlliV2xza0gtSlZ4RzgyRmNlQ1lRMmhTSUdWbE04S016dDJaeUppcWZrVmJiMVpXUnBlZHhwUWZyazE4ejBvVDJGeUVsejNMWXNBVjMxLTVqN052S2RfRERXRmNmWGhHNGFIdmlVNHNFdGowZ182eGtLZ2c0Q3V3SmgyTGE2VjBLMVZ5S3IyVUExazA5RVh0YnJiY0t3Z1FOS1VBT1dON0xpekZQWVBRWmw4RlVSamsyUV92SW9Ra0dpbHVSbDdtVGVBclB5NHZNQU83WFdUMzZMUHV5UXNOTGhpeFZFU1VzSF9wSnRpRTNUWTdHMHprNVc4ZXY4MjFMRnZGR2JLQ0ozYXJtdDRPaXRKV2RmcjJWS3FoWG0xT29jdkdULTVpVHBfcjlkbTc4c0tIcTB3YjFFOWx3OHhucU9zUXRDRG12eXo2Uk9jQm9hMkJNdmRMc1FEMGR1QjIwZXVRQ2RReG1TZno5UWQwaVl4Rk10aFl2bVljTzgzRXQ4eVAwVHh0TlQ1YldvaTV6WHUyakNMMUw0N1JMOG12dHhZOU9yV21YSGNxSmo3SUtMd2xBVHkxZ2ZOSk5WNXJCVi0yVF84ajhEdGNIbUl0TmlMVXMxa0ZZemNQY085cjRtQmZpWVB0d1prNTlRbGQxNExLZ0p0bnB3LWYzY2lua0NZZFdkcWNqRzhSZG5QMGRoZjUxWWU0eU42akdWVXUwd25aeFRMZlktbXNRb0EzSTVaWkgxc0g4R1dqczB0RVdUVUVuclpfTXdqd3F4V2s2VXpQUkU5Ui1may1EYjZoWE9Ea3E3cGM5MFRaZWxTb3ZyR0ZnejdQOUxiejZkVldQNGYya2YwOXVSazM3M280Y3FCWHJjck5DRmJVVUd1Tk91bEdSdDlOM1ZUci1UNXdvNWx4?oc=5",
         "source": "中国证券监督委员会",
         "source_url": "https://www.csrc.gov.cn",
+        "published_at": "2026-11-01T21:08:34+00:00",
+        "retrieved_at": "2026-11-07T12:32:06.915307+00:00",
+        "region": "CN"
+      },
+      {
+        "title": "国浩律师（上海）事务所关于普冉半导体（上海）股份有限公司首次公开发行股票并在科创板 - 中国证券监督管理委员会",
+        "article_url": "https://news.google.com/rss/articles/CBMi6gFBVV95cUxQZkw3SzdSWG0wR0FSNkM2MVVSR3NwRzBMNkxGZzlVbmdLQ1Q4NlBjY0gtbnhORGVNQVR3OFFSYUxHMEY3Q0tRbzJPMm8xVC01V3d2V3FiTnJHd05FQVRSZjNDYThlZjJnQnpsOVN6SjNCcWRrcTdJNk1WdW9DN2JXbWpKYXdXVDBmaWY4VWZJbkNQUEFvME10aTN4ODhlMTNnaXZoZnF3dzFFU21DSVg1WXhjc0tIUEtBbzV2U1E5eXVMdUNzYkd3Y3B2VTNFaHRid3NMTy02VDVodFRTSEZnTlBnamtaeGlTU2c?oc=5",
+        "source": "中国证券监督管理委员会",
+        "source_url": "https://www.csrc.gov.cn",
         "published_at": "2026-10-31T20:07:03+00:00",
-        "retrieved_at": "2026-11-05T01:27:32.052287+00:00",
+        "retrieved_at": "2026-11-07T12:32:06.915307+00:00",
         "region": "CN"
       },
       {
@@ -213,16 +231,7 @@
         "source": "中国证券监督委员会",
         "source_url": "https://www.csrc.gov.cn",
         "published_at": "2026-10-31T00:40:02+00:00",
-        "retrieved_at": "2026-11-05T01:27:32.052287+00:00",
-        "region": "CN"
-      },
-      {
-        "title": "中微半导体（深圳）股份有限公司注册阶段问询问题 - 中国证券监督委员会",
-        "article_url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE95Ry0xeHBEa2Q1SjFfZjFhM0RLeWNtcVJFYjd3RUZ3RXJzdVZadzF0YjFkRlo3RjNiWmR3aThta1ZxTURVTE5qaVVjTEVEX0xERUZhU2lwR0RzNEZ0UENpbzZtS1VvbjRXN1g0?oc=5",
-        "source": "中国证券监督委员会",
-        "source_url": "https://www.csrc.gov.cn",
-        "published_at": "2026-10-30T22:03:24+00:00",
-        "retrieved_at": "2026-11-05T01:27:32.052287+00:00",
+        "retrieved_at": "2026-11-07T12:32:06.915307+00:00",
         "region": "CN"
       },
       {
@@ -231,16 +240,7 @@
         "source": "中国证券监督委员会",
         "source_url": "https://www.csrc.gov.cn",
         "published_at": "2026-10-30T18:52:18+00:00",
-        "retrieved_at": "2026-11-05T01:27:32.052287+00:00",
-        "region": "CN"
-      },
-      {
-        "title": "东芯半导体股份有限公司问询回复_中国证券监督管理委员会 - 中国证券监督委员会",
-        "article_url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5fOFdEb2N4VTg3d3A5QjFnRHNJc0YwTm13VWhMeklJMnFFWnBCZjQ3Zkg5cnNObEFnMjRhME5BaFFMd0FvOEEyb0RfYzVyRUNOLTJ1WFRadERxZU1DTjBURm9VN201dUx2WWpF?oc=5",
-        "source": "中国证券监督委员会",
-        "source_url": "https://www.csrc.gov.cn",
-        "published_at": "2026-10-29T18:14:58+00:00",
-        "retrieved_at": "2026-11-05T01:27:32.052287+00:00",
+        "retrieved_at": "2026-11-07T12:32:06.915307+00:00",
         "region": "CN"
       }
     ],
@@ -250,8 +250,8 @@
         "article_url": "https://news.google.com/rss/articles/CBMi6gFBVV95cUxPMUZHSHk4eF9SSkFCbGpqdDRGUnUxbGZLMTFYUVVXNDJxVGRXRmdFb2ZmX3dIMUFMYVlLakhfV0lRQ1htbWUzb19iZTRwRDBlSTNiQ3dIWENvTFZZOVBxXzVySURGUzhiLTl0bG1pSDhRSmZFWGEzLVhTNkhjallDcnpsaUt4d2RJSnF1a0YwU0hvN1pRZ3BFblZkX18wQ3FEakRxRWJqZDhwcjNTQ3ZWdzFSNTdoSzRwWU1MYS1hWkhGSVEtUV9VVTNscjFDSXRWU1drR3Y0a2k4WHpCdjNEZjZLdzRmMmZYS2c?oc=5",
         "source": "SEMI.org",
         "source_url": "https://www.semi.org",
-        "published_at": "2026-10-28T17:11:20+00:00",
-        "retrieved_at": "2026-11-05T01:27:35.993531+00:00",
+        "published_at": "2026-10-28T07:00:00+00:00",
+        "retrieved_at": "2026-11-07T12:32:10.057713+00:00",
         "region": "INTL"
       },
       {
@@ -260,7 +260,7 @@
         "source": "SEMI.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-09-29T07:00:00+00:00",
-        "retrieved_at": "2026-11-05T01:27:35.993531+00:00",
+        "retrieved_at": "2026-11-07T12:32:10.057713+00:00",
         "region": "INTL"
       },
       {
@@ -269,7 +269,7 @@
         "source": "WSTS",
         "source_url": "https://www.wsts.org",
         "published_at": "2026-08-06T19:34:53+00:00",
-        "retrieved_at": "2026-11-05T01:27:35.993531+00:00",
+        "retrieved_at": "2026-11-07T12:32:10.057713+00:00",
         "region": "INTL"
       },
       {
@@ -278,7 +278,7 @@
         "source": "SEMI.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-08-06T07:00:00+00:00",
-        "retrieved_at": "2026-11-05T01:27:35.993531+00:00",
+        "retrieved_at": "2026-11-07T12:32:10.057713+00:00",
         "region": "INTL"
       },
       {
@@ -287,7 +287,7 @@
         "source": "commerce.gov",
         "source_url": "https://www.commerce.gov",
         "published_at": "2026-07-16T07:00:00+00:00",
-        "retrieved_at": "2026-11-05T01:27:35.993531+00:00",
+        "retrieved_at": "2026-11-07T12:32:10.057713+00:00",
         "region": "INTL"
       },
       {
@@ -296,19 +296,19 @@
         "source": "SEMI.org",
         "source_url": "https://www.semi.org",
         "published_at": "2026-07-14T07:00:00+00:00",
-        "retrieved_at": "2026-11-05T01:27:35.993531+00:00",
+        "retrieved_at": "2026-11-07T12:32:10.057713+00:00",
         "region": "INTL"
       }
     ]
   },
   "score": {
-    "overall": 39.23,
+    "overall": 37.29,
     "components": {
-      "risk_adjusted_return": 4.44,
-      "drawdown_volatility": 34.52,
-      "trend_recovery": 37.81,
+      "risk_adjusted_return": 1.58,
+      "drawdown_volatility": 39.22,
+      "trend_recovery": 24.46,
       "concentration": 77.51,
-      "holding_uzi": 51.1
+      "holding_uzi": 50.54
     },
     "confidence": 0.9,
     "model": "fund-transparent-six-factor",
@@ -344,11 +344,11 @@
       "hard_failures": []
     },
     "reasons": [
-      "component risk_adjusted_return=4.44",
-      "component drawdown_volatility=34.52",
-      "component trend_recovery=37.81",
+      "component risk_adjusted_return=1.58",
+      "component drawdown_volatility=39.22",
+      "component trend_recovery=24.46",
       "component concentration=77.51",
-      "component holding_uzi=51.1",
+      "component holding_uzi=50.54",
       "evidence source_status=fresh"
     ],
     "invalidation_rules": [
@@ -356,7 +356,7 @@
       "stale evidence requires confirmation",
       "hard_risk_flags or overall < 40 requires renewed research review"
     ],
-    "timestamp": "2026-11-05T01:27:27.076863+00:00"
+    "timestamp": "2026-11-07T12:32:01.256295+00:00"
   },
   "source_status": {
     "history": {
@@ -366,9 +366,9 @@
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month=",
         "https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C1.688825%2C1.688536%2C0.300661%2C0.300475%2C1.688766%2C0.301308%2C1.605111%2C1.688525&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2"
       ],
-      "attempted_at": "2026-11-05T01:27:27.076863+00:00",
-      "retrieved_at": "2026-11-05T01:27:32.051683+00:00",
-      "last_success_at": "2026-11-05T01:27:32.051683+00:00",
+      "attempted_at": "2026-11-07T12:32:01.256295+00:00",
+      "retrieved_at": "2026-11-07T12:32:06.914618+00:00",
+      "last_success_at": "2026-11-07T12:32:06.914618+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -380,9 +380,9 @@
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month=",
         "https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C1.688825%2C1.688536%2C0.300661%2C0.300475%2C1.688766%2C0.301308%2C1.605111%2C1.688525&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2"
       ],
-      "attempted_at": "2026-11-05T01:27:27.076863+00:00",
-      "retrieved_at": "2026-11-05T01:27:32.051683+00:00",
-      "last_success_at": "2026-11-05T01:27:32.051683+00:00",
+      "attempted_at": "2026-11-07T12:32:01.256295+00:00",
+      "retrieved_at": "2026-11-07T12:32:06.914618+00:00",
+      "last_success_at": "2026-11-07T12:32:06.914618+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -394,9 +394,9 @@
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month=",
         "https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C1.688825%2C1.688536%2C0.300661%2C0.300475%2C1.688766%2C0.301308%2C1.605111%2C1.688525&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2"
       ],
-      "attempted_at": "2026-11-05T01:27:27.076863+00:00",
-      "retrieved_at": "2026-11-05T01:27:32.051683+00:00",
-      "last_success_at": "2026-11-05T01:27:32.051683+00:00",
+      "attempted_at": "2026-11-07T12:32:01.256295+00:00",
+      "retrieved_at": "2026-11-07T12:32:06.914618+00:00",
+      "last_success_at": "2026-11-07T12:32:06.914618+00:00",
       "stale": false,
       "error": "",
       "coverage": {
@@ -412,9 +412,9 @@
         "https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=025209&topline=10&year=&month=",
         "https://push2.eastmoney.com/api/qt/ulist.np/get?secids=1.603986%2C0.300223%2C1.688825%2C1.688536%2C0.300661%2C0.300475%2C1.688766%2C0.301308%2C1.605111%2C1.688525&fields=f12%2Cf14%2Cf2%2Cf3&fltt=2&invt=2"
       ],
-      "attempted_at": "2026-11-05T01:27:27.076863+00:00",
-      "retrieved_at": "2026-11-05T01:27:32.051683+00:00",
-      "last_success_at": "2026-11-05T01:27:32.051683+00:00",
+      "attempted_at": "2026-11-07T12:32:01.256295+00:00",
+      "retrieved_at": "2026-11-07T12:32:06.914618+00:00",
+      "last_success_at": "2026-11-07T12:32:06.914618+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -422,12 +422,12 @@
     "news_CN": {
       "provider": "fetch_news",
       "source_urls": [
-        "https://www.miit.gov.cn",
-        "https://www.csrc.gov.cn"
+        "https://www.csrc.gov.cn",
+        "https://www.miit.gov.cn"
       ],
-      "attempted_at": "2026-11-05T01:27:27.076863+00:00",
-      "retrieved_at": "2026-11-05T01:27:27.076863+00:00",
-      "last_success_at": "2026-11-05T01:27:27.076863+00:00",
+      "attempted_at": "2026-11-07T12:32:01.256295+00:00",
+      "retrieved_at": "2026-11-07T12:32:01.256295+00:00",
+      "last_success_at": "2026-11-07T12:32:01.256295+00:00",
       "stale": false,
       "error": "",
       "coverage": {}
@@ -439,9 +439,9 @@
         "https://www.wsts.org",
         "https://www.commerce.gov"
       ],
-      "attempted_at": "2026-11-05T01:27:27.076863+00:00",
-      "retrieved_at": "2026-11-05T01:27:27.076863+00:00",
-      "last_success_at": "2026-11-05T01:27:27.076863+00:00",
+      "attempted_at": "2026-11-07T12:32:01.256295+00:00",
+      "retrieved_at": "2026-11-07T12:32:01.256295+00:00",
+      "last_success_at": "2026-11-07T12:32:01.256295+00:00",
       "stale": false,
       "error": "",
       "coverage": {}

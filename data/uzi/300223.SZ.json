@@ -3,12 +3,12 @@
   "model": "UZI-Skill",
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
-  "overall": 49.3,
-  "panel_consensus": 25.3,
-  "fundamental_score": 62.1,
+  "overall": 49.0,
+  "panel_consensus": 25.7,
+  "fundamental_score": 61.5,
   "school_scores": {
     "A": 34.6,
-    "B": 0.0,
+    "B": 0.7,
     "C": 49.8,
     "D": 22.7,
     "E": 49.2,
@@ -27,13 +27,13 @@
   "risk_flags": [
     "ROE 最新 3.1% 偏低"
   ],
-  "attempted_at": "2026-11-04T20:31:14.061470+00:00",
-  "last_success_at": "2026-11-04T20:31:14.061470+00:00",
+  "attempted_at": "2026-11-07T08:45:09.497069+00:00",
+  "last_success_at": "2026-11-07T08:45:09.497069+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "41907249407",
-    "depth": "lite",
+    "id": "42356751815",
+    "depth": "medium",
     "status": "refreshed_this_run"
   },
   "upstream": {
