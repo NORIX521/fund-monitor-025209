@@ -3,23 +3,23 @@
   "model": "UZI-Skill",
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
-  "overall": 50.3,
-  "panel_consensus": 22.3,
-  "fundamental_score": 65.9,
+  "overall": 50.0,
+  "panel_consensus": 23.4,
+  "fundamental_score": 64.8,
   "school_scores": {
     "A": 34.6,
     "B": 0.0,
     "C": 60.6,
     "D": 22.7,
-    "E": 18.3,
+    "E": 24.9,
     "F": 0.0,
     "G": 34.5,
     "H": 6.0,
     "I": 42.7
   },
   "signal_distribution": {
-    "bullish": 5,
-    "neutral": 11,
+    "bullish": 6,
+    "neutral": 10,
     "bearish": 27,
     "skip": 23
   },
@@ -29,12 +29,12 @@
     "—行业竞争加剧风险",
     "宏观经济或政策环境变化"
   ],
-  "attempted_at": "2026-11-07T08:45:09.497069+00:00",
-  "last_success_at": "2026-11-07T08:45:09.497069+00:00",
+  "attempted_at": "2026-11-14T08:57:03.289509+00:00",
+  "last_success_at": "2026-11-14T08:57:03.289509+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "42356751815",
+    "id": "43578146800",
     "depth": "medium",
     "status": "refreshed_this_run"
   },
