@@ -3,36 +3,36 @@
   "model": "UZI-Skill",
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
-  "overall": 48.8,
-  "panel_consensus": 23.9,
-  "fundamental_score": 62.1,
+  "overall": 45.7,
+  "panel_consensus": 14.0,
+  "fundamental_score": 63.2,
   "school_scores": {
     "A": 31.1,
-    "B": 0.0,
-    "C": 49.8,
-    "D": 22.7,
-    "E": 49.2,
+    "B": 0.7,
+    "C": 60.6,
+    "D": 20.0,
+    "E": 42.6,
     "F": 0.0,
-    "G": 17.2,
+    "G": 0.0,
     "H": 6.0,
     "I": 3.6
   },
   "signal_distribution": {
-    "bullish": 7,
-    "neutral": 9,
-    "bearish": 27,
-    "skip": 23
+    "bullish": 6,
+    "neutral": 10,
+    "bearish": 46,
+    "skip": 4
   },
   "verdict": "谨慎 · 7 派看空",
   "risk_flags": [
     "ROE 最新 3.1% 偏低"
   ],
-  "attempted_at": "2026-11-14T08:57:03.289509+00:00",
-  "last_success_at": "2026-11-14T08:57:03.289509+00:00",
+  "attempted_at": "2026-11-21T09:46:14.116772+00:00",
+  "last_success_at": "2026-11-21T09:46:14.116772+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "43578146800",
+    "id": "44891077005",
     "depth": "medium",
     "status": "refreshed_this_run"
   },

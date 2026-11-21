@@ -4,11 +4,11 @@
   "model_version": "3.9.2",
   "upstream_commit": "fce996c33e70eddce8e375f53cd252b549eb3d7c",
   "overall": 47.1,
-  "panel_consensus": 18.3,
+  "panel_consensus": 18.1,
   "fundamental_score": 62.5,
   "school_scores": {
     "A": 37.8,
-    "B": 17.2,
+    "B": 15.9,
     "C": 41.4,
     "D": 20.0,
     "E": 55.8,
@@ -25,14 +25,14 @@
   },
   "verdict": "谨慎 · 6 派看空",
   "risk_flags": [
-    "最大回撤 -71.5%"
+    "最大回撤 -74.9%"
   ],
-  "attempted_at": "2026-11-14T08:57:03.289509+00:00",
-  "last_success_at": "2026-11-14T08:57:03.289509+00:00",
+  "attempted_at": "2026-11-21T09:46:14.116772+00:00",
+  "last_success_at": "2026-11-21T09:46:14.116772+00:00",
   "stale": false,
   "error": "",
   "run": {
-    "id": "43578146800",
+    "id": "44891077005",
     "depth": "medium",
     "status": "refreshed_this_run"
   },
